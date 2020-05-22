@@ -12,5 +12,9 @@ libraryDependencies ++= Seq(
   "org.tpolecat" %% "doobie-core"     % doobieVersion,
   "org.tpolecat" %% "doobie-postgres" % doobieVersion,
   "com.github.pureconfig" %% "pureconfig" % "0.12.2",
-  "org.tpolecat" %% "doobie-specs2"   % doobieVersion
+  "org.tpolecat" %% "doobie-specs2"   % doobieVersion,
+  "org.scalatest" %% "scalatest-funsuite" % "3.3.0-SNAP2",
+  "org.tpolecat" %% "doobie-scalatest" % "0.9.0" % Test,
+  "com.typesafe.akka" %% "akka-stream" % "2.5.26",
+  "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.12"
 )
