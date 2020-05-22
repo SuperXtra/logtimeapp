@@ -3,26 +3,13 @@ package service
 import data.Queries
 import dbConnection.PostgresDb
 import java.util.UUID
-import doobie._
 import doobie.implicits._
-import doobie.util.ExecutionContexts
-import cats.effect._
-
 import cats.effect.IO
-import data.{Entities, _}
-import cats.free.Free
-import cats.implicits._
-import cats.syntax.comonad._
-import cats.instances.list._
 import data.Entities.User
-import dbConnection.PostgresDb.xa
-import doobie.free.connection
 import doobie.util.ExecutionContexts
 
 
 class UserService() {
-
-//TODO: not working
 
   val con = PostgresDb.xa
   implicit val cs = IO.contextShift(ExecutionContexts.synchronous)

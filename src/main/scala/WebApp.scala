@@ -17,22 +17,22 @@ object WebApp extends App {
     case Right(value) => println(value)
   }.unsafeRunSync()
 
-  service.checkIfExists("76e73815-4fd1-4576-9942-acefe9a01fff").map {
-    case Left(value) => print(value)
-    case Right(value) => value.size match {
-      case x if x == 1 => println(true)
-      case _ => println(false)
-    }
-  }.unsafeRunSync()
-
-
-  service.checkIfExists("76e73815-4fd1-4576-9942-").map {
-    case Left(value) => print(value)
-    case Right(value) => value.size match {
-      case x if x == 1 => println(true)
-      case _ => println(false)
-    }
-  }.unsafeRunSync()
+//  service.checkIfExists("76e73815-4fd1-4576-9942-acefe9a01fff").map {
+//    case Left(value) => print(value)
+//    case Right(value) => value.size match {
+//      case x if x == 1 => println(true)
+//      case _ => println(false)
+//    }
+//  }.unsafeRunSync()
+//
+//
+//  service.checkIfExists("76e73815-4fd1-4576-9942-").map {
+//    case Left(value) => print(value)
+//    case Right(value) => value.size match {
+//      case x if x == 1 => println(true)
+//      case _ => println(false)
+//    }
+//  }.unsafeRunSync()
 
   println(DateTime.now)
 

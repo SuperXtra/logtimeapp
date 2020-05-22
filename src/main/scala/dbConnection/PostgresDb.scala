@@ -29,20 +29,20 @@ object PostgresDb {
 
   val xa = Transactor.fromDriverManager[IO](
     "org.postgresql.Driver",
-    "jdbc:postgresql:test",
-    "test",
-    "test"
+    "jdbc:postgresql://ec2-54-75-229-28.eu-west-1.compute.amazonaws.com:5432/d94gigncif0u25",
+    "vqidaoxnepgktr",
+    "5075aa01fcdf2e9f371b817a92621d5da74acc7a655f3dd29585445f5fd4ffde"
 //    Blocker.liftExecutionContext(ExecutionContexts.synchronous)
   )
 
 //
-//  val createUser =
-//    sql"""
-//         create table if not exists tb_user (
-//            id serial primary key,
-//            user_identification varchar(50) unique not null
-//          )
-//         """.update.run
+  val createUser =
+    sql"""
+         create table if not exists tb_user (
+            id serial primary key,
+            user_identification varchar(50) unique not null
+          )
+         """.update.run
 //
 //  val createProject =
 //    sql"""
