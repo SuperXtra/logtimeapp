@@ -2,7 +2,9 @@ package data
 
 import akka.http.scaladsl.model.DateTime
 
-case class ProjectData(projectName: String, user: Int)
+case class CreateProject(projectName: String, userIdentification: String)
+case class ChangeProjectName(oldProjectName: String, projectName: String, userIdentification: String)
+
 
 case class TaskRequest(
                         taskDescription: String,
@@ -14,3 +16,4 @@ case class TaskRequest(
 case class DeleteTaskRequest(
 
                             )
+

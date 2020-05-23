@@ -23,7 +23,7 @@ object Entities {
                       id: Int,
                       userId: Int,
                       projectName: String,
-                      creatTime: String,
+                      createTime: String,
                       deleteTime: Option[String]
                     )
 

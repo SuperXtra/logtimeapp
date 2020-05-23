@@ -31,8 +31,7 @@ class QueriesCheckSpec extends AnyFunSuite with Matchers with doobie.scalatest.I
   }
 
   test("Project insert should check") {
-    val projectData = ProjectData("testProjectData", 2)
-    check(Queries.Project.insert(projectData))
+    check(Queries.Project.insert("testProjectData", 2))
   }
 
   test("User create should check") {

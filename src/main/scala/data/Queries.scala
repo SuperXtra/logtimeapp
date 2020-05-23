@@ -7,21 +7,22 @@ import data.Entities.User
 import doobie.free.connection
 import doobie.{Fragment, Query0, Update0}
 import doobie.implicits._
+import doobie.util.log.LogHandler
 
 object Queries {
 
   object Project {
+    implicit val han = LogHandler.jdkLogHandler
 
-    def insert(project: ProjectData) = {
-      val created = DateTime.now.toString()
-      sql"insert into tb_project (user_id, project_name, create_time) VALUES (${project.user}, ${project.projectName}, $created)".update
+    def insert(projectName: String, userId: Int) = {
+      sql"insert into tb_project (user_id, project_name, create_time) VALUES (${userId}, ${projectName}, ${DateTime.now.toString()})".update
     }
 
-    def changeName(oldName: String, newName: String, requestingUserId: Int): Update0 = {
+    def changeName(oldName: String, newName: String, userId: Int): Update0 = {
       fr"""
         update tb_project set project_name = ${newName}
         where project_name = ${oldName}
-        and user_id = ${requestingUserId}
+        and user_id = ${userId}
         """.update
     }
 

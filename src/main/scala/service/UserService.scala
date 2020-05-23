@@ -14,7 +14,7 @@ class UserService() {
   val con = PostgresDb.xa
   implicit val cs = IO.contextShift(ExecutionContexts.synchronous)
 
-  def createNewUser(): IO[Either[Throwable, User]] = {
+  def createNewUser() = {
    val conn =  for {
       _ <-     Queries.User.insertUser(UUID.randomUUID().toString).run
       id <-     Queries.User.selectLastInsertedUser().unique
