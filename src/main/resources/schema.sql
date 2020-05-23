@@ -10,12 +10,11 @@ create table tb_project (
     id serial primary key,
     user_id integer not null,
     project_name varchar (255) unique not null,
-    create_time varchar (255) not null,
-    delete_time varchar (255) default null,
+    create_time timestamp not null,
+    delete_time timestamp default null,
     active boolean default true,
     foreign key (user_id) references tb_user (id)
 );
-
 
 create table tb_task (
     id serial primary key,
@@ -27,7 +26,7 @@ create table tb_task (
     volume integer,
     comment varchar (255),
     delete_time timestamp default null,
-    active boolean default true
+    active boolean default true,
     foreign key (project_id) references tb_project (id),
     foreign key (user_id) references tb_user (id),
     constraint uq_project_task_desc unique (project_id, task_description),
