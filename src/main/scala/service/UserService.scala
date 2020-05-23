@@ -23,7 +23,7 @@ class UserService() {
     conn.transact(con).attempt
   }
 
-  def checkIfExists(uuid: String): IO[Either[Throwable, List[User]]] = {
-    Queries.User.getUserId(uuid).to[List].transact(con).attempt
+  def checkIfExists(uuid: String): IO[Either[Throwable, Long]] = {
+    Queries.User.getUserId(uuid).unique.transact(con).attempt
   }
 }

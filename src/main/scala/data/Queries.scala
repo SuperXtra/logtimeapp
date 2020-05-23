@@ -3,19 +3,25 @@ package data
 import akka.http.scaladsl.model.DateTime
 import akka.http.scaladsl.model.DateTime
 import cats.free.Free
-import data.Entities.User
-import doobie.free.connection
-import doobie.{Fragment, Query0, Update0}
+import data.Entities.{Project, Task, User}
+import doobie.{Query0, Update0}
 import doobie.implicits._
 import doobie.util.log.LogHandler
+import java.sql.Timestamp
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
+
+import doobie.implicits.javasql._
+import doobie.implicits.javatime._
+
 
 object Queries {
+  implicit val han = LogHandler.jdkLogHandler
 
   object Project {
-    implicit val han = LogHandler.jdkLogHandler
 
     def insert(projectName: String, userId: Int) = {
-      sql"insert into tb_project (user_id, project_name, create_time) VALUES (${userId}, ${projectName}, ${DateTime.now.toString()})".update
+      sql"insert into tb_project (user_id, project_name, create_time) VALUES (${userId}, ${projectName}, ${DateTime.now.toString()}) returning id".query[Long]
     }
 
     def changeName(oldName: String, newName: String, userId: Int): Update0 = {
@@ -34,40 +40,38 @@ object Queries {
         """.update
     }
 
+    def getProjectId(projectName: String) = {
+      fr"select id from tb_project where project_name = ${projectName}".query[Long]
+    }
+
     def getProject(projectName: String) = {
-      fr"select * from tb_project where project_name = ${projectName}".query[Entities.Project]
+      fr"select id from tb_project where project_name = ${projectName}".query[Project]
     }
 
   }
 
   object Task {
 
-    def insert(create: TaskRequest, projectId: Int, userId: Int): Update0 = {
-      fr"""insert into tb_task (project_id, user_id, task_description, start_time, end_time, volume, comment) VALUES (
-         ${projectId}
-         ${userId}
-         ${create.taskDescription}
-         ${create.startTime.toString()}
-         ${create.durationTime}
-         ${create.volume}
-         ${create.comment}
-        )""".update
-      //TODO:
-      //add constraint that user cannot add new task where start time is between start and end of the other task
+
+    def insert(create: LogTask, projectId: Long, userId: Long) = {
+
+      val start = LocalDateTime.parse(create.startTime)
+      val end = start.plusMinutes(create.durationTime)
+
+      sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, volume, comment) VALUES (${projectId}, ${userId}, ${create.taskDescription}, ${Timestamp.valueOf(start)}, ${Timestamp.valueOf(end)}, ${create.volume}, ${create.comment}) returning id".query[Long]
+    }
+
+    def selectLastInsertedTask(id: Long) = {
+      sql"select * from tb_task where id = ${id}".query[Task]
     }
 
     def deleteTask(taskDescription: String, projectId: Int) = {
       val created = DateTime.now.toString()
-
       fr"""
           update tb_task set delete_time = ${created}
           where project_id = ${projectId} and
           user_id = ${taskDescription}
           """.update
-
-      // TODO:
-      //add constraint that delete time cannot be bedore start time or end time
-
     }
 
     def fetchTasksForProject(taskDescription: String, projectId: Int) = {
@@ -77,6 +81,7 @@ object Queries {
           and project_id = ${projectId}
           """.query[Entities.Task]
     }
+
   }
 
   object User {
@@ -92,12 +97,14 @@ object Queries {
       sql"select * from tb_user where id = $id".query[User]
     }
 
-      def getUserId(userIdentification : String): Query0[User] = {
+      def getUserId(userIdentification : String): Query0[Long] = {
         fr"""
-            select * from tb_user
+            select id from tb_user
             where user_identification = ${userIdentification}
-            """.query[Entities.User]
+            """.query[Long]
       }
+
+
 
   }
 

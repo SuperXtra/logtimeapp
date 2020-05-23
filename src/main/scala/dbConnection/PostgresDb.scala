@@ -36,13 +36,15 @@ object PostgresDb {
   )
 
 //
-  val createUser =
-    sql"""
-         create table if not exists tb_user (
-            id serial primary key,
-            user_identification varchar(50) unique not null
-          )
-         """.update.run
+//  val createUser =
+//    sql"""
+//         create table if not exists tb_user (
+//            id serial primary key,
+//            user_identification varchar(50) unique not null
+//          )
+//         """.update.run
+//
+//  CREATE EXTENSION btree_gist;
 //
 //  val createProject =
 //    sql"""
@@ -52,6 +54,7 @@ object PostgresDb {
 //            project_name varchar (255) unique not null,
 //            create_time varchar (255) not null,
 //            delete_time varchar (255) default null,
+  //          active boolean default true,
 //            foreign key (user_id) references tb_user (id)
 //            )
 //         """.update.run
@@ -63,14 +66,16 @@ object PostgresDb {
 //            project_id integer not null,
 //            user_id integer not null,
 //            task_description varchar (255) not null,
-//            start_time varchar (255) not null,
-//            end_time varchar (255) not null,
+//            start_time timestamp not null,
+//            end_time timestamp not null,
 //            volume integer,
 //            comment varchar (255),
-//            delete_time varchar(255) default null,
+//            delete_time timestamp default null,
+  //          active boolean default true
 //            foreign key (project_id) references tb_project (id),
 //            foreign key (user_id) references tb_user (id),
-//            constraint uq_project_task_desc unique (project_id, task_description)
+//            constraint uq_project_task_desc unique (project_id, task_description),
+//            exclude using gist (user_id with =, tsrange(start_time, end_time) with &&) where (active)
 //         )
 //         """.update.run
 //
@@ -79,15 +84,6 @@ object PostgresDb {
 
 //  val insert: Int = sql"insert into tb_user (user_identification) values (${UUID.randomUUID().toString})".update.run.transact(xa).unsafeRunSync()
 
-  def test = {
-    val a = for {
-      _ <- sql"insert into tb_user (user_identification) values (${UUID.randomUUID().toString})".update.run
-      id <- sql"select lastval()".query[Int].unique
-      u <- sql"select * from tb_user where id = $id".query[User].unique
-    } yield u
-
-    a.transact(xa).unsafeRunSync()
-  }
 
 //  def test(userIdentification: String) = sql"select * from tb_user where user_identification = ${userIdentification}"
 //    .query[User]

@@ -1,0 +1,8 @@
+package error
+
+sealed trait AppError
+
+case object UpdateUnsuccessfulProjectDoesNotExist extends AppError
+case object DeleteUnsuccessfulProjectDoesNotExist extends AppError
+case object CannotLogNewTaskWithTheOverlappingTimeRangeForTheSameUser extends AppError
+case object CannotLogNewTaskWithDuplicateTaskDescriptionUnderTheSameProject extends AppError

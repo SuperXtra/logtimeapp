@@ -4,15 +4,18 @@ import akka.http.scaladsl.model.DateTime
 
 case class CreateProject(projectName: String, userIdentification: String)
 case class ChangeProjectName(oldProjectName: String, projectName: String, userIdentification: String)
+case class DeleteProject(projectName: String, userIdentification: String)
 
-
-case class TaskRequest(
+case class LogTask(
+                        projectName: String,
+                        userIdentification: String,
                         taskDescription: String,
-                        startTime: DateTime,
-                        durationTime: Int,
+                        startTime: String,
+                        durationTime: Long,
                         volume: Option[Int],
                         comment: Option[String]
                       )
+
 case class DeleteTaskRequest(
 
                             )

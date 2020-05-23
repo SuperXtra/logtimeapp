@@ -16,7 +16,8 @@ object Entities {
                    endTime: Option[String],
                    volume: Option[Int],
                    comment: Option[String],
-                   deleteTime: Option[String]
+                   deleteTime: Option[String],
+                   active: Boolean
                  )
 
   case class Project(
@@ -24,7 +25,8 @@ object Entities {
                       userId: Int,
                       projectName: String,
                       createTime: String,
-                      deleteTime: Option[String]
+                      deleteTime: Option[String],
+                      active: Boolean
                     )
 
 
