@@ -20,11 +20,11 @@ object Queries {
 
   object Project {
 
-    def insert(projectName: String, userId: Int) = {
-      sql"insert into tb_project (user_id, project_name, create_time) VALUES (${userId}, ${projectName}, ${DateTime.now.toString()}) returning id".query[Long]
+    def insert(projectName: String, userId: Long) = {
+      sql"insert into tb_project (user_id, project_name, create_time) VALUES (${userId}, ${projectName}, ${Timestamp.valueOf(LocalDateTime.now())}) returning id".query[Long]
     }
 
-    def changeName(oldName: String, newName: String, userId: Int): Update0 = {
+    def changeName(oldName: String, newName: String, userId: Long): Update0 = {
       fr"""
         update tb_project set project_name = ${newName}
         where project_name = ${oldName}
@@ -32,20 +32,20 @@ object Queries {
         """.update
     }
 
-    def deleteProject(requestingUserId: Int, projectName: String, deleted: String): Update0 = {
+    def deleteProject(requestingUserId: Long, projectName: String): Update0 = {
       fr"""
-        update tb_project set delete_time = ${deleted}
+        update tb_project set delete_time = ${Timestamp.valueOf(LocalDateTime.now())}, active = false
         where project_name = ${projectName}
         and user_id = ${requestingUserId}
         """.update
     }
 
     def getProjectId(projectName: String) = {
-      fr"select id from tb_project where project_name = ${projectName}".query[Long]
+      sql"select id from tb_project where project_name = ${projectName}".query[Long]
     }
 
     def getProject(projectName: String) = {
-      fr"select id from tb_project where project_name = ${projectName}".query[Project]
+      sql"select * from tb_project where project_name = ${projectName}".query[Project]
     }
 
   }

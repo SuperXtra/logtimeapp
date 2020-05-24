@@ -25,7 +25,7 @@ class ProjectService() {
 
     val x = for {
       userId <- Queries.User.getUserId(project.userIdentification).unique
-      projectId <- Queries.Project.insert(project.projectName, userId.toInt).unique
+      projectId <- Queries.Project.insert(project.projectName, userId).unique
     } yield projectId
 
     x.transact(con).attemptSomeSqlState {
@@ -37,7 +37,7 @@ class ProjectService() {
     //TODO handle situation when there is no user with given uuid
     val y = for {
       userId <- Queries.User.getUserId(project.userIdentification).unique
-      updateResult <- Queries.Project.changeName(project.oldProjectName,project.projectName, userId.toInt).run
+      updateResult <- Queries.Project.changeName(project.oldProjectName,project.projectName, userId).run
       project <- Queries.Project.getProject(project.projectName).unique
     } yield (project, updateResult)
 
@@ -51,7 +51,7 @@ class ProjectService() {
     //TODO handle situation when there is no user with given uuid
     val z = for {
       user <- Queries.User.getUserId(project.userIdentification).unique
-      deleteResult <- Queries.Project.deleteProject(user.toInt, project.projectName, DateTime.now.toString()).run
+      deleteResult <- Queries.Project.deleteProject(user.toInt, project.projectName).run
       project <- Queries.Project.getProject(project.projectName).unique
     } yield (project, deleteResult)
 

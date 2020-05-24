@@ -27,7 +27,7 @@ class QueriesCheckSpec extends AnyFunSuite with Matchers with doobie.scalatest.I
   }
 
   test("Project delete should check") {
-    check(Queries.Project.deleteProject(1, "test project", "2020-05-22T08:58:45"))
+    check(Queries.Project.deleteProject(1, "test project"))
   }
 
   test("Project insert should check") {
