@@ -1,5 +1,7 @@
 package data
 
+import java.sql.Timestamp
+
 object Entities {
 
   case class User(
@@ -13,7 +15,7 @@ object Entities {
                    userId: Int,
                    taskDescription: String,
                    startTime: String,
-                   endTime: Option[String],
+                   endTime: String,
                    volume: Option[Int],
                    comment: Option[String],
                    deleteTime: Option[String],

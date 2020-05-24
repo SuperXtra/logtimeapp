@@ -26,9 +26,9 @@ class QueriesCheckSpec extends AnyFunSuite with Matchers with doobie.scalatest.I
     check(Queries.Project.changeName("oldName", "newName", 1))
   }
 
-  test("Project delete should check") {
-    check(Queries.Project.deleteProject(1, "test project"))
-  }
+//  test("Project delete should check") {
+//    check(Queries.Project.deleteProject(1, "test project"))
+//  }
 
   test("Project insert should check") {
     check(Queries.Project.insert("testProjectData", 2))
@@ -45,9 +45,9 @@ class QueriesCheckSpec extends AnyFunSuite with Matchers with doobie.scalatest.I
     check(Queries.User.getUserId("sdasdamsdaksdm"))
   }
 
-  test("Task should fetch correctly by task description and project id") {
-    check(Queries.Task.fetchTasksForProject("test task description", 2))
-  }
+//  test("Task should fetch correctly by task description and project id") {
+//    check(Queries.Task.fetchTasksForProject("test task description", 2))
+//  }
 
   test("User select last inserted") {
     check(Queries.User.selectLastInsertedUser())

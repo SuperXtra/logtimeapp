@@ -1,6 +1,6 @@
 package service
 
-import data.{ChangeProjectName, CreateProject, DeleteProject, Entities, LogTask, Queries}
+import data.{ChangeProjectName, CreateProject, DeleteProject, DeleteTask, Entities, LogTask, Queries, UpdateTask, UpdateTaskInsert}
 import dbConnection.PostgresDb
 import java.util.UUID
 
@@ -33,4 +33,52 @@ class TaskService() {
       case sqlstate.class23.UNIQUE_VIOLATION => CannotLogNewTaskWithDuplicateTaskDescriptionUnderTheSameProject
     }
   }
+
+  def deleteTask(deleteTaskRequest: DeleteTask) = {
+      val x = for {
+        projectId <- Queries.Project.getProjectId(deleteTaskRequest.projectName).unique
+        userId <- Queries.User.getUserId(deleteTaskRequest.userIdentification.toString).unique
+        updatedCount <- Queries.Task.deleteTask(deleteTaskRequest.taskDescription, projectId, userId).run
+      } yield updatedCount
+
+    x.transact(con).attemptSomeSqlState {
+      case x => s" error $x"
+    }
+  }
+
+  def updateTask(updateTask: UpdateTask) = {
+
+    def newTask(oldTask: Task, updateTask: UpdateTask) = {
+      val newStartTime = updateTask.startTime match {
+        case Some(value) => value
+        case None => oldTask.startTime
+      }
+
+      val newVolume = updateTask.volume match {
+        case Some(value) => Some(value)
+        case None => oldTask.volume
+      }
+
+      val comment = updateTask.comment match {
+        case Some(value) => Some(value)
+        case None => oldTask.comment
+        }
+
+      UpdateTaskInsert(oldTask.projectId, oldTask.userId, updateTask.newTaskDescription,newStartTime, updateTask.durationTime, newVolume,comment)
+    }
+
+    val update = for {
+      userId <- Queries.User.getUserId(updateTask.userIdentification).unique
+      oldTask <- Queries.Task.fetchTask(updateTask.oldTaskDescription, userId).unique
+      _ <- Queries.Task.deleteTask(oldTask.taskDescription, oldTask.projectId, oldTask.userId).run
+      updated <- Queries.Task.insertUpdate(newTask(oldTask, updateTask)).unique
+    } yield updated
+
+    update.transact(con).attemptSomeSqlState {
+      x => s"error: $x"
+    }
+
+
+  }
+
 }

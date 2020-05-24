@@ -29,6 +29,8 @@ create table tb_task (
     active boolean default true,
     foreign key (project_id) references tb_project (id),
     foreign key (user_id) references tb_user (id),
-    constraint uq_project_task_desc unique (project_id, task_description),
+--    constraint uq_project_task_desc unique (project_id, task_description),
     exclude using gist (user_id with =, tsrange(start_time, end_time) with &&) where (active)
 );
+
+create unique index uq_project_task_desc_active on tb_task (project_id, task_description) where active is true;

@@ -12,7 +12,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import data.{ChangeProjectName, CreateProject, DeleteProject, Entities, LogTask}
+import data.{ChangeProjectName, CreateProject, DeleteProject, DeleteTask, Entities, LogTask, ProjecReport, UpdateTask}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server.Directives
 import error.{DeleteUnsuccessfulProjectDoesNotExist, UpdateUnsuccessfulProjectDoesNotExist}
@@ -36,7 +36,7 @@ object WebApp extends App with JsonSupport {
   implicit val executionContext = system.dispatcher
 
   val route1 =
-    path("createUser") {
+    path("user") {
       post {
         service.createNewUser().map {
           case Left(value: Throwable) => complete(value)
@@ -46,7 +46,7 @@ object WebApp extends App with JsonSupport {
     }
 
   val route2 =
-    path("createProject") {
+    path("project") {
       post {
         entity(as[CreateProject]) { project =>
           projectService.createNewProject(project).map {
@@ -58,7 +58,7 @@ object WebApp extends App with JsonSupport {
     }
 
   val route3 =
-    path("updateProject") {
+    path("project") {
       put {
         entity(as[ChangeProjectName]) { project =>
           projectService.updateProjectName(project).map {
@@ -75,7 +75,7 @@ object WebApp extends App with JsonSupport {
     }
 
   val route4 =
-    path("deleteProject") {
+    path("project") {
       delete {
         entity(as[DeleteProject]) { project =>
           projectService.deleteProject(project).map {
@@ -92,7 +92,7 @@ object WebApp extends App with JsonSupport {
     }
 
   val route5 =
-    path("createTask") {
+    path("task") {
       post {
         entity(as[LogTask]) { task =>
           taskService.logTask(task).map {
@@ -103,7 +103,43 @@ object WebApp extends App with JsonSupport {
       }
     }
 
-  val routes: Route = concat(route1, route2, route3, route4, route5)
+  val route6 =
+    path("task"){
+      delete {
+        entity(as[DeleteTask]) { task =>
+          taskService.deleteTask(task).map {
+            case Left(value) => complete(value)
+            case Right(value) => value match {
+              case x => complete(s"number of affected rows: $x")
+            }
+          }.unsafeRunSync()
+        }
+      }
+    }
+
+  val route7 =
+    path("task") {
+      put {
+        entity(as[UpdateTask]) { update =>
+          taskService.updateTask(update).map {
+            case Left(value) => complete(value)
+            case Right(value) => value match {
+              case x  => complete(s"Updated succesfully, new id: ${x}")
+              case _ => complete("could not update")
+            }
+          }.unsafeRunSync()
+        }
+      }
+    }
+
+  val route8 =
+    path("project" / Segment) { projectName: String =>
+      get {
+          complete(projectService.tasksAndDuration(projectName).unsafeRunSync())
+        }
+      }
+
+  val routes: Route = concat(route1, route2, route3, route4, route5, route6, route7, route8)
 
 
   val bindingFuture = Http().bindAndHandle(routes, "localhost", 8080)

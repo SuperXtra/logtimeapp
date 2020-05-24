@@ -32,7 +32,7 @@ object Queries {
         """.update
     }
 
-    def deleteProject(requestingUserId: Long, projectName: String): Update0 = {
+    def deleteProject(requestingUserId: Long, projectName: String,deleteTime: Timestamp): Update0 = {
       fr"""
         update tb_project set delete_time = ${Timestamp.valueOf(LocalDateTime.now())}, active = false
         where project_name = ${projectName}
@@ -48,9 +48,20 @@ object Queries {
       sql"select * from tb_project where project_name = ${projectName}".query[Project]
     }
 
+    def projectExists(projectName: String) = {
+      sql"select exists(select * from tb_project where project_name = ${projectName})".query[Boolean]
+    }
+
+
   }
 
   object Task {
+    def insertUpdate(update: UpdateTaskInsert) = {
+      val start = LocalDateTime.parse(update.startTime)
+      val end = start.plusMinutes(update.duration)
+      sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, volume, comment) VALUES (${update.projectId}, ${update.userId}, ${update.taskDescription}, ${Timestamp.valueOf(start)}, ${Timestamp.valueOf(end)}, ${update.volume}, ${update.comment}) returning id".query[Long]
+
+    }
 
 
     def insert(create: LogTask, projectId: Long, userId: Long) = {
@@ -65,21 +76,34 @@ object Queries {
       sql"select * from tb_task where id = ${id}".query[Task]
     }
 
-    def deleteTask(taskDescription: String, projectId: Int) = {
-      val created = DateTime.now.toString()
+    def deleteTask(taskDescription: String, projectId: Long, userId: Long) = {
+      val created = Timestamp.valueOf(LocalDateTime.now())
       fr"""
-          update tb_task set delete_time = ${created}
+          update tb_task set delete_time = ${created}, active = false
           where project_id = ${projectId} and
-          user_id = ${taskDescription}
+          user_id = ${userId}
+          and task_description = ${taskDescription}
+          and active = true
           """.update
     }
 
-    def fetchTasksForProject(taskDescription: String, projectId: Int) = {
+    def fetchTasksForProject(projectId: Long) = {
       fr"""
           select * from tb_task
-          where task_description = ${taskDescription}
-          and project_id = ${projectId}
-          """.query[Entities.Task]
+          where project_id = ${projectId}
+          and active = true
+          """.query[Task].to[List]
+    }
+
+    def fetchTask(taskDescription: String, userId: Long) = {
+      sql"select * from tb_task where task_description = ${taskDescription} and user_id = ${userId} and active = true".query[Task]
+    }
+
+    def deleteTasksForProject(projectId: Long, deleteTime: Timestamp): Update0 = {
+      fr"""
+        update tb_task set delete_time = ${deleteTime}, active = false
+        where project_id = ${projectId}
+        """.update
     }
 
   }
@@ -97,15 +121,16 @@ object Queries {
       sql"select * from tb_user where id = $id".query[User]
     }
 
-      def getUserId(userIdentification : String): Query0[Long] = {
+    def getUserId(userIdentification : String): Query0[Long] = {
         fr"""
             select id from tb_user
             where user_identification = ${userIdentification}
             """.query[Long]
-      }
+    }
 
-
-
+    def userExists(userIdentification: String) = {
+      sql"select exists(select * from tb_user where user_identification = ${userIdentification})".query[Boolean]
+    }
   }
 
 }
