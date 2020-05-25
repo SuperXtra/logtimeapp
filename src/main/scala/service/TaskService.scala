@@ -12,6 +12,7 @@ import data.Entities._
 import doobie.util.ExecutionContexts
 import doobie.util.log.LogHandler
 import error._
+import cats.implicits._
 
 class TaskService() {
 
@@ -19,7 +20,25 @@ class TaskService() {
   implicit val cs = IO.contextShift(ExecutionContexts.synchronous)
 
 
-  def logTask(task: LogTask): IO[Either[AppError, Task]] = {
+  def logTask(task: LogTask) = {
+
+//        Queries.Project.getProjectId(task.projectName).map {
+//          case Some(projectId) => {
+//            Queries.User.getUserId(task.userIdentification).map {
+//              case Some(userId) => for {
+//                id <- Queries.Task.insert(task, projectId, userId).unique
+//                task <- Queries.Task.selectLastInsertedTask(id).unique
+//              } yield task.asRight
+//              case None => CannotLogNewTaskWithDuplicateTaskDescriptionUnderTheSameProject.asLeft
+//            }
+//          }
+//          case None => CannotLogNewTaskWithDuplicateTaskDescriptionUnderTheSameProject.asLeft
+//        }.transact(con).attemptSomeSqlState {
+//          case sqlstate.class23.EXCLUSION_VIOLATION => CannotLogNewTaskWithTheOverlappingTimeRangeForTheSameUser.asLeft
+//          case sqlstate.class23.UNIQUE_VIOLATION => CannotLogNewTaskWithDuplicateTaskDescriptionUnderTheSameProject.asLeft
+//        }
+//      }
+
 
     val z = for {
       projectId <- Queries.Project.getProjectId(task.projectName).unique
@@ -28,7 +47,7 @@ class TaskService() {
       task <- Queries.Task.selectLastInsertedTask(id).unique
     } yield task
 
-    z.transact(con).attemptSomeSqlState{
+    z.transact(con).attemptSomeSqlState {
       case sqlstate.class23.EXCLUSION_VIOLATION => CannotLogNewTaskWithTheOverlappingTimeRangeForTheSameUser
       case sqlstate.class23.UNIQUE_VIOLATION => CannotLogNewTaskWithDuplicateTaskDescriptionUnderTheSameProject
     }
@@ -49,20 +68,24 @@ class TaskService() {
   def updateTask(updateTask: UpdateTask) = {
 
     def newTask(oldTask: Task, updateTask: UpdateTask) = {
-      val newStartTime = updateTask.startTime match {
-        case Some(value) => value
-        case None => oldTask.startTime
-      }
+      val newStartTime: String = updateTask.startTime getOrElse oldTask.startTime
 
-      val newVolume = updateTask.volume match {
-        case Some(value) => Some(value)
-        case None => oldTask.volume
+      val newVolume: Option[Int] = updateTask.volume match {
+        case Some(value: Int) => Some(value)
+        case None => oldTask.volume match {
+          case Some(value: Int) => Some(value)
+          case None => None
+        }
       }
 
       val comment = updateTask.comment match {
         case Some(value) => Some(value)
-        case None => oldTask.comment
+        case None => oldTask.comment match {
+          case Some(value) => Some(value)
+          case None => None
         }
+      }
+
 
       UpdateTaskInsert(oldTask.projectId, oldTask.userId, updateTask.newTaskDescription,newStartTime, updateTask.durationTime, newVolume,comment)
     }
@@ -77,8 +100,5 @@ class TaskService() {
     update.transact(con).attemptSomeSqlState {
       x => s"error: $x"
     }
-
-
   }
-
 }

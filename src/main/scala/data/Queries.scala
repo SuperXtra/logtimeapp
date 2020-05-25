@@ -121,7 +121,7 @@ object Queries {
       sql"select * from tb_user where id = $id".query[User]
     }
 
-    def getUserId(userIdentification : String): Query0[Long] = {
+    def getUserId(userIdentification : String) = {
         fr"""
             select id from tb_user
             where user_identification = ${userIdentification}

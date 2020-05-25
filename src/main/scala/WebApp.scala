@@ -19,6 +19,7 @@ import error.{DeleteUnsuccessfulProjectDoesNotExist, UpdateUnsuccessfulProjectDo
 import util.JsonSupport
 import spray.json._
 
+import scala.concurrent.Future
 import scala.io.StdIn
 
 object WebApp extends App with JsonSupport {
@@ -124,8 +125,7 @@ object WebApp extends App with JsonSupport {
           taskService.updateTask(update).map {
             case Left(value) => complete(value)
             case Right(value) => value match {
-              case x  => complete(s"Updated succesfully, new id: ${x}")
-              case _ => complete("could not update")
+              case x => complete(s"Updated succesfully, new id: ${x}")
             }
           }.unsafeRunSync()
         }
@@ -142,5 +142,5 @@ object WebApp extends App with JsonSupport {
   val routes: Route = concat(route1, route2, route3, route4, route5, route6, route7, route8)
 
 
-  val bindingFuture = Http().bindAndHandle(routes, "localhost", 8080)
+  val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(routes, "localhost", 8081)
 }
