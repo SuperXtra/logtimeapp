@@ -3,6 +3,8 @@ package data
 import java.sql.Date
 import java.time.ZonedDateTime
 
+import data.Entities.{Project, Task}
+
 case class CreateProject(projectName: String, userIdentification: String)
 case class ProjecReport(projectName: String)
 case class ChangeProjectName(oldProjectName: String, projectName: String, userIdentification: String)
@@ -35,3 +37,10 @@ case class LogTask(
                         volume: Option[Int],
                         comment: Option[String]
                       )
+
+case class ProjectReport(
+                        project: Project,
+                        tasks: Tasks,
+                        workedTimeInMinutes: Long
+                        )
+case class Tasks(tasks: List[Task])

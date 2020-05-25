@@ -16,7 +16,7 @@ object Queries {
 
 
     def insert(projectName: String, userId: Long) = {
-      sql"insert into tb_project (user_id, project_name, create_time) VALUES (${userId}, ${projectName}, ${ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime}) returning id".query[Long]
+      sql"insert into tb_project (user_id, project_name, create_time) VALUES (${userId}, ${projectName}, ${ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime}) returning id".query[Long].unique
     }
 
     def changeName(oldName: String, newName: String, userId: Long): Update0 = {
@@ -28,8 +28,14 @@ object Queries {
     }
 
     def deleteProject(requestingUserId: Long, projectName: String,deleteTime: ZonedDateTime): Update0 = {
+
+      println(deleteTime)
+      println(projectName)
+      println(requestingUserId)
+      println(s"update tb_project set delete_time = ${deleteTime.toLocalDateTime}, active = false where project_name = ${projectName} and user_id = ${requestingUserId})")
+
       fr"""
-        update tb_project set delete_time = ${ZonedDateTime.now(ZoneOffset.UTC)}, active = false
+        update tb_project set delete_time = ${deleteTime.toLocalDateTime}, active = false
         where project_name = ${projectName}
         and user_id = ${requestingUserId}
         """.update
@@ -40,7 +46,7 @@ object Queries {
     }
 
     def getProject(projectName: String) = {
-      sql"select * from tb_project where project_name = ${projectName}".query[Project]
+      sql"select * from tb_project where project_name = ${projectName}".query[Project].option
     }
 
     def projectExists(projectName: String) = {
@@ -94,7 +100,7 @@ object Queries {
 
     def deleteTasksForProject(projectId: Long, deleteTime: ZonedDateTime): Update0 = {
       fr"""
-        update tb_task set delete_time = ${deleteTime}, active = false
+        update tb_task set delete_time = ${deleteTime.toLocalDateTime}, active = false
         where project_id = ${projectId}
         """.update
     }
@@ -103,22 +109,22 @@ object Queries {
 
   object User {
       def insertUser(userIdentification : String) = {
-        sql"insert into tb_user (user_identification) values (${userIdentification})".update
+        sql"insert into tb_user (user_identification) values (${userIdentification}) returning id".query[Long].option
       }
 
     def selectLastInsertedUser() = {
       sql"select lastval()".query[Long]
     }
 
-    def selectByUserIdentity(id: Int) = {
-      sql"select * from tb_user where id = $id".query[User]
+    def selectByUserIdentity(id: Long) = {
+      sql"select * from tb_user where id = $id".query[User].option
     }
 
     def getUserId(userIdentification : String) = {
         fr"""
             select id from tb_user
             where user_identification = ${userIdentification}
-            """.query[Long]
+            """.query[Long].option
     }
 
     def userExists(userIdentification: String) = {

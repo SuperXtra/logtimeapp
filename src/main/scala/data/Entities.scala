@@ -1,6 +1,6 @@
 package data
 
-import java.time.ZonedDateTime
+import java.time.{LocalDateTime, ZonedDateTime}
 
 import org.joda.time.DateTime
 
@@ -17,12 +17,12 @@ object Entities {
                    projectId: Long,
                    userId: Long,
                    taskDescription: String,
-                   startTime: ZonedDateTime,
-                   endTime: ZonedDateTime,
+                   startTime: LocalDateTime,
+                   endTime: LocalDateTime,
                    duration: Long,
                    volume: Option[Int],
                    comment: Option[String],
-                   deleteTime: Option[String],
+                   deleteTime: Option[LocalDateTime],
                    active: Boolean
                  )
 
@@ -30,11 +30,10 @@ object Entities {
                       id: Long,
                       userId: Long,
                       projectName: String,
-                      createTime: ZonedDateTime,
-                      deleteTime: Option[ZonedDateTime],
+                      createTime: LocalDateTime,
+                      deleteTime: Option[LocalDateTime],
                       active: Boolean
                     )
-
 
 }
 

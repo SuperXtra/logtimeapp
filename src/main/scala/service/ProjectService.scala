@@ -1,93 +1,101 @@
 package service
 
-import java.sql.{Date, Timestamp}
-import java.time.{Duration, LocalDateTime, ZoneOffset, ZonedDateTime}
+import cats.effect.{ContextShift, IO}
+import java.time._
 
-import data.{ChangeProjectName, CreateProject, DeleteProject, Queries}
-import dbConnection.PostgresDb
-import java.util.UUID
-
-import akka.http.scaladsl.model.DateTime
+import cats.data.EitherT
+import data.Entities._
 import doobie.postgres._
 import doobie.implicits._
-import cats.effect.IO
-import data.Entities.User
 import doobie.util.ExecutionContexts
-import doobie.util.log.LogHandler
+import dbConnection.PostgresDb
+import data._
+import doobie.util.transactor.Transactor.Aux
+import error._
+import util.TimeZoneUTC
 
-class ProjectService() {
-  //TODO
+class ProjectService(con: Aux[IO, Unit])(implicit val contextShift: ContextShift[IO] ) {
 
-//  implicit val han = LogHandler.jdkLogHandler
-
-  val con = PostgresDb.xa
-  implicit val cs = IO.contextShift(ExecutionContexts.synchronous)
-
-  def createNewProject(project: CreateProject) = {
-    //TODO handle situation when there is no user with given uuid
-
-    val x = for {
-      exists <- Queries.User.userExists(project.userIdentification).unique
-      userId <- Queries.User.getUserId(project.userIdentification).unique
-      projectId <- Queries.Project.insert(project.projectName, userId).unique
-    } yield projectId
-
-    x.transact(con).attemptSomeSqlState {
-      case sqlstate.class23.UNIQUE_VIOLATION => s"Project with name: [ ${project.projectName} ] already exists, please select different name"
-    }
+  def createNewProject(project: CreateProject): IO[Either[AppError, Long]] = {
+    (for {
+      userId <- getExistingUserId(project.userIdentification)
+      projectId <- insertProject(project.projectName, userId)
+    } yield projectId).value
   }
 
 
-  def updateProjectName(project: ChangeProjectName) = {
-    //TODO handle situation when there is no user with given uuid
-    val y = for {
-      userId <- Queries.User.getUserId(project.userIdentification).unique
-      updateResult <- Queries.Project.changeName(project.oldProjectName,project.projectName, userId).run
-      project <- Queries.Project.getProject(project.projectName).unique
-    } yield (project, updateResult)
+  def updateProjectName(project: ChangeProjectName): IO[Either[AppError, Project]] = (for {
+      userId <- getExistingUserId(project.userIdentification)
+      _ <- changeProjectName(project.oldProjectName,project.projectName, userId)
+      updatedRecord <- findProjectById(project.projectName)
+    } yield updatedRecord).value
 
-    y.transact(con).attemptSomeSqlState {
-      case x => s"returned error is: ${x.value}"
-    }
+  def deleteProject(project: DeleteProject): EitherT[IO, AppError, Unit] = {
+    //TODO try to move delete time to for-comp
+    val deleteTime = TimeZoneUTC.currentTime
+    for {
+      userId <- getExistingUserId(project.userIdentification)
+      _ <- deleteProject(userId, project.projectName, deleteTime)
+      projectId <- findProjectById(project.projectName)
+      _ <- deleteTasksForProject(projectId.id, deleteTime)
+    } yield ()
   }
 
-  def deleteProject(project: DeleteProject) = {
-    val deleteTime = ZonedDateTime.now(ZoneOffset.UTC)
-    //TODO handle situation when there is no user with given uuid
-    val z = for {
-      user <- Queries.User.getUserId(project.userIdentification).unique
-      deleteResult <- Queries.Project.deleteProject(user.toInt, project.projectName, deleteTime).run
-      project <- Queries.Project.getProject(project.projectName).unique
-      _ <- Queries.Task.deleteTasksForProject(project.id, deleteTime).run
-    } yield (project, deleteResult)
-
-    z.transact(con).attemptSomeSqlState {
-      case x => s"returned error is ${x.value}"
-    }
+  def tasksAndDuration(projectName: String): IO[Either[AppError, ProjectReport]] = {
+    (for {
+      project <- findProjectById(projectName)
+      projectTasks <- fetchTasksForProject(project.id)
+    } yield {
+      val totalDuration = projectTasks.map(_.duration).sum
+      ProjectReport(project, Tasks(projectTasks), totalDuration)
+    }).value
   }
 
-  def tasksAndDuration(projectName: String) = {
+  private def getExistingUserId(userIdentification: String): EitherT[IO, AppError, Long] = {
+    EitherT.fromOptionF(Queries.User.getUserId(userIdentification).transact(con), UserNotFound)
+  }
 
-    val s = for {
-      projectId <- Queries.Project.getProjectId(projectName).unique
-      projectTasks <- Queries.Task.fetchTasksForProject(projectId)
-    } yield (projectName, projectTasks.map { task =>
-      val taskName = task.taskDescription
-      import java.time.LocalDateTime
-      import java.time.format.DateTimeFormatter
-      val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+  private def insertProject(projectName: String, userId: Long): EitherT[IO, AppError, Long] = {
+    EitherT(Queries.Project.insert(projectName, userId).transact(con).attemptSomeSqlState{
+      case sqlstate.class23.EXCLUSION_VIOLATION => CannotLogNewTaskWithTheOverlappingTimeRangeForTheSameUser
+      case sqlstate.class23.UNIQUE_VIOLATION => CannotLogNewTaskWithDuplicateTaskDescriptionUnderTheSameProject
+    }
+    )
+  }
 
-
-      val start = task.startTime.toLocalDate
-      val endTime =task.endTime.toLocalDate
-
-      val duration = Duration.between(start,endTime).toMinutes.toInt
-
-      (taskName, duration)
+  private def changeProjectName(oldProjectName: String, projectName: String, userId: Long): EitherT[IO, AppError, Int] = {
+    EitherT(Queries.Project.changeName(oldProjectName,projectName, userId).run.transact(con).attemptSomeSqlState{
+      case sqlstate.class23.UNIQUE_VIOLATION => CannotChangeNameGivenProjectNameExistsAlready
     })
-
-    s.transact(con)
   }
 
+  private def findProjectById(projectName: String): EitherT[IO, AppError, Project] = {
+    EitherT.fromOptionF(Queries.Project.getProject(projectName).transact(con), ProjectNotCreated)
+  }
 
+  private def deleteProject(userId: Long, projectName: String, timeZoneUTC: ZonedDateTime): EitherT[IO, AppError, Int] = {
+    println(s"should delete: ${userId}, ${projectName}, ${timeZoneUTC}")
+    EitherT(Queries.Project.deleteProject(userId, projectName, timeZoneUTC).run.transact(con).attemptSomeSqlState{
+      case x => {
+        println(s"delete project error: $x")
+        DeleteProjectUnsuccessful
+      }
+
+    })
+  }
+
+  private def deleteTasksForProject(id: Long, deleteTime: ZonedDateTime): EitherT[IO, AppError, Int] = {
+    EitherT(Queries.Task.deleteTasksForProject(id, deleteTime).run.transact(con).attemptSomeSqlState{
+      case x => {
+        println(s"delete project task error: $x")
+        DeleteProjectUnsuccessful
+      }
+    })
+  }
+
+  private def fetchTasksForProject(id: Long): EitherT[IO, AppError, List[Task]] = {
+    EitherT(Queries.Task.fetchTasksForProject(id).transact(con).attemptSomeSqlState {
+      case _ => FetchingTaskForProjectUnsuccessful
+    })
+  }
 }

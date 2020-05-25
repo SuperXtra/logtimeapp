@@ -3,27 +3,36 @@ package service
 import data.Queries
 import dbConnection.PostgresDb
 import java.util.UUID
+
+import cats.data.EitherT
 import doobie.implicits._
-import cats.effect.IO
+import cats.effect.{ContextShift, IO}
 import data.Entities.User
+import doobie.postgres.sqlstate
 import doobie.util.ExecutionContexts
+import doobie.util.transactor.Transactor.Aux
+import error._
 
 
-class UserService() {
+class UserService(con: Aux[IO, Unit])(implicit val contextShift: ContextShift[IO]) {
 
-  val con = PostgresDb.xa
-  implicit val cs = IO.contextShift(ExecutionContexts.synchronous)
+  def createNewUser(): IO[Either[AppError, User]] = (
+    for {
+    id <- createUser()
+    user <- getExistingUserById(id)
+  } yield user
+    ).value
 
-  def createNewUser() = {
-   val conn =  for {
-      _ <-     Queries.User.insertUser(UUID.randomUUID().toString).run
-      id <-     Queries.User.selectLastInsertedUser().unique
-      user <-     Queries.User.selectByUserIdentity(id.toInt).unique
-    } yield user
-    conn.transact(con).attempt
+
+  private def createUser(): EitherT[IO, AppError, Long] = {
+    EitherT.fromOptionF(Queries.User.insertUser(UUID.randomUUID().toString).transact(con), CannotCreateUserWithGeneratedUUID)
   }
 
-  def checkIfExists(uuid: String): IO[Either[Throwable, Long]] = {
-    Queries.User.getUserId(uuid).unique.transact(con).attempt
+  private def getExistingUserById(id: Long): EitherT[IO, AppError, User] = {
+    EitherT.fromOptionF(Queries.User.selectByUserIdentity(id).transact(con), UserNotFound)
   }
+
+  def getExistingUserId(uuid: String): EitherT[IO, UserNotFound.type, Long] =
+    EitherT.fromOptionF(Queries.User.getUserId(uuid).transact(con), UserNotFound)
+
 }

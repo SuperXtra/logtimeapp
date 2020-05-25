@@ -6,3 +6,9 @@ case object UpdateUnsuccessfulProjectDoesNotExist extends AppError
 case object DeleteUnsuccessfulProjectDoesNotExist extends AppError
 case object CannotLogNewTaskWithTheOverlappingTimeRangeForTheSameUser extends AppError
 case object CannotLogNewTaskWithDuplicateTaskDescriptionUnderTheSameProject extends AppError
+case object UserNotFound extends AppError
+case object CannotChangeNameGivenProjectNameExistsAlready extends AppError
+case object ProjectNotCreated extends AppError
+case object CannotCreateUserWithGeneratedUUID extends AppError
+case object DeleteProjectUnsuccessful extends AppError
+case object FetchingTaskForProjectUnsuccessful extends AppError
