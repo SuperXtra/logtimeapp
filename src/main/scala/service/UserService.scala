@@ -1,15 +1,11 @@
 package service
 
 import data.Queries
-import dbConnection.PostgresDb
 import java.util.UUID
-
 import cats.data.EitherT
-import doobie.implicits._
 import cats.effect.{ContextShift, IO}
 import data.Entities.User
-import doobie.postgres.sqlstate
-import doobie.util.ExecutionContexts
+import doobie.implicits._
 import doobie.util.transactor.Transactor.Aux
 import error._
 
@@ -32,7 +28,7 @@ class UserService(con: Aux[IO, Unit])(implicit val contextShift: ContextShift[IO
     EitherT.fromOptionF(Queries.User.selectByUserIdentity(id).transact(con), UserNotFound)
   }
 
-  def getExistingUserId(uuid: String): EitherT[IO, UserNotFound.type, Long] =
+  def getExistingUserId(uuid: String): EitherT[IO, AppError, Long] =
     EitherT.fromOptionF(Queries.User.getUserId(uuid).transact(con), UserNotFound)
 
 }

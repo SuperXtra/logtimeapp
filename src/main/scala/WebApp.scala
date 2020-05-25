@@ -1,3 +1,5 @@
+import java.time.ZonedDateTime
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
@@ -12,6 +14,7 @@ import data._
 import dbConnection.PostgresDb
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor.Aux
+import spray.json._
 
 object WebApp extends App with JsonSupport {
 
@@ -27,6 +30,8 @@ object WebApp extends App with JsonSupport {
 
   implicit val system = ActorSystem("projectAppSystem")
   implicit val executionContext = system.dispatcher
+
+  println(ZonedDateTime.now().toString)
 
   val route1 =
     path("user") {
@@ -79,57 +84,65 @@ object WebApp extends App with JsonSupport {
       }
     }
 
-//  val route5 =
-//    path("task") {
-//      post {
-//        entity(as[LogTask]) { task =>
-//          taskService.logTask(task).map {
-//            case Left(error) => complete(error.toString)
-//            case Right(created) => complete(created)
-//          }.unsafeRunSync()
-//        }
-//      }
-//    }
+  val route5 =
+    path("task") {
+      post {
+        entity(as[LogTask]) { task =>
+          taskService.logTask(task).map {
+            case Left(error) => complete(error.toString)
+            case Right(created) => complete(created)
+          }.unsafeRunSync()
+        }
+      }
+    }
 
-//  val route6 =
-//    path("task") {
-//      delete {
-//        entity(as[DeleteTask]) { task =>
-//          taskService.deleteTask(task).map {
-//            case Left(value) => complete(value)
-//            case Right(value) => value match {
-//              case x => complete(s"number of affected rows: $x")
-//            }
-//          }.unsafeRunSync()
-//        }
-//      }
-//    }
+  val route6 =
+    path("task") {
+      delete {
+        entity(as[DeleteTask]) { task =>
+          taskService.deleteTask(task).map {
+            case Left(value) => complete(value.toString)
+            case Right(value) => value match {
+              case x => complete(s"number of affected rows: $x")
+            }
+          }.unsafeRunSync()
+        }
+      }
+    }
 
-//  val route7 =
-//    path("task") {
-//      put {
-//        entity(as[UpdateTask]) { update =>
-//          taskService.updateTask(update).map {
-//            case Left(value) => complete(value)
-//            case Right(value) => value match {
-//              case x => complete(s"Updated succesfully, new id: ${x}")
-//            }
-//          }.unsafeRunSync()
-//        }
-//      }
-//    }
+  val route7 =
+    path("task") {
+      put {
+        entity(as[UpdateTask]) { update =>
+          taskService.updateTask(update).map {
+            case Left(value) => complete(value.toString)
+            case Right(value) => value match {
+              case x => complete(s"Updated succesfully, new id: ${x}")
+            }
+          }.unsafeRunSync()
+        }
+      }
+    }
 
-//  val route8 =
-//    path("project" / Segment) { projectName: String =>
-//      get {
-//          projectService.tasksAndDuration(projectName).map {
-//          case Left(value) => complete(value.toString)
-//          case Right(report) => complete(report)
-//        }.unsafeRunSync()
-//      }
-//    }
+  val route8 =
+    path("project" / Segment) { projectName: String =>
+      get {
+          projectService.tasksAndDuration(projectName).map {
+          case Left(value: AppError) => complete {
+            println("error")
+            value.toString
+          }
+          case Right(report) => complete{
+            println("right")
 
-  val routes: Route = concat(route1, route2, route3, route4)
+            println(report.toString)
+            report
+          }
+        }.unsafeRunSync()
+      }
+    }
+
+  val routes: Route = concat(route1, route2, route3, route4, route5, route6, route7, route8)
 
 
   val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(routes, "localhost", 8082)

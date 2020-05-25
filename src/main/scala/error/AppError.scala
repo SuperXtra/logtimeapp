@@ -1,6 +1,6 @@
 package error
 
-sealed trait AppError
+sealed trait AppError extends Product with Serializable
 
 case object UpdateUnsuccessfulProjectDoesNotExist extends AppError
 case object DeleteUnsuccessfulProjectDoesNotExist extends AppError
@@ -12,3 +12,8 @@ case object ProjectNotCreated extends AppError
 case object CannotCreateUserWithGeneratedUUID extends AppError
 case object DeleteProjectUnsuccessful extends AppError
 case object FetchingTaskForProjectUnsuccessful extends AppError
+case object CouldNotFindTheTask extends AppError
+case object CannotChangeNameGivenTaskExistsAlready extends AppError
+case object FetchingTaskUnsuccessful extends AppError
+case object TaskUpdateUnsuccessful extends AppError
+case object TaskWithGivenNameDoesNotExist extends AppError

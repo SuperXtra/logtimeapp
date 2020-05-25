@@ -60,7 +60,7 @@ object Queries {
     def insertUpdate(update: UpdateTaskInsert) = {
       val start = update.startTime
       val end = start.plusMinutes(update.duration)
-      sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, volume, comment) VALUES (${update.projectId}, ${update.userId}, ${update.taskDescription}, ${start.toLocalDate}, ${end.toLocalDate}, ${update.volume}, ${update.comment}) returning id".query[Long]
+      sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, duration, volume, comment) VALUES (${update.projectId}, ${update.userId}, ${update.taskDescription}, ${start.toLocalDate}, ${end.toLocalDate}, ${update.duration}, ${update.volume}, ${update.comment}) returning id".query[Long].option
 
     }
 
@@ -68,15 +68,15 @@ object Queries {
     def insert(create: LogTask, projectId: Long, userId: Long) = {
       val start = create.startTime.withZoneSameInstant(ZoneOffset.UTC)
       val end: ZonedDateTime = start.plusMinutes(create.durationTime)
-      sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, volume, comment) VALUES (${projectId}, ${userId}, ${create.taskDescription}, ${start.toLocalDateTime}, ${end.toLocalDateTime}, ${create.volume}, ${create.comment}) returning id".query[Long]
+      sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, duration, volume, comment) VALUES (${projectId}, ${userId}, ${create.taskDescription}, ${start.toLocalDateTime}, ${end.toLocalDateTime}, ${create.durationTime}, ${create.volume}, ${create.comment}) returning id".query[Long].unique
     }
 
     def selectLastInsertedTask(id: Long) = {
-      sql"select * from tb_task where id = ${id}".query[Task]
+      sql"select * from tb_task where id = ${id}".query[Task].option
     }
 
     def deleteTask(taskDescription: String, projectId: Long, userId: Long) = {
-      val created = ZonedDateTime.now(ZoneOffset.UTC)
+      val created = ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime
       fr"""
           update tb_task set delete_time = ${created}, active = false
           where project_id = ${projectId} and
@@ -95,7 +95,7 @@ object Queries {
     }
 
     def fetchTask(taskDescription: String, userId: Long) = {
-      sql"select * from tb_task where task_description = ${taskDescription} and user_id = ${userId} and active = true".query[Task]
+      sql"select * from tb_task where task_description = ${taskDescription} and user_id = ${userId} and active = true".query[Task].option
     }
 
     def deleteTasksForProject(projectId: Long, deleteTime: ZonedDateTime): Update0 = {

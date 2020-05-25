@@ -7,6 +7,7 @@ import data.Entities._
 import data._
 import spray.json._
 import doobie.implicits.javatime._
+import error.{AppError, ProjectNotCreated}
 
 import scala.util.{Failure, Success, Try}
 
@@ -56,9 +57,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val deletedTaskFormat: RootJsonFormat[DeleteTask] = jsonFormat3(DeleteTask)
   implicit val updateTaskFormat: RootJsonFormat[UpdateTask] = jsonFormat7(UpdateTask)
   implicit val projecReportFormat: RootJsonFormat[ProjecReport] =jsonFormat1(ProjecReport)
-  implicit val tasksFormat = jsonFormat1(Tasks)
-  implicit val projectReportFormat = jsonFormat3(ProjectReport)
-
-
-
+  implicit val tasksFormat: RootJsonFormat[Tasks] = jsonFormat1(Tasks)
+  implicit val projectReportFormat: RootJsonFormat[ProjectReport] = jsonFormat3(ProjectReport)
 }
