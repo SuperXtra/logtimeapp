@@ -1,21 +1,25 @@
 package data
 
-import java.sql.Timestamp
+import java.time.ZonedDateTime
+
+import org.joda.time.DateTime
+
 
 object Entities {
 
   case class User(
-                   id: Int,
+                   id: Long,
                    userIdentification: String
                  )
 
   case class Task(
-                   id: Int,
-                   projectId: Int,
-                   userId: Int,
+                   id: Long,
+                   projectId: Long,
+                   userId: Long,
                    taskDescription: String,
-                   startTime: String,
-                   endTime: String,
+                   startTime: ZonedDateTime,
+                   endTime: ZonedDateTime,
+                   duration: Long,
                    volume: Option[Int],
                    comment: Option[String],
                    deleteTime: Option[String],
@@ -23,15 +27,16 @@ object Entities {
                  )
 
   case class Project(
-                      id: Int,
-                      userId: Int,
+                      id: Long,
+                      userId: Long,
                       projectName: String,
-                      createTime: String,
-                      deleteTime: Option[String],
+                      createTime: ZonedDateTime,
+                      deleteTime: Option[ZonedDateTime],
                       active: Boolean
                     )
 
 
 }
+
 
 

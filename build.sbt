@@ -1,21 +1,96 @@
-name := "it"
+lazy val root = project
+  .in(file("."))
+  .settings(
+    name := "project-management-app",
+    version := "0.1",
+    scalaVersion := "2.13.2",
+    scalacOptions ++= Seq(
+      "-encoding", "utf8",
+      "-Xfatal-warnings",
+      "-deprecation",
+      "-unchecked",
+      "-feature",
+      "-language:implicitConversions",
+      "-language:higherKinds",
+      "-language:existentials",
+      "-language:postfixOps"
+    ),
+    javacOptions ++= Seq("-source", "1.9", "-target", "1.9", "-encoding", "UTF-8"),
+    libraryDependencies ++=
+      akka ++
+        cats ++
+        circe ++
+        doobie ++
+        flyway ++
+        jodaTime ++
+        pureConfig ++
+        scalatest ++
+        scalaTestFunSuite ++
+        testContainers
+  ).settings(Defaults.itSettings: _*)
+  .configs(IntegrationTest)
 
-version := "0.1"
+lazy val IntegrationTest = config("it") extend Test
 
-scalaVersion := "2.13.2"
+lazy val akkaVersion              =  "2.6.5"
+lazy val akkaHttpVersion          =  "10.1.12"
+lazy val catsVersion              =  "2.0.0"
+lazy val circeVersion             =  "0.12.2"
+lazy val doobieVersion            =  "0.9.0"
 
-lazy val doobieVersion = "0.8.8"
+lazy val akkaHttp                 =  Seq("com.typesafe.akka" %% "akka-http"             % akkaHttpVersion)
+lazy val akkaSteam                =  Seq("com.typesafe.akka" %% "akka-stream"           % akkaVersion)
+lazy val akkaHttpSpray            =  Seq("com.typesafe.akka" %% "akka-http-spray-json"  % akkaHttpVersion) //TODO remove
+lazy val akkaCirce                =  Seq("de.heikoseeberger" %% "akka-http-circe"       % "1.31.0")
 
-libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-http"   % "10.1.12",
-  "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.12",
-  "org.typelevel" %% "cats-core"   % "2.0.0",
-  "org.tpolecat" %% "doobie-core"     % doobieVersion,
-  "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-  "com.github.pureconfig" %% "pureconfig" % "0.12.2",
-  "org.tpolecat" %% "doobie-specs2"   % doobieVersion,
-  "org.scalatest" %% "scalatest-funsuite" % "3.3.0-SNAP2",
-  "org.tpolecat" %% "doobie-scalatest" % "0.9.0" % Test,
-  "com.typesafe.akka" %% "akka-stream" % "2.5.26",
-  "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.12"
-)
+lazy val akkaHttpTestKit          =  Seq("com.typesafe.akka" %% "akka-http-testkit"     % akkaHttpVersion % Test) // TODO
+lazy val akkaSteamTestKit         =  Seq("com.typesafe.akka" %% "akka-stream-testkit"   % akkaVersion % Test) // TODO
+
+lazy val catsCore                 =  Seq("org.typelevel"     %% "cats-core"             % catsVersion)
+lazy val catsEffect               =  Seq("org.typelevel"     %% "cats-effect"           % catsVersion) // TODO add
+
+lazy val circeParser              =  Seq("io.circe"          %% "circe-parser"          % circeVersion) // TODO add
+lazy val circeGeneric             =  Seq("io.circe"          %% "circe-generic-extras"  % circeVersion) // TODO add
+
+lazy val doobieCore               =  Seq("org.tpolecat"      %% "doobie-core"           % doobieVersion)
+lazy val doobiePostgres           =  Seq("org.tpolecat"      %% "doobie-postgres"       % doobieVersion)
+lazy val doobieSpecs2             =  Seq("org.tpolecat"      %% "doobie-specs2"         % doobieVersion % Test) // TODO remove
+lazy val doobieScalaTest          =  Seq("org.tpolecat"      %% "doobie-scalatest"      % doobieVersion % "test,it") // TODO add
+
+lazy val flyway                   =  Seq("org.flywaydb"      % "flyway-core"           % "6.4.2")
+
+lazy val jodaTime                 =  Seq("joda-time" % "joda-time" % "2.3")
+
+lazy val pureConfig               =  Seq("com.github.pureconfig" %% "pureconfig"        % "0.12.2")
+
+lazy val scalatest                =  Seq("org.scalatest"     %% "scalatest"             % "3.1.1" % "test,it") // TODO add
+lazy val scalaTestFunSuite        =  Seq("org.scalatest"     %% "scalatest-funsuite"    % "3.3.0-SNAP2" % Test) // TODO remove
+
+lazy val testContainersScala      =  Seq("com.dimafeng"      %% "testcontainers-scala"  % "0.36.1" % "it") // TODO add
+lazy val testContainersPostgres   =  Seq("org.testcontainers" % "postgresql"            % "1.14.2" % "it") // TODO add
+
+lazy val akka =
+  akkaHttp ++
+    akkaSteam ++
+    akkaHttpSpray ++
+    akkaCirce ++
+    akkaHttpTestKit ++
+    akkaSteamTestKit
+
+lazy val cats =
+  catsCore ++
+    catsEffect
+
+lazy val circe =
+  circeParser ++
+    circeGeneric
+
+lazy val doobie =
+  doobieCore ++
+    doobiePostgres ++
+    doobieScalaTest ++
+    doobieSpecs2
+
+lazy val testContainers =
+  testContainersScala ++
+    testContainersPostgres

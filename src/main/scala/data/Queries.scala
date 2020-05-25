@@ -1,27 +1,22 @@
 package data
 
-import akka.http.scaladsl.model.DateTime
-import akka.http.scaladsl.model.DateTime
-import cats.free.Free
 import data.Entities.{Project, Task, User}
-import doobie.{Query0, Update0}
+import doobie._
 import doobie.implicits._
 import doobie.util.log.LogHandler
-import java.sql.Timestamp
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
-
-import doobie.implicits.javasql._
+//import java.sql.Timestamp
+import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 import doobie.implicits.javatime._
-
+import doobie.implicits.javasql._
 
 object Queries {
   implicit val han = LogHandler.jdkLogHandler
 
   object Project {
 
+
     def insert(projectName: String, userId: Long) = {
-      sql"insert into tb_project (user_id, project_name, create_time) VALUES (${userId}, ${projectName}, ${Timestamp.valueOf(LocalDateTime.now())}) returning id".query[Long]
+      sql"insert into tb_project (user_id, project_name, create_time) VALUES (${userId}, ${projectName}, ${ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime}) returning id".query[Long]
     }
 
     def changeName(oldName: String, newName: String, userId: Long): Update0 = {
@@ -32,9 +27,9 @@ object Queries {
         """.update
     }
 
-    def deleteProject(requestingUserId: Long, projectName: String,deleteTime: Timestamp): Update0 = {
+    def deleteProject(requestingUserId: Long, projectName: String,deleteTime: ZonedDateTime): Update0 = {
       fr"""
-        update tb_project set delete_time = ${Timestamp.valueOf(LocalDateTime.now())}, active = false
+        update tb_project set delete_time = ${ZonedDateTime.now(ZoneOffset.UTC)}, active = false
         where project_name = ${projectName}
         and user_id = ${requestingUserId}
         """.update
@@ -57,19 +52,17 @@ object Queries {
 
   object Task {
     def insertUpdate(update: UpdateTaskInsert) = {
-      val start = LocalDateTime.parse(update.startTime)
+      val start = update.startTime
       val end = start.plusMinutes(update.duration)
-      sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, volume, comment) VALUES (${update.projectId}, ${update.userId}, ${update.taskDescription}, ${Timestamp.valueOf(start)}, ${Timestamp.valueOf(end)}, ${update.volume}, ${update.comment}) returning id".query[Long]
+      sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, volume, comment) VALUES (${update.projectId}, ${update.userId}, ${update.taskDescription}, ${start.toLocalDate}, ${end.toLocalDate}, ${update.volume}, ${update.comment}) returning id".query[Long]
 
     }
 
 
     def insert(create: LogTask, projectId: Long, userId: Long) = {
-
-      val start = LocalDateTime.parse(create.startTime)
-      val end = start.plusMinutes(create.durationTime)
-
-      sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, volume, comment) VALUES (${projectId}, ${userId}, ${create.taskDescription}, ${Timestamp.valueOf(start)}, ${Timestamp.valueOf(end)}, ${create.volume}, ${create.comment}) returning id".query[Long]
+      val start = create.startTime.withZoneSameInstant(ZoneOffset.UTC)
+      val end: ZonedDateTime = start.plusMinutes(create.durationTime)
+      sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, volume, comment) VALUES (${projectId}, ${userId}, ${create.taskDescription}, ${start.toLocalDateTime}, ${end.toLocalDateTime}, ${create.volume}, ${create.comment}) returning id".query[Long]
     }
 
     def selectLastInsertedTask(id: Long) = {
@@ -77,7 +70,7 @@ object Queries {
     }
 
     def deleteTask(taskDescription: String, projectId: Long, userId: Long) = {
-      val created = Timestamp.valueOf(LocalDateTime.now())
+      val created = ZonedDateTime.now(ZoneOffset.UTC)
       fr"""
           update tb_task set delete_time = ${created}, active = false
           where project_id = ${projectId} and
@@ -99,7 +92,7 @@ object Queries {
       sql"select * from tb_task where task_description = ${taskDescription} and user_id = ${userId} and active = true".query[Task]
     }
 
-    def deleteTasksForProject(projectId: Long, deleteTime: Timestamp): Update0 = {
+    def deleteTasksForProject(projectId: Long, deleteTime: ZonedDateTime): Update0 = {
       fr"""
         update tb_task set delete_time = ${deleteTime}, active = false
         where project_id = ${projectId}

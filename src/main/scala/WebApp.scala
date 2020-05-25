@@ -33,7 +33,6 @@ object WebApp extends App with JsonSupport {
 
 
   implicit val system = ActorSystem("projectAppSystem")
-  implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
 
   val route1 =

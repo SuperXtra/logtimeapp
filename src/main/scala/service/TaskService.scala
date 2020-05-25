@@ -68,7 +68,7 @@ class TaskService() {
   def updateTask(updateTask: UpdateTask) = {
 
     def newTask(oldTask: Task, updateTask: UpdateTask) = {
-      val newStartTime: String = updateTask.startTime getOrElse oldTask.startTime
+      val newStartTime = updateTask.startTime getOrElse oldTask.startTime
 
       val newVolume: Option[Int] = updateTask.volume match {
         case Some(value: Int) => Some(value)

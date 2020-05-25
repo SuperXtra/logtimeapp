@@ -1,7 +1,7 @@
 package service
 
-import java.sql.Timestamp
-import java.time.{Duration, LocalDateTime}
+import java.sql.{Date, Timestamp}
+import java.time.{Duration, LocalDateTime, ZoneOffset, ZonedDateTime}
 
 import data.{ChangeProjectName, CreateProject, DeleteProject, Queries}
 import dbConnection.PostgresDb
@@ -37,6 +37,7 @@ class ProjectService() {
     }
   }
 
+
   def updateProjectName(project: ChangeProjectName) = {
     //TODO handle situation when there is no user with given uuid
     val y = for {
@@ -51,7 +52,7 @@ class ProjectService() {
   }
 
   def deleteProject(project: DeleteProject) = {
-    val deleteTime: Timestamp = Timestamp.valueOf(LocalDateTime.now())
+    val deleteTime = ZonedDateTime.now(ZoneOffset.UTC)
     //TODO handle situation when there is no user with given uuid
     val z = for {
       user <- Queries.User.getUserId(project.userIdentification).unique
@@ -75,10 +76,12 @@ class ProjectService() {
       import java.time.LocalDateTime
       import java.time.format.DateTimeFormatter
       val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-      val startTime = LocalDateTime.parse(task.startTime, formatter)
-      val endTime = LocalDateTime.parse(task.endTime, formatter)
 
-      val duration = Duration.between(startTime,endTime).toMinutes.toInt
+
+      val start = task.startTime.toLocalDate
+      val endTime =task.endTime.toLocalDate
+
+      val duration = Duration.between(start,endTime).toMinutes.toInt
 
       (taskName, duration)
     })
