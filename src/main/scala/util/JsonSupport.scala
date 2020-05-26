@@ -3,11 +3,10 @@ package util
 import java.time.{LocalDateTime, ZonedDateTime}
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import data.Entities._
-import data._
+import models.model.{ProjectTb, TaskTb, UserTb}
+import models.request.{ChangeProjectNameRequest, CreateProjectRequest, DeleteProjectRequest, DeleteTaskRequest, LogTaskRequest, UpdateTaskRequest}
+import models.responses.{FinalReport, ProjectReport, Tasks}
 import spray.json._
-import doobie.implicits.javatime._
-import error.{AppError, ProjectNotCreated}
 
 import scala.util.{Failure, Success, Try}
 
@@ -47,16 +46,15 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
 
 
-  implicit val userFormat: RootJsonFormat[User] = jsonFormat2(User)
-  implicit val projectFormat: RootJsonFormat[Entities.Project] = jsonFormat6(Entities.Project)
-  implicit val projectDataFormat: RootJsonFormat[CreateProject] = jsonFormat2(CreateProject)
-  implicit val changeProjectNameFormat: RootJsonFormat[ChangeProjectName] = jsonFormat3(ChangeProjectName)
-  implicit val deleteProjectFormat: RootJsonFormat[DeleteProject] = jsonFormat2(DeleteProject)
-  implicit val logTaskFormat: RootJsonFormat[LogTaskModel] = jsonFormat7(LogTaskModel)
-  implicit val taskFormat: RootJsonFormat[Task] = jsonFormat11(Task)
-  implicit val deletedTaskFormat: RootJsonFormat[DeleteTask] = jsonFormat3(DeleteTask)
-  implicit val updateTaskFormat: RootJsonFormat[UpdateTask] = jsonFormat7(UpdateTask)
-  implicit val projecReportFormat: RootJsonFormat[ProjecReport] =jsonFormat1(ProjecReport)
+  implicit val userFormat: RootJsonFormat[UserTb] = jsonFormat2(UserTb)
+  implicit val projectFormat: RootJsonFormat[ProjectTb] = jsonFormat6(ProjectTb)
+  implicit val projectDataFormat: RootJsonFormat[CreateProjectRequest] = jsonFormat2(CreateProjectRequest)
+  implicit val changeProjectNameFormat: RootJsonFormat[ChangeProjectNameRequest] = jsonFormat3(ChangeProjectNameRequest)
+  implicit val deleteProjectFormat: RootJsonFormat[DeleteProjectRequest] = jsonFormat2(DeleteProjectRequest)
+  implicit val logTaskFormat: RootJsonFormat[LogTaskRequest] = jsonFormat7(LogTaskRequest)
+  implicit val taskFormat: RootJsonFormat[TaskTb] = jsonFormat12(TaskTb)
+  implicit val deletedTaskFormat: RootJsonFormat[DeleteTaskRequest] = jsonFormat3(DeleteTaskRequest)
+  implicit val updateTaskFormat: RootJsonFormat[UpdateTaskRequest] = jsonFormat7(UpdateTaskRequest)
   implicit val tasksFormat: RootJsonFormat[Tasks] = jsonFormat1(Tasks)
   implicit val projectReportFormat: RootJsonFormat[ProjectReport] = jsonFormat3(ProjectReport)
   implicit val finalReportFormat: RootJsonFormat[FinalReport] = jsonFormat9(FinalReport)

@@ -20,6 +20,7 @@ create table tb_task (
     id serial primary key,
     project_id integer not null,
     user_id integer not null,
+    create_time timestamp not null,
     task_description varchar (255) not null,
     start_time timestamp not null,
     end_time timestamp not null,
