@@ -13,7 +13,7 @@ import data.Entities._
 
 class TaskService(con: Aux[IO, Unit])(implicit val contextShift: ContextShift[IO]) {
 
-  def logTask(task: LogTask): IO[Either[AppError, Task]] = (
+  def logTask(task: LogTaskModel): IO[Either[AppError, Task]] = (
     for {
       project <- findProjectById(task.projectName)
       userId <- getExistingUserId(task.userIdentification)
@@ -82,7 +82,7 @@ class TaskService(con: Aux[IO, Unit])(implicit val contextShift: ContextShift[IO
     EitherT.fromOptionF(Queries.Task.selectLastInsertedTask(taskId).transact(con), CouldNotFindTheTask)
   }
 
-  private def insertTask(task: LogTask, projectId: Long, userId: Long): EitherT[IO, AppError, Long] = {
+  private def insertTask(task: LogTaskModel, projectId: Long, userId: Long): EitherT[IO, AppError, Long] = {
     EitherT(Queries.Task.insert(task, projectId, userId).transact(con).attemptSomeSqlState {
       case sqlstate.class23.EXCLUSION_VIOLATION => CannotLogNewTaskWithTheOverlappingTimeRangeForTheSameUser
       case sqlstate.class23.UNIQUE_VIOLATION => CannotLogNewTaskWithDuplicateTaskDescriptionUnderTheSameProject

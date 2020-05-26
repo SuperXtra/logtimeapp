@@ -17,7 +17,8 @@ import doobie.util.transactor.Transactor.Aux
 import service.refactor.serv.project.CreateNewProject
 import service.refactor.repo.project.{DeleteProjectR, FindProjectById, InsertProject, UpdateProjectName}
 import service.refactor.repo.task.DeleteTasks
-import service.refactor.repo.user.GetExistingUserId
+import service.refactor.repo.user.{CreateUser, GetExistingUserId, UserById}
+import service.refactor.serv.user.CreateNewUser
 import spray.json._
 
 object WebApp extends App with JsonSupport {
@@ -38,8 +39,11 @@ object WebApp extends App with JsonSupport {
   val getExistingUserId = new GetExistingUserId[IO](connection)
   val insertProject = new InsertProject[IO](connection)
   val updateProjectName = new UpdateProjectName[IO](connection)
+  val createNewUser = new CreateUser[IO](connection)
+  val userById = new UserById[IO](connection)
 
   val createNewProjectService = new CreateNewProject[IO](getExistingUserId, insertProject)
+  val createNewUserService = new CreateNewUser[IO](userById, createNewUser)
 
 
 
@@ -53,7 +57,7 @@ object WebApp extends App with JsonSupport {
   val route1 =
     path("user") {
       post {
-        service.createNewUser().map {
+        createNewUserService().map {
           case Left(value) => complete(value.toString)
           case Right(newUser) =>complete(newUser)
         }.unsafeRunSync()
@@ -104,7 +108,7 @@ object WebApp extends App with JsonSupport {
   val route5 =
     path("task") {
       post {
-        entity(as[LogTask]) { task =>
+        entity(as[LogTaskModel]) { task =>
           taskService.logTask(task).map {
             case Left(error) => complete(error.toString)
             case Right(created) => complete(created)

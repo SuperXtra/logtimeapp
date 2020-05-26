@@ -141,7 +141,7 @@ object Queries {
     }
 
 
-    def insert(create: LogTask, projectId: Long, userId: Long) = {
+    def insert(create: LogTaskModel, projectId: Long, userId: Long) = {
       val start = create.startTime.withZoneSameInstant(ZoneOffset.UTC)
       val end: ZonedDateTime = start.plusMinutes(create.durationTime)
       sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, duration, volume, comment) VALUES (${projectId}, ${userId}, ${create.taskDescription}, ${start.toLocalDateTime}, ${end.toLocalDateTime}, ${create.durationTime}, ${create.volume}, ${create.comment}) returning id".query[Long].unique

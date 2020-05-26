@@ -2,7 +2,6 @@ package routes
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Route
-import service.UserService
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.MethodDirectives.get
 import akka.http.scaladsl.server.directives.PathDirectives.path

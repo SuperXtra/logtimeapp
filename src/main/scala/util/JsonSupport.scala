@@ -52,7 +52,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val projectDataFormat: RootJsonFormat[CreateProject] = jsonFormat2(CreateProject)
   implicit val changeProjectNameFormat: RootJsonFormat[ChangeProjectName] = jsonFormat3(ChangeProjectName)
   implicit val deleteProjectFormat: RootJsonFormat[DeleteProject] = jsonFormat2(DeleteProject)
-  implicit val logTaskFormat: RootJsonFormat[LogTask] = jsonFormat7(LogTask)
+  implicit val logTaskFormat: RootJsonFormat[LogTaskModel] = jsonFormat7(LogTaskModel)
   implicit val taskFormat: RootJsonFormat[Task] = jsonFormat11(Task)
   implicit val deletedTaskFormat: RootJsonFormat[DeleteTask] = jsonFormat3(DeleteTask)
   implicit val updateTaskFormat: RootJsonFormat[UpdateTask] = jsonFormat7(UpdateTask)

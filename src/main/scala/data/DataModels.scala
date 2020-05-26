@@ -28,7 +28,7 @@ case class UpdateTaskInsert(
                              comment: Option[String]
                            )
 
-case class LogTask(
+case class LogTaskModel(
                         projectName: String,
                         userIdentification: String,
                         taskDescription: String,
