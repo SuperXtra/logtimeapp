@@ -12,7 +12,7 @@ import service.refactor.repo.user.GetExistingUserId
 import service.refactor.repo.project.{FindProjectById, UpdateProjectName}
 
 
-class UpdateProject[F[+_]: Sync](tx: Transactor[F])(
+class UpdateProject[F[+_]: Sync](
                                 userId: GetExistingUserId[F],
                                 updateProjectName: UpdateProjectName[F],
                                 findProject: FindProjectById[F]) {

@@ -15,7 +15,7 @@ class ProjectTasksDurationReport[F[+_] : Sync](
                                                 tasks: GetProjectTasks[F]
                                               ) {
 
-  def tasksAndDuration(projectName: String): F[Either[AppError, ProjectReport]] =
+  def apply(projectName: String): F[Either[AppError, ProjectReport]] =
     (for {
       project <- findProjectById(projectName)
       projectTasks <- fetchTasksForProject(project.id)

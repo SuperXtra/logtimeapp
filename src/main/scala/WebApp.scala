@@ -14,10 +14,12 @@ import data._
 import dbConnection.PostgresDb
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor.Aux
-import service.refactor.serv.project.CreateNewProject
+import service.refactor.serv.project.{CreateNewProject, DeactivateProject, UpdateProject}
 import service.refactor.repo.project.{DeleteProjectR, FindProjectById, InsertProject, UpdateProjectName}
-import service.refactor.repo.task.DeleteTasks
+import service.refactor.repo.task.{DeleteTasks, GetProjectTasks, GetTask, GetUserTask, InsertTask, TaskDelete, TaskInsertUpdate}
 import service.refactor.repo.user.{CreateUser, GetExistingUserId, UserById}
+import service.refactor.serv.report.ProjectTasksDurationReport
+import service.refactor.serv.task.{DeleteTas, LogTask, UpdateTas}
 import service.refactor.serv.user.CreateNewUser
 import spray.json._
 
@@ -28,9 +30,7 @@ object WebApp extends App with JsonSupport {
   val connection: Aux[IO, Unit] = PostgresDb.xa
 
 
-  val service = new UserService(connection)
-  val projectService = new ProjectService(connection)
-  val taskService = new TaskService(connection)
+//  val taskService = new TaskService(connection)
 
 
   val deleteProjectR = new DeleteProjectR[IO](connection)
@@ -41,10 +41,23 @@ object WebApp extends App with JsonSupport {
   val updateProjectName = new UpdateProjectName[IO](connection)
   val createNewUser = new CreateUser[IO](connection)
   val userById = new UserById[IO](connection)
+  val deleteProject = new DeleteProjectR[IO](connection)
+  val getProjectTasks = new GetProjectTasks[IO](connection)
+  val getUserTask = new GetUserTask[IO](connection)
+  val deleteTask = new TaskDelete[IO](connection)
+  val taskInsertUpdate = new TaskInsertUpdate[IO](connection)
+  val insertTask = new InsertTask[IO](connection)
+  val getTask = new GetTask[IO](connection)
+
 
   val createNewProjectService = new CreateNewProject[IO](getExistingUserId, insertProject)
+  val deactivateProjectService = new DeactivateProject[IO](getExistingUserId,deleteProject, findProjectById, deleteTasks)
+  val updateProjectService = new UpdateProject[IO](getExistingUserId, updateProjectName, findProjectById)
   val createNewUserService = new CreateNewUser[IO](userById, createNewUser)
-
+  val updateTaskService = new UpdateTas[IO](getExistingUserId, getUserTask, deleteTask,taskInsertUpdate)
+  val logTaskService = new LogTask[IO](findProjectById, getExistingUserId, insertTask, getTask)
+  val projectTaskDurationReport = new ProjectTasksDurationReport[IO](findProjectById, getProjectTasks)
+  val deleteTaskService = new DeleteTas[IO](findProjectById, getExistingUserId, deleteTask)
 
 
 
@@ -83,7 +96,7 @@ object WebApp extends App with JsonSupport {
       put {
         entity(as[ChangeProjectName]) { project =>
           complete(
-            projectService.updateProjectName(project).map {
+            updateProjectService(project).map {
               case Right(updatedProject: Entities.Project) => updatedProject.projectName
               case Left(error: AppError) => error.toString
             }.unsafeToFuture()
@@ -97,7 +110,7 @@ object WebApp extends App with JsonSupport {
     path("project") {
       delete {
         entity(as[DeleteProject]) { project =>
-          projectService.deleteProject(project).value.map {
+          deactivateProjectService(project).value.map {
             case Right(_) =>complete("Deleted")
             case Left(value) => complete(value.toString)
           }.unsafeRunSync()
@@ -109,7 +122,7 @@ object WebApp extends App with JsonSupport {
     path("task") {
       post {
         entity(as[LogTaskModel]) { task =>
-          taskService.logTask(task).map {
+          logTaskService(task).map {
             case Left(error) => complete(error.toString)
             case Right(created) => complete(created)
           }.unsafeRunSync()
@@ -121,7 +134,7 @@ object WebApp extends App with JsonSupport {
     path("task") {
       delete {
         entity(as[DeleteTask]) { task =>
-          taskService.deleteTask(task).map {
+          deleteTaskService(task).map {
             case Left(value) => complete(value.toString)
             case Right(value) => value match {
               case x => complete(s"number of affected rows: $x")
@@ -135,7 +148,7 @@ object WebApp extends App with JsonSupport {
     path("task") {
       put {
         entity(as[UpdateTask]) { update =>
-          taskService.updateTask(update).map {
+          updateTaskService(update).map {
             case Left(value) => complete(value.toString)
             case Right(value) => value match {
               case x => complete(s"Updated succesfully, new id: ${x}")
@@ -148,7 +161,7 @@ object WebApp extends App with JsonSupport {
   val route8 =
     path("project" / Segment) { projectName: String =>
       get {
-          projectService.tasksAndDuration(projectName).map {
+        projectTaskDurationReport(projectName).map {
           case Left(value: AppError) => complete {
             println("error")
             value.toString
