@@ -1,27 +1,47 @@
 package data
 
+import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
+
 import cats.effect.IO
 import doobie.util.transactor.Transactor
 import org.specs2.matcher.Matchers
-//import doobie._
+import util.JsonSupport
+import doobie._
 import doobie.util.ExecutionContexts
 import org.scalatest.funsuite.AnyFunSuite
+import doobie.implicits._
 
-class QueriesCheckSpec extends AnyFunSuite with Matchers with doobie.scalatest.IOChecker {
+
+class QueriesCheckSpec extends AnyFunSuite with Matchers with doobie.scalatest.IOChecker with JsonSupport {
 
   implicit val cs = IO.contextShift(ExecutionContexts.synchronous)
+//  project_name, create_time, delete_time,
+//  user_id, task_description, start_time, end_time, duration, volume, comment, delete_time
+
+
+
 
   val transactor = Transactor.fromDriverManager[IO](
     "org.postgresql.Driver",
-    "jdbc:postgresql:test",
-    "test",
-    "test"
+    "jdbc:postgresql://ec2-54-75-229-28.eu-west-1.compute.amazonaws.com:5432/d94gigncif0u25",
+    "vqidaoxnepgktr",
+    "5075aa01fcdf2e9f371b817a92621d5da74acc7a655f3dd29585445f5fd4ffde"
   )
+
+
+  test("") {
+
+    val projectQuery = ProjectQuery(Some(List("test1", "test2")), Some(ZonedDateTime.now(ZoneOffset.UTC).minusDays(10)), Some(ZonedDateTime.now(ZoneOffset.UTC).plusDays(10)), ByCreatedTime,Some(true), Ascending,0,0)
+
+    val query = Queries.Project.Report.apply(projectQuery)
+
+    check(query)
+  }
 
 //  test("Project select should check") {
 //    check(Queries.Project.getProject("test"))
 //  }
-//
+
 //  test("Project change name should check") {
 //    check(Queries.Project.changeName("oldName", "newName", 1))
 //  }

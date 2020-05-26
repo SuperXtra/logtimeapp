@@ -1,13 +1,16 @@
 package data
 
+import java.sql.Timestamp
+
 import data.Entities.{Project, Task, User}
 import doobie._
 import doobie.implicits._
-import doobie.util.log.LogHandler
-//import java.sql.Timestamp
 import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
+import cats._, cats.data._, cats.implicits._
+import doobie.util.log.LogHandler
 import doobie.implicits.javatime._
 import doobie.implicits.javasql._
+
 
 object Queries {
   implicit val han = LogHandler.jdkLogHandler
@@ -27,18 +30,13 @@ object Queries {
         """.update
     }
 
-    def deleteProject(requestingUserId: Long, projectName: String,deleteTime: ZonedDateTime): Update0 = {
-
-      println(deleteTime)
-      println(projectName)
-      println(requestingUserId)
-      println(s"update tb_project set delete_time = ${deleteTime.toLocalDateTime}, active = false where project_name = ${projectName} and user_id = ${requestingUserId})")
-
-      fr"""
-        update tb_project set delete_time = ${deleteTime.toLocalDateTime}, active = false
-        where project_name = ${projectName}
-        and user_id = ${requestingUserId}
-        """.update
+    def deleteProject(requestingUserId: Long, projectName: String, deleteTime: ZonedDateTime): Update0 = {
+      fr"""UPDATE tb_project
+           SET delete_time = ${deleteTime.toLocalDateTime}, active = false
+           WHERE project_name = $projectName
+           AND user_id = $requestingUserId
+           """
+        .update
     }
 
     def getProjectId(projectName: String) = {
@@ -54,13 +52,91 @@ object Queries {
     }
 
 
+    object Report {
+
+      def apply(projectQuery: ProjectQuery, page: Int =1, limit: Int = 20) = {
+
+
+        val queryBody: Fragment =
+          fr"""
+          SELECT p.project_name, p.create_time,
+          t.user_id, t.task_description, t.start_time, t.end_time, t.duration, t.volume, t.comment
+          FROM tb_project p
+          LEFT JOIN tb_task t ON p.id = t.project_id
+          WHERE 1 = 1
+          """
+
+
+        val filterIds: Fragment = projectQuery.ids match {
+          case Some(projects) => projects match {
+            case ::(_, _) =>
+              fr"AND p.project_name IN (" ++
+                projects.map(x => fr"$x").intercalate(fr",") ++
+                fr")"
+            case Nil => fr""
+          }
+          case None => fr""
+        }
+
+
+        val filterDat: Fragment = (projectQuery.since, projectQuery.upTo) match {
+          case (maybeFrom, maybeTo) =>{
+
+            val from = maybeFrom.map(_.toLocalDateTime).orNull
+            val to = maybeTo.map(_.toLocalDateTime).orNull
+
+            fr"AND create_time BETWEEN COALESCE(" ++
+            fr"TO_TIMESTAMP($from, 'YYYY-MM-DD:hh:mm:ss'))" ++ fr"AND COALESCE(" ++ fr"TO_TIMESTAMP($to, 'YYYY-MM-DD:hh:mm:ss'))"
+          }
+        }
+
+        val sort: Fragment = projectQuery.projectSort match {
+          case ByCreatedTime => fr" ORDER BY p.created_date"
+          case ByUpdateTime => fr" ORDER BY COALESCE(t.created_date, p.created_date)"
+        }
+
+        //    val byCategory = auctionQuery.categoryId.map(cat => fr" AND categoryId = ${cat.underlying}").getOrElse(fr"")
+
+        val desc: Fragment = projectQuery.sortDirection match {
+          case Ascending => fr"ASC"
+          case Descending => fr"DESC"
+          case _ => fr"ASC"
+        }
+
+        val deletedFilter = projectQuery.active match {
+          case Some(value) => value match {
+            case true => fr"AND t.active = true"
+            case false => fr"AND t.active = false"
+          }
+          case None => fr""
+        }
+
+        val pagination = {
+
+          val start = ((page - 1) * limit) + 1
+          val end = page * limit
+
+          fr"AND range IN (" ++
+          (start to end).toList.map(x => fr"$x").intercalate(fr",") ++
+            fr")"
+        }
+        //          fr"AND range IN (" ++
+
+        (queryBody ++ filterIds ++ deletedFilter ++ filterDat ++ pagination ++ sort ++ desc).query[FinalReport]
+
+
+      }
+
+    }
+
+
   }
 
   object Task {
     def insertUpdate(update: UpdateTaskInsert) = {
       val start = update.startTime
       val end = start.plusMinutes(update.duration)
-      sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, duration, volume, comment) VALUES (${update.projectId}, ${update.userId}, ${update.taskDescription}, ${start.toLocalDate}, ${end.toLocalDate}, ${update.duration}, ${update.volume}, ${update.comment}) returning id".query[Long].option
+      sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, duration, volume, comment) VALUES (${update.projectId}, ${update.userId}, ${update.taskDescription}, ${start.toLocalDateTime}, ${end.toLocalDateTime}, ${update.duration}, ${update.volume}, ${update.comment}) returning id".query[Long].option
 
     }
 
@@ -108,9 +184,9 @@ object Queries {
   }
 
   object User {
-      def insertUser(userIdentification : String) = {
-        sql"insert into tb_user (user_identification) values (${userIdentification}) returning id".query[Long].option
-      }
+    def insertUser(userIdentification: String) = {
+      sql"insert into tb_user (user_identification) values (${userIdentification}) returning id".query[Long].option
+    }
 
     def selectLastInsertedUser() = {
       sql"select lastval()".query[Long]
@@ -120,8 +196,8 @@ object Queries {
       sql"select * from tb_user where id = $id".query[User].option
     }
 
-    def getUserId(userIdentification : String) = {
-        fr"""
+    def getUserId(userIdentification: String) = {
+      fr"""
             select id from tb_user
             where user_identification = ${userIdentification}
             """.query[Long].option

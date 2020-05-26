@@ -14,6 +14,10 @@ import data._
 import dbConnection.PostgresDb
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor.Aux
+import service.refactor.serv.project.CreateNewProject
+import service.refactor.repo.project.{DeleteProjectR, FindProjectById, InsertProject, UpdateProjectName}
+import service.refactor.repo.task.DeleteTasks
+import service.refactor.repo.user.GetExistingUserId
 import spray.json._
 
 object WebApp extends App with JsonSupport {
@@ -26,6 +30,19 @@ object WebApp extends App with JsonSupport {
   val service = new UserService(connection)
   val projectService = new ProjectService(connection)
   val taskService = new TaskService(connection)
+
+
+  val deleteProjectR = new DeleteProjectR[IO](connection)
+  val deleteTasks = new DeleteTasks[IO](connection)
+  val findProjectById = new FindProjectById[IO](connection)
+  val getExistingUserId = new GetExistingUserId[IO](connection)
+  val insertProject = new InsertProject[IO](connection)
+  val updateProjectName = new UpdateProjectName[IO](connection)
+
+  val createNewProjectService = new CreateNewProject[IO](getExistingUserId, insertProject)
+
+
+
 
 
   implicit val system = ActorSystem("projectAppSystem")
@@ -48,7 +65,7 @@ object WebApp extends App with JsonSupport {
       post {
         entity(as[CreateProject]) { project =>
           complete(
-            projectService.createNewProject(project).map {
+            createNewProjectService(project).map {
               case Right(project) => s"Created project with id: $project"
               case Left(error: AppError) => error.toString
             }.unsafeToFuture()

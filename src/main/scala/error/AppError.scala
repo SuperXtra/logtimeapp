@@ -1,6 +1,6 @@
 package error
 
-sealed trait AppError extends Product with Serializable
+sealed trait AppError
 
 case object UpdateUnsuccessfulProjectDoesNotExist extends AppError
 case object DeleteUnsuccessfulProjectDoesNotExist extends AppError

@@ -1,7 +1,7 @@
 package data
 
 import java.sql.Date
-import java.time.ZonedDateTime
+import java.time.{LocalDateTime, ZonedDateTime}
 
 import data.Entities.{Project, Task}
 
@@ -44,3 +44,15 @@ case class ProjectReport(
                         workedTimeInMinutes: Long
                         )
 case class Tasks(tasks: List[Task])
+
+case class FinalReport(
+                        project_name: String,
+                        create_time: LocalDateTime,
+                        user_id: Long,
+                        task_description: String,
+                        start_time: LocalDateTime,
+                        end_time: LocalDateTime,
+                        duration: Long,
+                        volume: Option[Int],
+                        comment: Option[String]
+                      )

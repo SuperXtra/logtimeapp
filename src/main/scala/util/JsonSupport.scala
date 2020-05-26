@@ -59,4 +59,5 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val projecReportFormat: RootJsonFormat[ProjecReport] =jsonFormat1(ProjecReport)
   implicit val tasksFormat: RootJsonFormat[Tasks] = jsonFormat1(Tasks)
   implicit val projectReportFormat: RootJsonFormat[ProjectReport] = jsonFormat3(ProjectReport)
+  implicit val finalReportFormat: RootJsonFormat[FinalReport] = jsonFormat9(FinalReport)
 }
