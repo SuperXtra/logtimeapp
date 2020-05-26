@@ -14,13 +14,18 @@ import data._
 import dbConnection.PostgresDb
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor.Aux
-import service.refactor.serv.project.{CreateNewProject, DeactivateProject, UpdateProject}
-import service.refactor.repo.project.{DeleteProjectR, FindProjectById, InsertProject, UpdateProjectName}
-import service.refactor.repo.task.{DeleteTasks, GetProjectTasks, GetTask, GetUserTask, InsertTask, TaskDelete, TaskInsertUpdate}
-import service.refactor.repo.user.{CreateUser, GetExistingUserId, UserById}
-import service.refactor.serv.report.ProjectTasksDurationReport
-import service.refactor.serv.task.{DeleteTas, LogTask, UpdateTas}
-import service.refactor.serv.user.CreateNewUser
+import service.refactor.serv.project.DeactivateProject
+import service.refactor.repo.project.UpdateProjectName
+import service.refactor.repo.task.DeleteTasks
+import service.refactor.repo.user.UserById
+import service.refactor.serv.task.LogTask
+import service.repo.project.{DeleteProjectR, FindProjectById, InsertProject, UpdateProjectName}
+import service.repo.task.{DeleteTasks, GetProjectTasks, GetTask, GetUserTask, InsertTask, TaskDelete, TaskInsertUpdate}
+import service.repo.user.{CreateUser, GetExistingUserId, UserById}
+import service.serv.project.{CreateNewProject, DeactivateProject, UpdateProject}
+import service.serv.report.ProjectTasksDurationReport
+import service.serv.task.{DeleteTas, LogTask, UpdateTas}
+import service.serv.user.CreateNewUser
 import spray.json._
 
 object WebApp extends App with JsonSupport {
