@@ -1,39 +1,41 @@
 package repository.queries
 
+import java.time.format.DateTimeFormatter
+
 import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending}
 import models.request.ReportRequest
-import models.responses.FinalReport
-import java.time.{ZoneOffset, ZonedDateTime}
-
 import cats.implicits._
-import doobie.free.connection.ConnectionIO
 import doobie.util.log.LogHandler
 import doobie.implicits.javatime._
-import doobie.{Fragment, Update0}
-import doobie.implicits._
+import doobie._
 import doobie.util.query.Query0
-import models.model._
-import models.request._
 import models.responses.FinalReport
+import doobie.implicits._
 
 object Report {
   implicit val han = LogHandler.jdkLogHandler
 
 
-  def apply(projectQuery: ReportRequest, page: Int =1, limit: Int = 20) = {
+  def apply(projectQuery: ReportRequest): doobie.Query0[FinalReport] = {
 
+    val selectAllFromCTE =
+      fr"""
+           SELECT
+            p.project_name,
+            p.create_time as project_create_time,
+            t.create_time as task_create_time,
+            t.task_description as task_description,
+            t.start_time,
+            t.end_time,
+            t.duration,
+            t.volume,
+            t.comment
+           FROM projects_page p
+           left join tb_task t on t.project_id = p.id
+           WHERE 1=1
+          """
 
-
-//    val queryBody: Fragment =
-//      fr"""
-//          SELECT p.project_name, p.create_time as project_create_time, t.create_time as task_create_time, t.user_id, t.task_description, t.start_time, t.end_time, t.duration, t.volume, t.comment
-//          FROM tb_project p
-//          LEFT JOIN tb_task t ON p.id = t.project_id
-//          WHERE 1 = 1
-//          """
-
-
-    val filterIds: Fragment = projectQuery.ids match {
+    val projectNamesFilter: Fragment = projectQuery.params.ids match {
       case Some(projects) => projects match {
         case ::(_, _) =>
           fr"AND p.project_name IN (" ++
@@ -45,78 +47,81 @@ object Report {
     }
 
 
-    val filterDat: Fragment = (projectQuery.since, projectQuery.upTo) match {
-      case (maybeFrom, maybeTo) =>{
+    val dateRangeFilter: Fragment =
 
-        val from = maybeFrom.map(_.toLocalDateTime.toString).orNull
-        val to = maybeTo.map(_.toLocalDateTime.toString).orNull
-
-        fr"AND p.create_time BETWEEN COALESCE(" ++
-          fr"TO_TIMESTAMP($from, 'YYYY-MM-DD:hh:mm:ss'))" ++ fr"AND COALESCE(" ++ fr"TO_TIMESTAMP($to, 'YYYY-MM-DD:hh:mm:ss'))"
+      (projectQuery.params.since, projectQuery.params.upTo) match {
+        case (Some(from), Some(to)) =>
+          fr"""AND p.create_time BETWEEN TO_TIMESTAMP(${from.toLocalDateTime.toString}, 'YYYY-MM-DDTHH:xx:ss') AND TO_TIMESTAMP(${to.toLocalDateTime.toString}, 'YYYY-MM-DDTHH:xx:ss')"""
+        case (Some(from), None) => fr"""AND p.create_time BETWEEN TO_TIMESTAMP(${from.toLocalDateTime}, 'YYYY-MM-DDTHH:xx:ss') AND TO_TIMESTAMP('2100-01-01 00:00:00', 'YYYY-MM-DDTHH:xx:ss')"""
+        case (None, Some(to)) => fr"""AND p.create_time BETWEEN TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DDTHH:xx:ss') AND TO_TIMESTAMP(${to.toLocalDateTime}, 'YYYY-MM-DDTHH:xx:ss')"""
+        case (_, _) => fr""
       }
-    }
 
-    val sort: Fragment = projectQuery.projectSort match {
-      case ByCreatedTime => fr" ORDER BY project_create_time"
-      case ByUpdateTime => fr" ORDER BY COALESCE(task_create_time, project_create_time)"
-    }
-
-    //    val byCategory = auctionQuery.categoryId.map(cat => fr" AND categoryId = ${cat.underlying}").getOrElse(fr"")
-
-    val desc: Fragment = projectQuery.sortDirection match {
-      case Ascending => fr"ASC"
-      case Descending => fr"DESC"
-      case _ => fr"ASC"
-    }
-
-    val deletedFilter = projectQuery.active match {
+    val order: Fragment = projectQuery.path.sortDirection match {
       case Some(value) => value match {
-        case true => fr"AND t.active = true"
-        case false => fr"AND t.active = false"
+        case Ascending => fr"ASC"
+        case Descending => fr"DESC"
+        case _ => fr"ASC"
       }
       case None => fr""
     }
 
-    val pagination = {
+    val sortingCTE: Fragment = projectQuery.path.projectSort match {
+      case Some(value) => value match {
+        case ByCreatedTime => fr" ORDER BY p.create_time ${order}"
+        case ByUpdateTime => fr" ORDER BY update ${order}"
+      }
+      case None => fr""
+    }
 
-//      val start = (((page - 1) * limit) + 1).toLong
-//      val end = (page * limit).toLong
-//
-//      fr"AND ranking IN (" ++
-//        (start to end).toList.map(x => fr"$x").intercalate(fr",") ++
-//        fr")"
-
-      val offset = ((page-1)*limit).toLong
-      val limitation = limit.toLong
-
-      fr"""
-          OFFSET ${offset} LIMIT ${limitation}
-          """
-
+    val sortingSelect: Fragment = projectQuery.path.projectSort match {
+      case Some(value) => value match {
+        case ByCreatedTime => fr" ORDER BY p.create_time ${order}, t.create_time ${order}"
+        case ByUpdateTime => fr" ORDER BY COALESCE(t.create_time, p.create_time) ${order}"
+      }
+      case None => fr""
     }
 
 
-    val queryBody: Fragment = {
 
+    val isActiveFilter = projectQuery.path.active match {
+      case Some(value) => value match {
+        case true => fr"AND COALESCE(t.active , true) = true"
+        case false => fr"AND COALESCE(t.active , false) = false"
+      }
+      case None => fr""
+    }
+
+    val paginationFilter = {
+      val offset = ((projectQuery.path.page - 1) * projectQuery.path.quantity).toLong
+      val limitation = projectQuery.path.quantity.toLong
       fr"""
-          WITH input_data AS (
-            SELECT p.project_name, p.create_time AS project_create_time, t.create_time as task_create_time, t.user_id, t.task_description, t.start_time, t.end_time, t.duration, t.volume, t.comment,
-            DENSE_RANK() OVER (ORDER BY p.id) AS ranking
-            FROM tb_project p
-            LEFT JOIN tb_task t ON p.id = t.project_id
-            WHERE 1 = 1""" ++ filterIds ++ deletedFilter ++ filterDat ++
-        fr""")
-          SELECT project_name, project_create_time, task_create_time, user_id, task_description, start_time, end_time, duration, volume, comment, ranking
-          FROM input_data
-          WHERE 1=1
-          """ ++ pagination ++ sort ++ desc
+        LIMIT ${limitation} OFFSET ${offset}
+       """
     }
 
 
-    //    (queryBody ++ filterIds ++ deletedFilter ++ filterDat ++ sort ++ desc ++ pagination).query[FinalReport].to[List]
-    queryBody.query[FinalReport].to[List]
+    val reportQuery =
+      fr"""
+        WITH projects_page AS(
+        SELECT p.*, COALESCE(MAX(t.create_time), p.create_time) AS update
+        FROM tb_project p
+        LEFT JOIN tb_task t ON t.project_id = p.id
+        WHERE 1 = 1
+    """ ++
+        projectNamesFilter ++
+        isActiveFilter ++
+        dateRangeFilter ++
+        fr"""GROUP BY p.id""" ++
+        sortingCTE ++
+        paginationFilter ++
+        fr")" ++
+        selectAllFromCTE ++
+        isActiveFilter ++
+        sortingSelect
 
+    println(reportQuery.toString())
 
+    reportQuery.query[FinalReport]
   }
-
 }

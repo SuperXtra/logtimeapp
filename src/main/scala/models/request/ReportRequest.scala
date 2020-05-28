@@ -6,12 +6,19 @@ import models.model.{Ascending, ByCreatedTime, ProjectSort, SortDirection}
 
 // TODO do odzielnych plików
 case class ReportRequest(
-                           ids: Option[List[String]],
-                           since: Option[ZonedDateTime],
-                           upTo: Option[ZonedDateTime],
-                           projectSort: ProjectSort = ByCreatedTime,
-                           active: Option[Boolean],
-                           sortDirection: SortDirection = Ascending,
-                           page: Int,
-                           quantity: Int
+                           params: RRequest,
+                           path: RReq
                          )
+
+case class RRequest(
+                     ids: Option[List[String]],
+                     since: Option[ZonedDateTime],
+                     upTo: Option[ZonedDateTime]
+                   )
+case class RReq (
+                  active: Option[Boolean],
+                  projectSort: Option[ProjectSort],
+                  sortDirection: Option[SortDirection],
+                  page: Int,
+                  quantity: Int
+                )

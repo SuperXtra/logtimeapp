@@ -26,14 +26,14 @@ class LogTask[F[+_]: Sync](
   }
 
   private def getExistingProjectId(projectName: String): EitherT[F, AppError, ProjectTb] =
-    EitherT.fromOptionF(getProjectId(projectName), ProjectNotFound)
+    EitherT.fromOptionF(getProjectId(projectName), ProjectNotFound())
 
   private def getExistingUserId(userIdentification: String): EitherT[F, AppError, Long] =
-    EitherT.fromOptionF(getUserId(userIdentification), UserNotFound)
+    EitherT.fromOptionF(getUserId(userIdentification), UserNotFound())
 
   private def insertNewTask(work: LogTaskRequest, projectId: Long, userId: Long): EitherT[F, AppError, Long] =
     EitherT(insertTask(work, projectId, userId))
 
   private def getExistingTask(taskId: Long): EitherT[F, AppError, TaskTb] =
-    EitherT.fromOptionF(getTask(taskId), TaskNotCreated)
+    EitherT.fromOptionF(getTask(taskId), TaskNotCreated())
 }

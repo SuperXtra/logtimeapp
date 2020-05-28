@@ -42,11 +42,11 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
       startTime = workDone.startTime.toLocalDateTime,
       endTime = workDone.startTime.plusMinutes(workDone.durationTime).toLocalDateTime,
       createTime= ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime,
-      duration = workDone.durationTime,
+      duration = workDone.durationTime.toInt,
       volume = workDone.volume,
       comment = workDone.comment,
       deleteTime = none,
-      active = false
+      active = Some(false)
     )
 
     And("a service will find project id, user id, insert and return created task task")
@@ -90,7 +90,7 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
     val result = logWork(workDone).unsafeRunSync
 
     Then("returns error message: project not found")
-    result shouldBe Left(ProjectNotFound)
+    result shouldBe Left(ProjectNotFound())
   }
 
   // not allow to log work if user id does not exist

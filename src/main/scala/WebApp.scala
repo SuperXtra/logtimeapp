@@ -37,28 +37,28 @@ object WebApp extends App with JsonSupport {
 
 
   implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
-  val connection = DatabaseContext.transactor(databaseConfig)
+  val tx = DatabaseContext.transactor(databaseConfig)
 
 
 //  val taskService = new TaskService(connection)
 
 
-  val deleteProjectR = new DeleteProjectR[IO](connection)
-  val deleteTasks = new DeleteTasks[IO](connection)
-  val findProjectById = new FindProjectById[IO](connection)
-  val getExistingUserId = new GetExistingUserId[IO](connection)
-  val insertProject = new InsertProject[IO](connection)
-  val updateProjectName = new UpdateProjectName[IO](connection)
-  val createNewUser = new CreateUser[IO](connection)
-  val userById = new UserById[IO](connection)
-  val deleteProject = new DeleteProjectR[IO](connection)
-  val getProjectTasks = new GetProjectTasks[IO](connection)
-  val getUserTask = new GetUserTask[IO](connection)
-  val deleteTask = new TaskDelete[IO](connection)
-  val taskInsertUpdate = new TaskInsertUpdate[IO](connection)
-  val insertTask = new InsertTask[IO](connection)
-  val getTask = new GetTask[IO](connection)
-  val report = new Report[IO](connection)
+  val deleteProjectR = new DeleteProjectR[IO](tx)
+  val deleteTasks = new DeleteTasks[IO](tx)
+  val findProjectById = new FindProjectById[IO](tx)
+  val getExistingUserId = new GetExistingUserId[IO](tx)
+  val insertProject = new InsertProject[IO](tx)
+  val updateProjectName = new UpdateProjectName[IO](tx)
+  val createNewUser = new CreateUser[IO](tx)
+  val userById = new UserById[IO](tx)
+  val deleteProject = new DeleteProjectR[IO](tx)
+  val getProjectTasks = new GetProjectTasks[IO](tx)
+  val getUserTask = new GetUserTask[IO](tx)
+  val deleteTask = new TaskDelete[IO](tx)
+  val taskInsertUpdate = new TaskInsertUpdate[IO](tx)
+  val insertTask = new InsertTask[IO](tx)
+  val getTask = new GetTask[IO](tx)
+  val report = new Report[IO](tx)
 
 
   val createNewProjectService = new CreateNewProject[IO](getExistingUserId, insertProject)
@@ -69,7 +69,7 @@ object WebApp extends App with JsonSupport {
   val logTaskService = new LogTask[IO](findProjectById, getExistingUserId, insertTask, getTask)
   val projectTaskDurationReport = new ProjectTasksDurationReport[IO](findProjectById, getProjectTasks)
   val deleteTaskService = new DeleteTas[IO](findProjectById, getExistingUserId, deleteTask)
-//  val projectWithTaskFilter = new ProjectWithTasks[IO](report)
+  val projectWithTaskFilter = new ProjectWithTasks[IO](report)
 
   val routes: Route = concat(
     TaskRoutes.logTask(logTaskService.apply),
@@ -79,8 +79,8 @@ object WebApp extends App with JsonSupport {
     ProjectRoutes.createProject(createNewProjectService.apply),
     ProjectRoutes.updateProject(updateProjectService.apply),
     ProjectRoutes.deleteProject(deactivateProjectService.apply),
-    ReportRoutes.projectTasksReport(projectTaskDurationReport.apply)
-//    ReportRoutes.mainReport(projectWithTaskFilter.apply)
+    ReportRoutes.projectTasksReport(projectTaskDurationReport.apply),
+    ReportRoutes.mainReport(projectWithTaskFilter.apply)
   )
 
 

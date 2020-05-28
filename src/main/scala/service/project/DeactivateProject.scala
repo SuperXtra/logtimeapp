@@ -30,13 +30,13 @@ class DeactivateProject[F[+_] : Sync](
   }
 
   private def getExistingUserId(userIdentification: String): EitherT[F, AppError, Long] =
-    EitherT.fromOptionF(getUserId(userIdentification), UserNotFound)
+    EitherT.fromOptionF(getUserId(userIdentification), ProjectDeleteUnsuccessful("Given user uuid does not exists or is not the owner ow the project"))
 
   private def deleteProject(userId: Long, projectName: String, deleteTime: ZonedDateTime): EitherT[F, AppError, Int] =
     EitherT(deactivateProject(userId, projectName, deleteTime))
 
   private def findProjectById(projectName: String): EitherT[F, AppError, ProjectTb] =
-    EitherT.fromOptionF(findProject(projectName), ProjectNotCreated)
+    EitherT.fromOptionF(findProject(projectName), ProjectNotCreated())
 
   private def deleteTasksForProject(id: Long, deleteTime: ZonedDateTime): EitherT[F, AppError, Int] =
     EitherT(deactivateTasks(id, deleteTime))

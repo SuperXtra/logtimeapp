@@ -22,7 +22,7 @@ import scala.concurrent.duration._
 class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
 
   it should "return error project not found" in new Context {
-    val result = ProjectNotFound.asLeft
+    val result = ProjectNotFound().asLeft
     val route =
       Route.seal(TaskRoutes.logTask(_ => IO(result)))
     Post("/task",
@@ -57,12 +57,12 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
       taskDescription = "this is description",
       startTime = LocalDateTime.now().minusSeconds(3.days.toSeconds),
       endTime = LocalDateTime.now,
-      duration=3.days.toSeconds,
+      duration=3.days.toSeconds.toInt,
       createTime = ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime,
       volume = 2.some,
       comment = "this is comment".some,
       deleteTime = none,
-      active = false
+      active = Some(false)
     )
 
     val route =

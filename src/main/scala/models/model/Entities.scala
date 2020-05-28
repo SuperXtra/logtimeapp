@@ -15,11 +15,11 @@ case class TaskTb(
                    taskDescription: String,
                    startTime: LocalDateTime,
                    endTime: LocalDateTime,
-                   duration: Long,
+                   duration: Int,
                    volume: Option[Int],
                    comment: Option[String],
                    deleteTime: Option[LocalDateTime],
-                   active: Boolean
+                   active: Option[Boolean]
                  )
 
 case class ProjectTb(

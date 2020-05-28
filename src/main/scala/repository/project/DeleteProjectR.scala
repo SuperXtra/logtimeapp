@@ -14,5 +14,5 @@ class DeleteProjectR[F[+_]: Sync](tx: Transactor[F]) {
     Project
       .deleteProject(userId,projectName,timeZoneUTC)
       .run
-      .transact(tx).attemptSomeSqlState(_=>DeleteProjectUnsuccessful)
+      .transact(tx).attemptSomeSqlState(x=>ProjectDeleteUnsuccessful(detailErrorMessage = x.value))
 }

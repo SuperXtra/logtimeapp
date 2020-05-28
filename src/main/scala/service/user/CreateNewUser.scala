@@ -19,12 +19,12 @@ class CreateNewUser[F[+_] : Sync](getNewUser: UserById[F],
     ).value
 
 
-  private def createUser(): EitherT[F, AppError, Long] = {
-    EitherT.fromOptionF(create(), CannotCreateUserWithGeneratedUUID)
+  private def createUser(): EitherT[F, AppError, Int] = {
+    EitherT.fromOptionF(create(), CannotCreateUserWithGeneratedUUID())
   }
 
-  private def getExistingUserById(id: Long): EitherT[F, AppError, UserTb] = {
-    EitherT.fromOptionF(getNewUser(id), UserNotFound)
+  private def getExistingUserById(id: Int): EitherT[F, AppError, UserTb] = {
+    EitherT.fromOptionF(getNewUser(id), UserNotFound())
   }
 
   //  private def getExistingUserId(uuid: String): EitherT[F, AppError, Long] =

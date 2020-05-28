@@ -5,7 +5,7 @@ import java.time.ZonedDateTime
 import cats.effect.Sync
 import doobie.implicits._
 import doobie.util.transactor.Transactor
-import error.{AppError, DeleteProjectUnsuccessful}
+import error._
 import repository.queries.Task
 
 class DeleteTasks[F[+_]: Sync](tx: Transactor[F]) {
@@ -15,6 +15,6 @@ class DeleteTasks[F[+_]: Sync](tx: Transactor[F]) {
       .deleteTasksForProject(projectId, deleteTime)
       .run
       .transact(tx)
-      .attemptSomeSqlState(_ => DeleteProjectUnsuccessful)
+      .attemptSomeSqlState(x =>TaskDeleteUnsuccessful(detailErrorMessage = x.value))
   }
 }

@@ -21,8 +21,8 @@ class InsertTask[F[_] : Sync](tx: Transactor[F]) {
       .insert(create, projectId, userId)
       .transact(tx)
       .attemptSomeSqlState {
-        case sqlstate.class23.EXCLUSION_VIOLATION => CannotLogNewTaskWithTheOverlappingTimeRangeForTheSameUser
-        case sqlstate.class23.UNIQUE_VIOLATION => CannotLogNewTaskWithDuplicateTaskDescriptionUnderTheSameProject
+        case sqlstate.class23.EXCLUSION_VIOLATION => TaskNotCreated("User can not log task with overlapping time")
+        case sqlstate.class23.UNIQUE_VIOLATION => TaskNameExists()
       }
   }
 }

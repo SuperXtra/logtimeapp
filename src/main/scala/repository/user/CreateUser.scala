@@ -9,9 +9,10 @@ import repository.queries.User
 
 class CreateUser[F[_]: Sync](tx: Transactor[F]) {
 
-  def apply(): F[Option[Long]] = {
+  def apply(): F[Option[Int]] = {
     User
       .insertUser(UUID.randomUUID().toString)
+      .option
       .transact(tx)
   }
 

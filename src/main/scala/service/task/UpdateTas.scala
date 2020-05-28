@@ -55,7 +55,7 @@ class UpdateTas[F[+_] : Sync](getUserId: GetExistingUserId[F],
 
 
   private def updateExistingTask(toUpdate: TaskToUpdate): EitherT[F, AppError, Long] = {
-    EitherT.fromOptionF(taskUpdate(toUpdate), TaskUpdateUnsuccessful)
+    EitherT.fromOptionF(taskUpdate(toUpdate), TaskUpdateUnsuccessful())
   }
 
   private def deleteTask(taskDescription: String, projectId: Long, userId: Long): EitherT[F, AppError, Int] = {
@@ -63,11 +63,11 @@ class UpdateTas[F[+_] : Sync](getUserId: GetExistingUserId[F],
   }
 
   private def fetchTask(taskDescription: String, userId: Long): EitherT[F, AppError, TaskTb] = {
-    EitherT.fromOptionF(getUserTask(taskDescription, userId), TaskWithGivenNameDoesNotExist)
+    EitherT.fromOptionF(getUserTask(taskDescription, userId), TaskNotFound("Task with given name cannot be updated - it does not exist"))
   }
 
   private def getExistingUserId(uuid: String): EitherT[F, AppError, Long] =
-    EitherT.fromOptionF(getUserId(uuid), UserNotFound)
+    EitherT.fromOptionF(getUserId(uuid), UserNotFound())
 
 }
 

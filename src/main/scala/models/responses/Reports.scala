@@ -14,14 +14,29 @@ case class ProjectReport(
 case class Tasks(tasks: List[TaskTb])
 
 case class FinalReport(
-                        project_name: String,
-                        project_create_time: LocalDateTime,
-                        task_create_time: LocalDateTime,
-                        user_id: Int,
-                        task_description: String,
-                        start_time: LocalDateTime,
-                        end_time: LocalDateTime,
-                        duration: Int,
+                        project_name: Option[String],
+                        project_create_time: Option[LocalDateTime],
+                        task_create_time: Option[LocalDateTime],
+                        task_description: Option[String],
+                        start_time: Option[LocalDateTime],
+                        end_time: Option[LocalDateTime],
+                        duration: Option[Int],
                         volume: Option[Int],
                         comment: Option[String]
                       )
+
+case class Repoooort (
+                       project_name: Option[String],
+                       project_create_time: Option[LocalDateTime],
+                       tasks: List[RepTasks]
+                     )
+
+case class RepTasks (
+                      task_create_time: Option[LocalDateTime],
+                      task_description: Option[String],
+                      start_time: Option[LocalDateTime],
+                      end_time: Option[LocalDateTime],
+                      duration: Option[Int],
+                      volume: Option[Int],
+                      comment: Option[String]
+                    )

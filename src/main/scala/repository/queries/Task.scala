@@ -24,7 +24,7 @@ object Task {
   def insertUpdate(update: TaskToUpdate) = {
     val start = update.startTime
     val end = start.plusMinutes(update.duration)
-    sql"insert into tb_task (project_id, user_id, task_description, start_time, end_time, duration, volume, comment) VALUES (${update.projectId}, ${update.userId}, ${update.taskDescription}, ${start.toLocalDateTime}, ${end.toLocalDateTime}, ${update.duration}, ${update.volume}, ${update.comment}) returning id".query[Long].option
+    sql"insert into tb_task (project_id, user_id, create_time, task_description, start_time, end_time, duration, volume, comment) VALUES (${update.projectId}, ${update.userId}, ${ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime}, ${update.taskDescription}, ${start.toLocalDateTime}, ${end.toLocalDateTime}, ${update.duration}, ${update.volume}, ${update.comment}) returning id".query[Long].option
 
   }
 
@@ -74,12 +74,12 @@ object Task {
           """.update
   }
 
-  def fetchTasksForProject(projectId: Long) = {
+  def fetchTasksForProject(projectId: Int) = {
     fr"""
           select * from tb_task
           where project_id = ${projectId}
           and active = true
-          """.query[TaskTb].to[List]
+          """.query[TaskTb]
   }
 
   def fetchTask(taskDescription: String, userId: Long) = {

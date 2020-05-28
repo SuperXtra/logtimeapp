@@ -3,7 +3,7 @@ package repository.task
 import cats.effect.Sync
 import doobie.postgres.sqlstate
 import doobie.util.transactor.Transactor
-import error.{AppError, CannotChangeNameGivenTaskExistsAlready}
+import error._
 import doobie.implicits._
 import repository.queries.Task
 
@@ -14,7 +14,7 @@ class TaskDelete[F[+_] : Sync](tx: Transactor[F]) {
       .deleteTask(taskDescription, projectId, userId)
       .run.transact(tx)
       .attemptSomeSqlState {
-        case sqlstate.class23.UNIQUE_VIOLATION => CannotChangeNameGivenTaskExistsAlready
+        case sqlstate.class23.UNIQUE_VIOLATION => TaskDeleteUnsuccessful()
       }
   }
 }

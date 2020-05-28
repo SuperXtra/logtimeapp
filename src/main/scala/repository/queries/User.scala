@@ -16,22 +16,22 @@ object User {
   implicit val han = LogHandler.jdkLogHandler
 
   def insertUser(userIdentification: String) = {
-    sql"insert into tb_user (user_identification) values (${userIdentification}) returning id".query[Long].option
+    sql"insert into tb_user (user_identification) values (${userIdentification}) returning id".query[Int]
   }
 
   def selectLastInsertedUser() = {
     sql"select lastval()".query[Long]
   }
 
-  def selectByUserIdentity(id: Long) = {
-    sql"select * from tb_user where id = $id".query[UserTb].option
+  def selectByUserIdentity(id: Int) = {
+    sql"select * from tb_user where id = $id".query[UserTb]
   }
 
   def getUserId(userIdentification: String) = {
     fr"""
             select id from tb_user
             where user_identification = ${userIdentification}
-            """.query[Long].option
+            """.query[Int]
   }
 
   def userExists(userIdentification: String) = {

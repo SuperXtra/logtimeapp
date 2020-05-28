@@ -12,18 +12,12 @@ import doobie.util.ExecutionContexts
 import org.scalatest.funsuite.AnyFunSuite
 import doobie.implicits._
 import models.request.ReportRequest
-import repository.queries.{Project, Report}
+import repository.queries.{Project, Report, Task, User}
 
 
 class QueriesCheckSpec extends AnyFunSuite with Matchers with doobie.scalatest.IOChecker with JsonSupport {
 
   implicit val cs = IO.contextShift(ExecutionContexts.synchronous)
-//  project_name, create_time, delete_time,
-//  user_id, task_description, start_time, end_time, duration, volume, comment, delete_time
-
-
-
-
   val transactor = Transactor.fromDriverManager[IO](
     "org.postgresql.Driver",
     "jdbc:postgresql://ec2-54-75-229-28.eu-west-1.compute.amazonaws.com:5432/d94gigncif0u25",
@@ -40,44 +34,41 @@ class QueriesCheckSpec extends AnyFunSuite with Matchers with doobie.scalatest.I
 //
 //    check(query)
 //  }
-//
-//  test("Project select should check") {
-//    check(Project.getProject("test"))
-//  }
-//
-//  test("Project change name should check") {
-//    check(Project.changeName("oldName", "newName", 1))
-//  }
 
-//  test("Project delete should check") {
-//    check(Queries.Project.deleteProject(1, "test project"))
-//  }
+  test("Project select should check") {
+    check(Project.getProject("test"))
+  }
 
-//  test("Project insert should check") {
-//    check(Queries.Project.insert("testProjectData", 2))
-//  }
-//
-//  test("User create should check") {
-//    check(Queries.User.insertUser("ussiddsdnjnsdwweq2322"))
-//  }
-//  test("User create with null check") {
-//    check(Queries.User.insertUser(null))
-//  }
-//
-//  test("User should retrieve user") {
-//    check(Queries.User.getUserId("sdasdamsdaksdm"))
-//  }
+  test("Project change name should check") {
+    check(Project.changeName("oldName", "newName", 1))
+  }
 
-//  test("Task should fetch correctly by task description and project id") {
-//    check(Queries.Task.fetchTasksForProject("test task description", 2))
-//  }
+  test("Project delete should check") {
+    check(Project.deleteProject(1, "test project", ZonedDateTime.now(ZoneOffset.UTC)))
+  }
 
-//  test("User select last inserted") {
-//    check(Queries.User.selectLastInsertedUser())
-//  }
-//
-//  test("User fetch by id") {
-//    check(Queries.User.selectByUserIdentity(2))
-//  }
+  test("Project insert should check") {
+    check(Project.insert("testProjectData", 2))
+  }
+
+  test("User create should check") {
+    check(User.insertUser("ussiddsdnjnsdwweq2322"))
+  }
+
+  test("User should retrieve user") {
+    check(User.getUserId("sdasdamsdaksdm"))
+  }
+
+  test("Task should fetch correctly by project id") {
+    check(Task.fetchTasksForProject(2))
+  }
+
+  test("User select last inserted") {
+    check(User.selectLastInsertedUser())
+  }
+
+  test("User fetch by id") {
+    check(User.selectByUserIdentity(2))
+  }
 
 }

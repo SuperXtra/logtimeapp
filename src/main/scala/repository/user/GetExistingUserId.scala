@@ -9,6 +9,7 @@ class GetExistingUserId[F[_] : Sync](tx: Transactor[F]) {
   def apply(userIdentification: String): F[Option[Long]] = {
     User
       .getUserId(userIdentification)
+      .option
       .transact(tx)
   }
 }

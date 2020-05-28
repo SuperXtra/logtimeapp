@@ -10,8 +10,11 @@ import repository.queries.Report
 
 class Report[F[_]: Sync](tx: Transactor[F]) {
 
-  def apply(projectQuert: ReportRequest, page: Int, pageCount: Int): F[Either[ReportCouldNotBeGenerated.type, List[FinalReport]]] = {
-    Report(projectQuert, page, pageCount).transact(tx).attemptSomeSqlState{
+  def apply(projectQuert: ReportRequest): F[Either[ReportCouldNotBeGenerated.type, List[FinalReport]]] = {
+    Report(projectQuert)
+      .to[List]
+      .transact(tx)
+      .attemptSomeSqlState{
       _ => ReportCouldNotBeGenerated
     }
   }

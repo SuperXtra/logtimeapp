@@ -19,20 +19,19 @@ object Project {
 
   def insert(projectName: String, userId: Long) = {
     fr"""INSERT INTO tb_project (user_id, project_name, create_time) VALUES (
-           ${userId},
+           ${userId.toInt},
            ${projectName},
            ${ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime}
            ) returning id
            """
-      .query[Long]
-      .unique
+      .query[Int]
   }
 
   def changeName(oldName: String, newName: String, userId: Long): Update0 = {
     fr"""
         UPDATE tb_project SET project_name = ${newName}
         WHERE project_name = ${oldName}
-        AND user_id = ${userId}
+        AND user_id = ${userId.toInt}
         """.update
   }
 
@@ -40,7 +39,7 @@ object Project {
     fr"""UPDATE tb_project
            SET delete_time = ${deleteTime.toLocalDateTime}, active = false
            WHERE project_name = $projectName
-           AND user_id = $requestingUserId
+           AND user_id = ${requestingUserId.toInt}
            """
       .update
   }

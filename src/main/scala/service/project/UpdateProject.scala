@@ -5,7 +5,7 @@ import cats.effect.Sync
 import models.request.ChangeProjectNameRequest
 import doobie.implicits._
 import doobie.postgres.sqlstate
-import error.{AppError, CannotChangeNameGivenProjectNameExistsAlready, ProjectNotCreated, UserNotFound}
+import error.{AppError, ProjectNameExists, ProjectNotCreated, UserNotFound}
 import models.model.ProjectTb
 import repository.project.{FindProjectById, UpdateProjectName}
 import repository.user.GetExistingUserId
@@ -25,15 +25,15 @@ class UpdateProject[F[+_]: Sync](
 
 
   private def getExistingUserId(userIdentification: String): EitherT[F, AppError, Long] = {
-    EitherT.fromOptionF(userId(userIdentification), UserNotFound)
+    EitherT.fromOptionF(userId(userIdentification), UserNotFound())
   }
 
   private def findProjectById(projectName: String): EitherT[F, AppError, ProjectTb] =
-    EitherT.fromOptionF(findProject(projectName), ProjectNotCreated)
+    EitherT.fromOptionF(findProject(projectName), ProjectNotCreated())
 
   private def changeProjectName(oldProjectName: String, projectName: String, userId: Long): EitherT[F, AppError, Int] =
     EitherT(updateProjectName(oldProjectName, projectName, userId).attemptSomeSqlState {
-      case sqlstate.class23.UNIQUE_VIOLATION => CannotChangeNameGivenProjectNameExistsAlready
+      case sqlstate.class23.UNIQUE_VIOLATION => ProjectNameExists()
     })
 
 }

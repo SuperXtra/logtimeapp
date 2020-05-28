@@ -21,7 +21,7 @@ class CreateNewProject[F[+_] : Sync](
   }
 
   private def getExistingUserId(userIdentification: String): EitherT[F, AppError, Long] = {
-    EitherT.fromOptionF(getUserId(userIdentification), UserNotFound)
+    EitherT.fromOptionF(getUserId(userIdentification), UserNotFound())
   }
 
   private def insertProject(projectName: String, userId: Long): EitherT[F, AppError, Long] = {

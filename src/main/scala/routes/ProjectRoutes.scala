@@ -2,14 +2,15 @@ package routes
 
 import akka.http.scaladsl.server.Directives.{as, complete, delete, entity, path, post, put}
 import akka.http.scaladsl.server.Route
-import cats.data.EitherT
 import cats.effect.IO
 import models.request.{ChangeProjectNameRequest, CreateProjectRequest, DeleteProjectRequest}
 import error.AppError
 import models.model.ProjectTb
-import util.JsonSupport
+import io.circe.generic.auto._
+import cats.implicits._
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 
-object ProjectRoutes extends JsonSupport{
+object ProjectRoutes {
 
   //TODO prepare responses
 
@@ -21,9 +22,9 @@ object ProjectRoutes extends JsonSupport{
         entity(as[CreateProjectRequest]) { project =>
           complete(
             req(project).map {
-              case Right(project) => s"Created project with id: $project"
-              case Left(error: AppError) => error.toString
-            }.unsafeToFuture()
+              case Right(project) => project.asRight
+              case Left(error: AppError) => error.asLeft
+            }.unsafeToFuture
           )
         }
       }
@@ -35,9 +36,9 @@ object ProjectRoutes extends JsonSupport{
         entity(as[ChangeProjectNameRequest]) { project =>
           complete(
             req(project).map {
-              case Right(updatedProject: ProjectTb) => updatedProject.projectName
-              case Left(error: AppError) => error.toString
-            }.unsafeToFuture()
+              case Right(updatedProject: ProjectTb) => updatedProject.asLeft
+              case Left(error: AppError) => error.asRight
+            }.unsafeToFuture
           )
 
         }
@@ -48,12 +49,13 @@ object ProjectRoutes extends JsonSupport{
     path(projectPath) {
       delete {
         entity(as[DeleteProjectRequest]) { project =>
-          req(project).map {
-            case Right(_) => complete("Deleted")
-            case Left(value) => complete(value.toString)
-          }.unsafeRunSync()
+          complete(
+            req(project).map {
+              case Right(_) => "Deleted Successfully".asRight
+              case Left(value) => value.asLeft
+            }.unsafeToFuture
+          )
         }
       }
     }
-
 }
