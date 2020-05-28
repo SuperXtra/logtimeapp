@@ -6,17 +6,21 @@ import akka.http.scaladsl.server.Directives._
 import cats.effect.IO
 import error.AppError
 import models.model.UserTb
-import util.JsonSupport
+import io.circe.generic.auto._
+import cats.implicits._
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 
-object UserRoutes extends JsonSupport{
+object UserRoutes {
 
   def createUser(user: () => IO[Either[AppError, UserTb]]) =
   path("user") {
     post {
+      complete(
         user().map {
-          case Left(value) => complete(value.toString)
-          case Right(newUser) =>complete(newUser)
-        }.unsafeRunSync()
+          case Right(newUser) =>newUser.asRight
+          case Left(value) => value.asLeft
+        }.unsafeToFuture
+      )
     }
   }
 }

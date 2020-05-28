@@ -23,6 +23,7 @@ import service.task._
 import service.user._
 import pureconfig._
 import pureconfig.generic.auto._
+import repository.report.Report
 import spray.json._
 
 object WebApp extends App with JsonSupport {
@@ -57,6 +58,7 @@ object WebApp extends App with JsonSupport {
   val taskInsertUpdate = new TaskInsertUpdate[IO](connection)
   val insertTask = new InsertTask[IO](connection)
   val getTask = new GetTask[IO](connection)
+  val report = new Report[IO](connection)
 
 
   val createNewProjectService = new CreateNewProject[IO](getExistingUserId, insertProject)
@@ -67,7 +69,7 @@ object WebApp extends App with JsonSupport {
   val logTaskService = new LogTask[IO](findProjectById, getExistingUserId, insertTask, getTask)
   val projectTaskDurationReport = new ProjectTasksDurationReport[IO](findProjectById, getProjectTasks)
   val deleteTaskService = new DeleteTas[IO](findProjectById, getExistingUserId, deleteTask)
-
+//  val projectWithTaskFilter = new ProjectWithTasks[IO](report)
 
   val routes: Route = concat(
     TaskRoutes.logTask(logTaskService.apply),
@@ -78,6 +80,7 @@ object WebApp extends App with JsonSupport {
     ProjectRoutes.updateProject(updateProjectService.apply),
     ProjectRoutes.deleteProject(deactivateProjectService.apply),
     ReportRoutes.projectTasksReport(projectTaskDurationReport.apply)
+//    ReportRoutes.mainReport(projectWithTaskFilter.apply)
   )
 
 

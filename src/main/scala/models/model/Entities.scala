@@ -3,14 +3,14 @@ package models.model
 import java.time._
 
 case class UserTb(
-                   id: Long,
+                   id: Int,
                    userIdentification: String
                  )
 
 case class TaskTb(
-                   id: Long,
-                   projectId: Long,
-                   userId: Long,
+                   id: Int,
+                   projectId: Int,
+                   userId: Int,
                    createTime: LocalDateTime,
                    taskDescription: String,
                    startTime: LocalDateTime,
@@ -23,10 +23,10 @@ case class TaskTb(
                  )
 
 case class ProjectTb(
-                      id: Long,
-                      userId: Long,
+                      id: Int,
+                      userId: Int,
                       projectName: String,
                       createTime: LocalDateTime,
                       deleteTime: Option[LocalDateTime],
-                      active: Boolean
+                      active: Option[Boolean]
                     )

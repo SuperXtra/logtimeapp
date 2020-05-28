@@ -7,7 +7,6 @@ import models.model.UserTb
 import repository.queries.User
 
 class UserById[F[_]: Sync](tx: Transactor[F]) {
-
   def apply(id: Long): F[Option[UserTb]] = {
     User
       .selectByUserIdentity(id)

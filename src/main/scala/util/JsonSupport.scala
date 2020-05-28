@@ -3,8 +3,8 @@ package util
 import java.time.{LocalDateTime, ZonedDateTime}
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import models.model.{ProjectTb, TaskTb, UserTb}
-import models.request.{ChangeProjectNameRequest, CreateProjectRequest, DeleteProjectRequest, DeleteTaskRequest, LogTaskRequest, UpdateTaskRequest}
+import models.model.{ByCreatedTime, ByUpdateTime, ProjectSort, ProjectTb, TaskTb, UserTb}
+import models.request.{ChangeProjectNameRequest, CreateProjectRequest, DeleteProjectRequest, DeleteTaskRequest, LogTaskRequest, ReportRequest, UpdateTaskRequest}
 import models.responses.{FinalReport, ProjectReport, Tasks}
 import spray.json._
 
@@ -57,5 +57,8 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val updateTaskFormat: RootJsonFormat[UpdateTaskRequest] = jsonFormat7(UpdateTaskRequest)
   implicit val tasksFormat: RootJsonFormat[Tasks] = jsonFormat1(Tasks)
   implicit val projectReportFormat: RootJsonFormat[ProjectReport] = jsonFormat3(ProjectReport)
-  implicit val finalReportFormat: RootJsonFormat[FinalReport] = jsonFormat9(FinalReport)
+  implicit val finalReportFormat: RootJsonFormat[FinalReport] = jsonFormat10(FinalReport)
+//  implicit val projectSortByCreatedTime = jsonFormat0(ByCreatedTime)
+//  implicit val projectSortByUpdateTime = jsonFormat(ByUpdateTime)
+//  implicit val reportReqFormat = jsonFormat8(ReportRequest)
 }

@@ -51,11 +51,10 @@ object Project {
            """
       .query[Long]
 
-  def getProject(projectName: String): ConnectionIO[Option[ProjectTb]] = {
+  def getProject(projectName: String)= {
     fr"""SELECT * FROM tb_project
            WHERE project_name = ${projectName}"""
       .query[ProjectTb]
-      .option
   }
 
   def projectExists(projectName: String): Query0[Boolean] = {

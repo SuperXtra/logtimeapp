@@ -11,6 +11,7 @@ class FindProjectById[F[+_]: Sync](tx: Transactor[F]) {
   def apply(projectName: String): F[Option[ProjectTb]] =
     Project
       .getProject(projectName)
+      .option
       .transact(tx)
 
 }

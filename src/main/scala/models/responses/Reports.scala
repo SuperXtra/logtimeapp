@@ -15,12 +15,13 @@ case class Tasks(tasks: List[TaskTb])
 
 case class FinalReport(
                         project_name: String,
-                        create_time: LocalDateTime,
-                        user_id: Long,
+                        project_create_time: LocalDateTime,
+                        task_create_time: LocalDateTime,
+                        user_id: Int,
                         task_description: String,
                         start_time: LocalDateTime,
                         end_time: LocalDateTime,
-                        duration: Long,
+                        duration: Int,
                         volume: Option[Int],
                         comment: Option[String]
                       )

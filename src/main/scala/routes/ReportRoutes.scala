@@ -4,7 +4,8 @@ import akka.http.scaladsl.server.Directives.{complete, get, path}
 import cats.effect.IO
 import error.AppError
 import akka.http.scaladsl.server.Directives._
-import models.responses.ProjectReport
+import models.request.ReportRequest
+import models.responses.{FinalReport, ProjectReport}
 import util.JsonSupport
 
 object ReportRoutes extends JsonSupport{
@@ -28,4 +29,16 @@ object ReportRoutes extends JsonSupport{
         }.unsafeRunSync()
       }
     }
+//
+//  def mainReport(req: ReportRequest => IO[Either[AppError, List[FinalReport]]]) = {
+//    path("report")
+//      get {
+//        entity(as[ReportRequest]) { request =>
+//        req(request).map {
+//          case Left(value) => complete(value.toString)
+//          case Right(value) => complete(value)
+//        }.unsafeRunSync()
+//      }
+//    }
+//  }
 }

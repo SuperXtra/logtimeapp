@@ -19,3 +19,4 @@ case object TaskUpdateUnsuccessful extends AppError
 case object TaskWithGivenNameDoesNotExist extends AppError
 case object ProjectNotFound extends AppError
 case object TaskNotCreated extends AppError
+case object ReportCouldNotBeGenerated extends AppError

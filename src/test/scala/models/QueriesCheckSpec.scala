@@ -4,7 +4,6 @@ import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
 import cats.effect.IO
 import models.model.{Ascending, ByCreatedTime}
-import models.request.ReportRequest
 import doobie.util.transactor.Transactor
 import org.specs2.matcher.Matchers
 import util.JsonSupport
@@ -12,6 +11,8 @@ import doobie._
 import doobie.util.ExecutionContexts
 import org.scalatest.funsuite.AnyFunSuite
 import doobie.implicits._
+import models.request.ReportRequest
+import repository.queries.{Project, Report}
 
 
 class QueriesCheckSpec extends AnyFunSuite with Matchers with doobie.scalatest.IOChecker with JsonSupport {
@@ -35,17 +36,17 @@ class QueriesCheckSpec extends AnyFunSuite with Matchers with doobie.scalatest.I
 //
 //    val projectQuery = ReportRequest(Some(List("test1", "test2")), Some(ZonedDateTime.now(ZoneOffset.UTC).minusDays(10)), Some(ZonedDateTime.now(ZoneOffset.UTC).plusDays(10)), ByCreatedTime,Some(true), Ascending,0,0)
 //
-//    val query = Queries.Project.Report.apply(projectQuery)
+//    val query = Report.apply(projectQuery)
 //
 //    check(query)
 //  }
-
+//
 //  test("Project select should check") {
-//    check(Queries.Project.getProject("test"))
+//    check(Project.getProject("test"))
 //  }
-
+//
 //  test("Project change name should check") {
-//    check(Queries.Project.changeName("oldName", "newName", 1))
+//    check(Project.changeName("oldName", "newName", 1))
 //  }
 
 //  test("Project delete should check") {
