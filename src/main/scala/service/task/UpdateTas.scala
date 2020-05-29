@@ -16,9 +16,9 @@ class UpdateTas[F[+_] : Sync](getUserId: GetExistingUserId[F],
                               taskDelete: TaskDelete[F],
                               taskUpdate: TaskInsertUpdate[F]) {
 
-  def apply(updateTask: UpdateTaskRequest): F[Either[AppError, Long]] = (
+  def apply(updateTask: UpdateTaskRequest, uuid: String): F[Either[AppError, Long]] = (
     for {
-      userId <- getExistingUserId(updateTask.userIdentification)
+      userId <- getExistingUserId(uuid)
       oldTask <- fetchTask(updateTask.oldTaskDescription, userId)
       _ <- deleteTask(oldTask.taskDescription, oldTask.projectId, oldTask.userId)
       updated <- updateExistingTask(newTask(oldTask, updateTask))
@@ -66,7 +66,7 @@ class UpdateTas[F[+_] : Sync](getUserId: GetExistingUserId[F],
     EitherT.fromOptionF(getUserTask(taskDescription, userId), TaskNotFound("Task with given name cannot be updated - it does not exist"))
   }
 
-  private def getExistingUserId(uuid: String): EitherT[F, AppError, Long] =
+  private def getExistingUserId(uuid: String): EitherT[F, AppError, Int] =
     EitherT.fromOptionF(getUserId(uuid), UserNotFound())
 
 }

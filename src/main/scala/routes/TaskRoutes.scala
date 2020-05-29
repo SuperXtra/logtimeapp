@@ -8,49 +8,60 @@ import error._
 import models.model.TaskTb
 import io.circe.generic.auto._
 import cats.implicits._
+import routes.ProjectRoutes.Authorization
+import service.auth.AuthService
 //import cats.effect._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 
 object TaskRoutes {
 
-  def logTask(logWorkDone: LogTaskRequest => IO[Either[AppError, TaskTb]]): Route =
+  val authorization = new AuthService()
+
+
+  def logTask(logWorkDone: (LogTaskRequest, String) => IO[Either[AppError, TaskTb]]): Route =
     path("task") {
       post {
-        entity(as[LogTaskRequest]) { task =>
-          complete(
-            logWorkDone(task).map {
-              case Right(created) => created.asRight
-              case Left(err) => err.asLeft
-            }.unsafeToFuture
-          )
+        Authorization.authenticated { tokenClaims =>
+          entity(as[LogTaskRequest]) { task =>
+            complete(
+              logWorkDone(task, tokenClaims("uuid").toString).map {
+                case Right(created) => created.asRight
+                case Left(err) => err.asLeft
+              }.unsafeToFuture
+            )
+          }
         }
       }
     }
 
-  def updateTask(updateTask: UpdateTaskRequest => IO[Either[AppError, Long]]): Route =
+  def updateTask(updateTask: (UpdateTaskRequest, String) => IO[Either[AppError, Long]]): Route =
     path("task") {
       put {
-        entity(as[UpdateTaskRequest]) { update =>
-          complete(
-            updateTask(update).map {
-              case Left(value) => value.asRight
-              case Right(err) => err.asLeft
-            }.unsafeToFuture()
-          )
+        Authorization.authenticated { tokenClaims =>
+          entity(as[UpdateTaskRequest]) { update =>
+            complete(
+              updateTask(update, tokenClaims("uuid").toString).map {
+                case Left(value) => value.asRight
+                case Right(err) => err.asLeft
+              }.unsafeToFuture()
+            )
+          }
         }
       }
     }
 
 
-  def deleteTask(deleteTask: DeleteTaskRequest => IO[Either[AppError, Int]]): Route =
+  def deleteTask(deleteTask: (DeleteTaskRequest,String) => IO[Either[AppError, Int]]): Route =
     path("task") {
       delete {
-        entity(as[DeleteTaskRequest]) { delete =>
-          complete(deleteTask(delete).map {
-            case Right(value) => value.asRight
-            case Left(ex) => ex.asLeft
-          }.unsafeToFuture
-          )
+        Authorization.authenticated { tokenClaims =>
+          entity(as[DeleteTaskRequest]) { delete =>
+            complete(deleteTask(delete, tokenClaims("uuid").toString).map {
+              case Right(value) => value.asRight
+              case Left(ex) => ex.asLeft
+            }.unsafeToFuture
+            )
+          }
         }
       }
     }

@@ -3,7 +3,7 @@ lazy val root = project
   .settings(
     name := "project-management-app",
     version := "0.1",
-    scalaVersion := "2.13.2",
+    scalaVersion := "2.12.2",
     scalacOptions ++= Seq(
       "-encoding", "utf8",
       "-Xfatal-warnings",
@@ -21,8 +21,8 @@ lazy val root = project
         cats ++
         circe ++
         doobie ++
+        authentikat ++
         flyway ++
-        jodaTime ++
         pureConfig ++
         scalatest ++
         scalaTestFunSuite ++
@@ -57,10 +57,9 @@ lazy val doobiePostgres           =  Seq("org.tpolecat"      %% "doobie-postgres
 lazy val doobieSpecs2             =  Seq("org.tpolecat"      %% "doobie-specs2"         % doobieVersion % Test) // TODO remove
 lazy val doobieScalaTest          =  Seq("org.tpolecat"      %% "doobie-scalatest"      % doobieVersion % "test,it") // TODO add
 
+lazy val authentikat              =  Seq("com.jason-goodwin" %% "authentikat-jwt" % "0.4.5")
+
 lazy val flyway                   =  Seq("org.flywaydb"      % "flyway-core"           % "6.4.2")
-
-lazy val jodaTime                 =  Seq("joda-time" % "joda-time" % "2.3")
-
 lazy val pureConfig               =  Seq("com.github.pureconfig" %% "pureconfig"        % "0.12.2")
 
 lazy val scalatest                =  Seq("org.scalatest"     %% "scalatest"             % "3.1.1" % "test,it") // TODO add

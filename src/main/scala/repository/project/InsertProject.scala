@@ -9,7 +9,7 @@ import repository.queries.Project
 
 
 class InsertProject[F[+_] : Sync](tx: Transactor[F]) {
-  def apply(projectName: String, userId: Long): F[Either[AppError, Long]] =
+  def apply(projectName: String, userId: Long): F[Either[AppError, Int]] =
     Project
       .insert(projectName, userId)
       .unique

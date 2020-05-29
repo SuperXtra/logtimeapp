@@ -6,14 +6,11 @@ import cats.implicits._
 import cats.effect._
 import models.model.{ProjectTb, TaskTb}
 import service.task._
-import doobie.util.ExecutionContexts
-import doobie.util.transactor.Transactor
 import error.{AppError, ProjectNotFound}
 import models.request.LogTaskRequest
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.GivenWhenThen
-import org.joda.time.DateTime
 import repository.project.FindProjectById
 import repository.task.{GetTask, InsertTask}
 import repository.user.{GetExistingUserId, UserById}
@@ -27,7 +24,6 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
     val userId = 456
     val workDone = LogTaskRequest(
       projectName = "",
-      userIdentification = "",
       taskDescription = "",
       startTime = ZonedDateTime.now(ZoneOffset.UTC).minusDays(3),
       durationTime = 0,
@@ -52,13 +48,13 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
     And("a service will find project id, user id, insert and return created task task")
     val logWork = serviceUnderTest(
       project = Some(project),
-      userId = userId.toLong.some,
+      userId = userId.some,
       task = task.some,
       insertTaskResult = task.id.toLong.asRight
     )
 
     When("logging work")
-    val result = logWork(workDone).unsafeRunSync
+    val result = logWork((workDone), "test string").unsafeRunSync
 
     Then("returns created task")
     result shouldBe Right(task)
@@ -71,7 +67,6 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
     val project = None
     val workDone = LogTaskRequest(
       projectName = "",
-      userIdentification = "",
       taskDescription = "",
       startTime = ZonedDateTime.of(2020,5,24,21,0,0,0,ZoneOffset.UTC),
       durationTime = 0,
@@ -87,7 +82,7 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
     )
 
     When("logging work")
-    val result = logWork(workDone).unsafeRunSync
+    val result = logWork(workDone, "test string").unsafeRunSync
 
     Then("returns error message: project not found")
     result shouldBe Left(ProjectNotFound())
@@ -104,7 +99,7 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
   private trait Context {
 
     def serviceUnderTest(project: Option[ProjectTb],
-                         userId: Option[Long],
+                         userId: Option[Int],
                          task: Option[TaskTb],
                          insertTaskResult: Either[AppError, Long]): LogTask[IO] = {
 
@@ -113,7 +108,7 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
       }
 
       val getUserId = new GetExistingUserId[IO](null) {
-        override def apply(userIdentification: String): IO[Option[Long]] = userId.pure[IO]
+        override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
       }
 
       val insertTask = new InsertTask[IO](null) {
@@ -121,7 +116,7 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
           insertTaskResult.pure[IO]
       }
 
-      val getTask = new GetTask[IO](null) {
+      val getTask = new GetTask[IO](null) {Long
         override def apply(id: Long): IO[Option[TaskTb]] = task.pure[IO]
       }
       new LogTask(getProjectId, getUserId, insertTask, getTask)

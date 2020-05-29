@@ -9,52 +9,63 @@ import models.model.ProjectTb
 import io.circe.generic.auto._
 import cats.implicits._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
+import service.auth.AuthService
 
 object ProjectRoutes {
 
   //TODO prepare responses
 
+  val Authorization = new AuthService()
+
+
   val projectPath = "project"
 
-  def createProject(req: CreateProjectRequest => IO[Either[AppError, Long]]): Route =
+  def createProject(req: (CreateProjectRequest, String) => IO[Either[AppError, Int]]): Route =
     path(projectPath) {
       post {
-        entity(as[CreateProjectRequest]) { project =>
-          complete(
-            req(project).map {
-              case Right(project) => project.asRight
-              case Left(error: AppError) => error.asLeft
-            }.unsafeToFuture
-          )
+        Authorization.authenticated { tokenClaims =>
+          entity(as[CreateProjectRequest]) { project =>
+            complete(
+              req(project, tokenClaims("uuid").toString).map {
+                case Right(project) => project.asRight
+                case Left(error: AppError) => error.asLeft
+              }.unsafeToFuture
+            )
+          }
         }
       }
     }
 
-  def updateProject(req: ChangeProjectNameRequest => IO[Either[AppError, ProjectTb]]): Route =
+
+  def updateProject(req: (ChangeProjectNameRequest, String) => IO[Either[AppError, ProjectTb]]): Route =
     path(projectPath) {
       put {
-        entity(as[ChangeProjectNameRequest]) { project =>
-          complete(
-            req(project).map {
-              case Right(updatedProject: ProjectTb) => updatedProject.asLeft
-              case Left(error: AppError) => error.asRight
-            }.unsafeToFuture
-          )
+        Authorization.authenticated { tokenClaims =>
+          entity(as[ChangeProjectNameRequest]) { project =>
+            complete(
+              req(project, tokenClaims("uuid").toString).map {
+                case Right(updatedProject: ProjectTb) => updatedProject.asLeft
+                case Left(error: AppError) => error.asRight
+              }.unsafeToFuture
+            )
 
+          }
         }
       }
     }
 
-  def deleteProject(req: DeleteProjectRequest => IO[Either[AppError, Unit]]): Route =
+  def deleteProject(req: (DeleteProjectRequest, String) => IO[Either[AppError, Unit]]): Route =
     path(projectPath) {
       delete {
-        entity(as[DeleteProjectRequest]) { project =>
-          complete(
-            req(project).map {
-              case Right(_) => "Deleted Successfully".asRight
-              case Left(value) => value.asLeft
-            }.unsafeToFuture
-          )
+        Authorization.authenticated { tokenClaims =>
+          entity(as[DeleteProjectRequest]) { project =>
+            complete(
+              req(project, tokenClaims("uuid").toString).map {
+                case Right(_) => "Deleted Successfully".asRight
+                case Left(value) => value.asLeft
+              }.unsafeToFuture
+            )
+          }
         }
       }
     }

@@ -15,9 +15,9 @@ class DeleteTas[F[+_] : Sync](
                                delete: TaskDelete[F]) {
 
 
-  def apply(deleteTaskRequest: DeleteTaskRequest): F[Either[AppError, Int]] = (for {
+  def apply(deleteTaskRequest: DeleteTaskRequest, uuid: String): F[Either[AppError, Int]] = (for {
     project <- findProjectById(deleteTaskRequest.projectName)
-    userId <- getExistingUserId(deleteTaskRequest.userIdentification)
+    userId <- getExistingUserId(uuid)
     updatedCount <- deleteTask(deleteTaskRequest.taskDescription, project.id, userId)
   } yield updatedCount).value
 
@@ -26,7 +26,7 @@ class DeleteTas[F[+_] : Sync](
     EitherT.fromOptionF(getProjectId(projectName), ProjectNotCreated())
   }
 
-  private def getExistingUserId(uuid: String): EitherT[F, AppError, Long] =
+  private def getExistingUserId(uuid: String): EitherT[F, AppError, Int] =
     EitherT.fromOptionF(getUserId(uuid), UserNotFound())
 
   private def deleteTask(taskDescription: String, projectId: Long, userId: Long): EitherT[F, AppError, Int] = {

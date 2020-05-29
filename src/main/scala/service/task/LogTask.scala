@@ -16,10 +16,10 @@ class LogTask[F[+_]: Sync](
                             insertTask: InsertTask[F],
                             getTask: GetTask[F]) {
 
-  def apply(work: LogTaskRequest): F[Either[AppError, TaskTb]] = {
+  def apply(work: LogTaskRequest, uuid: String): F[Either[AppError, TaskTb]] = {
     (for {
       projectId <- getExistingProjectId(work.projectName)
-      userId <- getExistingUserId(work.userIdentification)
+      userId <- getExistingUserId(uuid)
       taskId <- insertNewTask(work, projectId.id, userId)
       task <- getExistingTask(taskId)
     } yield task).value
@@ -28,7 +28,7 @@ class LogTask[F[+_]: Sync](
   private def getExistingProjectId(projectName: String): EitherT[F, AppError, ProjectTb] =
     EitherT.fromOptionF(getProjectId(projectName), ProjectNotFound())
 
-  private def getExistingUserId(userIdentification: String): EitherT[F, AppError, Long] =
+  private def getExistingUserId(userIdentification: String): EitherT[F, AppError, Int] =
     EitherT.fromOptionF(getUserId(userIdentification), UserNotFound())
 
   private def insertNewTask(work: LogTaskRequest, projectId: Long, userId: Long): EitherT[F, AppError, Long] =

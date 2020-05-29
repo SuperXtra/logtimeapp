@@ -6,7 +6,7 @@ import doobie.util.transactor.Transactor
 import repository.queries.User
 
 class GetExistingUserId[F[_] : Sync](tx: Transactor[F]) {
-  def apply(userIdentification: String): F[Option[Long]] = {
+  def apply(userIdentification: String): F[Option[Int]] = {
     User
       .getUserId(userIdentification)
       .option

@@ -24,6 +24,7 @@ import service.user._
 import pureconfig._
 import pureconfig.generic.auto._
 import repository.report.Report
+import service.auth.AuthService
 import spray.json._
 
 object WebApp extends App with JsonSupport {
@@ -59,6 +60,7 @@ object WebApp extends App with JsonSupport {
   val insertTask = new InsertTask[IO](tx)
   val getTask = new GetTask[IO](tx)
   val report = new Report[IO](tx)
+  val userExists = new UserExists[IO](tx)
 
 
   val createNewProjectService = new CreateNewProject[IO](getExistingUserId, insertProject)
@@ -70,12 +72,15 @@ object WebApp extends App with JsonSupport {
   val projectTaskDurationReport = new ProjectTasksDurationReport[IO](findProjectById, getProjectTasks)
   val deleteTaskService = new DeleteTas[IO](findProjectById, getExistingUserId, deleteTask)
   val projectWithTaskFilter = new ProjectWithTasks[IO](report)
+  val authenticateUser = new AuthenticateUser[IO](userExists)
+
 
   val routes: Route = concat(
     TaskRoutes.logTask(logTaskService.apply),
     TaskRoutes.deleteTask(deleteTaskService.apply),
     TaskRoutes.updateTask(updateTaskService.apply),
-    UserRoutes.createUser(createNewUserService.apply),
+    UserRoutes.createUser(createNewUserService.apply()),
+    UserRoutes.authorizeUser(authenticateUser.apply),
     ProjectRoutes.createProject(createNewProjectService.apply),
     ProjectRoutes.updateProject(updateProjectService.apply),
     ProjectRoutes.deleteProject(deactivateProjectService.apply),

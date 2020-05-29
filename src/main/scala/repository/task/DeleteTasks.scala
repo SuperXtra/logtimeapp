@@ -15,6 +15,8 @@ class DeleteTasks[F[+_]: Sync](tx: Transactor[F]) {
       .deleteTasksForProject(projectId, deleteTime)
       .run
       .transact(tx)
-      .attemptSomeSqlState(x =>TaskDeleteUnsuccessful(detailErrorMessage = x.value))
+      .attemptSomeSqlState {
+        case x =>TaskDeleteUnsuccessful(detailErrorMessage = x.value)
+      }
   }
 }

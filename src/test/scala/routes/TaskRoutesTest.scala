@@ -24,7 +24,7 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
   it should "return error project not found" in new Context {
     val result = ProjectNotFound().asLeft
     val route =
-      Route.seal(TaskRoutes.logTask(_ => IO(result)))
+      Route.seal(TaskRoutes.logTask((_,_) => IO(result)))
     Post("/task",
       HttpEntity(
         `application/json`,
@@ -66,7 +66,7 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
     )
 
     val route =
-      Route.seal(TaskRoutes.logTask(_ => IO(task.asRight)))
+      Route.seal(TaskRoutes.logTask((_,_) => IO(task.asRight)))
     Post("/task",
       HttpEntity(
         `application/json`,

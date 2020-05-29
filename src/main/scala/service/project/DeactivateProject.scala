@@ -18,18 +18,18 @@ class DeactivateProject[F[+_] : Sync](
                                        deactivateTasks: DeleteTasks[F]
                                      ) {
 
-  def apply(project: DeleteProjectRequest): F[Either[AppError, Unit]] = {
+  def apply(project: DeleteProjectRequest, uuid: String): F[Either[AppError, Unit]] = {
     //TODO try to move delete time to for-comp
     val deleteTime = ZonedDateTime.now(ZoneOffset.UTC)
     (for {
-      userId <- getExistingUserId(project.userIdentification)
+      userId <- getExistingUserId(uuid)
       _ <- deleteProject(userId, project.projectName, deleteTime)
       projectId <- findProjectById(project.projectName)
       _ <- deleteTasksForProject(projectId.id, deleteTime)
     } yield ()).value
   }
 
-  private def getExistingUserId(userIdentification: String): EitherT[F, AppError, Long] =
+  private def getExistingUserId(userIdentification: String): EitherT[F, AppError, Int] =
     EitherT.fromOptionF(getUserId(userIdentification), ProjectDeleteUnsuccessful("Given user uuid does not exists or is not the owner ow the project"))
 
   private def deleteProject(userId: Long, projectName: String, deleteTime: ZonedDateTime): EitherT[F, AppError, Int] =

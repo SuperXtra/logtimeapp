@@ -17,14 +17,14 @@ class UpdateProject[F[+_]: Sync](
                                 findProject: FindProjectById[F]) {
 
 
-  def apply(project: ChangeProjectNameRequest): F[Either[AppError, ProjectTb]] = (for {
-    userId <- getExistingUserId(project.userIdentification)
+  def apply(project: ChangeProjectNameRequest, uuid: String): F[Either[AppError, ProjectTb]] = (for {
+    userId <- getExistingUserId(uuid)
     _ <- changeProjectName(project.oldProjectName, project.projectName, userId)
     updatedRecord <- findProjectById(project.projectName)
   } yield updatedRecord).value
 
 
-  private def getExistingUserId(userIdentification: String): EitherT[F, AppError, Long] = {
+  private def getExistingUserId(userIdentification: String): EitherT[F, AppError, Int] = {
     EitherT.fromOptionF(userId(userIdentification), UserNotFound())
   }
 

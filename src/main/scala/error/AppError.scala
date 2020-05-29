@@ -23,3 +23,6 @@ case class CannotCreateUserWithGeneratedUUID(errorMessage: String = "Test Test")
 
 //Report
 case class ReportCouldNotBeGenerated(errorMessage: String = "Report could not be generated", detailErrorMessage:String ="") extends AppError
+
+//Authentication
+case class AuthenticationNotSuccessful(errorMessage: String = "Could not authenticate request", detailErrorMessage:String ="") extends AppError
