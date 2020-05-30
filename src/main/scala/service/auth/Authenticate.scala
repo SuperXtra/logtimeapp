@@ -16,7 +16,7 @@ import pureconfig.ConfigSource
 import pureconfig._
 import pureconfig.generic.auto._
 
-class AuthService() {
+class Authenticate() {
 
   //TODO configuration params
 

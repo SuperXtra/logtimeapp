@@ -6,12 +6,12 @@ import cats.effect.Sync
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import error._
-import repository.queries.Task
+import repository.query.TaskQueries
 
 class DeleteTasks[F[+_]: Sync](tx: Transactor[F]) {
 
   def apply(projectId: Long, deleteTime: ZonedDateTime): F[Either[AppError, Int]] = {
-    Task
+    TaskQueries
       .deleteTasksForProject(projectId, deleteTime)
       .run
       .transact(tx)

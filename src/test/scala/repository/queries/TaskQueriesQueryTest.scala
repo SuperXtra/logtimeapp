@@ -1,0 +1,44 @@
+package repository.queries
+
+import java.time.{ZoneOffset, ZonedDateTime}
+
+import models.request.LogTaskRequest
+import repository.query.{TaskQueries, UserQueries}
+
+class TaskQueriesQueryTest extends QueryTest {
+  //TODO
+
+  test("User create should check") {
+    check(TaskQueries.insert(LogTaskRequest(
+      "test name",
+      "test description",
+      ZonedDateTime.now(ZoneOffset.UTC),
+      50,
+      Some(2),
+      Some("test comment")), 2, 2))
+  }
+
+  test("User delete test") {
+    check(TaskQueries.deleteTask("task", 1, 1))
+  }
+
+  test("test if user exist with given uuid query") {
+    check(UserQueries.userExists("123sdaaksjdaskjd"))
+  }
+
+  test("Get user id by user uuid") {
+    check(UserQueries.getUserId("asddadsa"))
+  }
+
+
+  test("Insert user with given uuid") {
+    check(UserQueries.insertUser("asdkjasklkdjasj"))
+  }
+
+  test("Select by user id") {
+    check(UserQueries.selectByUserIdentity(1))
+  }
+  test("User, select last inserted user") {
+    check(UserQueries.selectLastInsertedUser())
+  }
+}

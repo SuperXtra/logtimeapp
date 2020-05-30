@@ -5,20 +5,20 @@ import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import models.request.{DeleteTaskRequest, LogTaskRequest, UpdateTaskRequest}
 import error._
-import models.model.TaskTb
+import models.model.Task
 import io.circe.generic.auto._
 import cats.implicits._
 import routes.ProjectRoutes.Authorization
-import service.auth.AuthService
+import service.auth.Authenticate
 //import cats.effect._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 
 object TaskRoutes {
 
-  val authorization = new AuthService()
+  val authorization = new Authenticate()
 
 
-  def logTask(logWorkDone: (LogTaskRequest, String) => IO[Either[AppError, TaskTb]]): Route =
+  def logTask(logWorkDone: (LogTaskRequest, String) => IO[Either[AppError, Task]]): Route =
     path("task") {
       post {
         Authorization.authenticated { tokenClaims =>

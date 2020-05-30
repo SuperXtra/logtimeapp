@@ -5,12 +5,12 @@ import doobie.implicits._
 import doobie.postgres.sqlstate
 import doobie.util.transactor.Transactor
 import error._
-import repository.queries.Project
+import repository.query.ProjectQueries
 
 
 class InsertProject[F[+_] : Sync](tx: Transactor[F]) {
   def apply(projectName: String, userId: Long): F[Either[AppError, Int]] =
-    Project
+    ProjectQueries
       .insert(projectName, userId)
       .unique
       .transact(tx)

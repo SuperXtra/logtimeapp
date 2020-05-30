@@ -4,15 +4,15 @@ import cats.data.EitherT
 import cats.effect._
 import models.request.DeleteTaskRequest
 import error._
-import models.model.ProjectTb
+import models.model.Project
 import repository.project.FindProjectById
-import repository.task.TaskDelete
+import repository.task.DeleteTask
 import repository.user.GetExistingUserId
 
-class DeleteTas[F[+_] : Sync](
+class TaskDelete[F[+_] : Sync](
                                getProjectId: FindProjectById[F],
                                getUserId: GetExistingUserId[F],
-                               delete: TaskDelete[F]) {
+                               delete: DeleteTask[F]) {
 
 
   def apply(deleteTaskRequest: DeleteTaskRequest, uuid: String): F[Either[AppError, Int]] = (for {
@@ -22,7 +22,7 @@ class DeleteTas[F[+_] : Sync](
   } yield updatedCount).value
 
 
-  private def findProjectById(projectName: String): EitherT[F, AppError, ProjectTb] = {
+  private def findProjectById(projectName: String): EitherT[F, AppError, Project] = {
     EitherT.fromOptionF(getProjectId(projectName), ProjectNotCreated())
   }
 

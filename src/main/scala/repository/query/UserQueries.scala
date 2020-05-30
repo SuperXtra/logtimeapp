@@ -1,6 +1,6 @@
-package repository.queries
+package repository.query
 
-import models.model.UserTb
+import models.model.User
 import cats.implicits._
 import doobie.free.connection.ConnectionIO
 import doobie.util.log.LogHandler
@@ -10,9 +10,9 @@ import doobie.implicits._
 import doobie.util.query.Query0
 import models.model._
 import models.request._
-import models.responses.FinalReport
+import models.responses.ReportFromDb
 
-object User {
+object UserQueries {
   implicit val han = LogHandler.jdkLogHandler
 
   def insertUser(userIdentification: String) = {
@@ -24,7 +24,7 @@ object User {
   }
 
   def selectByUserIdentity(id: Int) = {
-    sql"select * from tb_user where id = $id".query[UserTb]
+    sql"select * from tb_user where id = $id".query[User]
   }
 
   def getUserId(userIdentification: String) = {

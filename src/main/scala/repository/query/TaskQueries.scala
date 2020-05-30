@@ -1,8 +1,8 @@
-package repository.queries
+package repository.query
 
 import java.time.{ZoneOffset, ZonedDateTime}
 
-import models.model.{TaskTb, TaskToUpdate}
+import models.model.{Task, TaskToUpdate}
 import models.request.LogTaskRequest
 import java.time.{ZoneOffset, ZonedDateTime}
 
@@ -15,9 +15,9 @@ import doobie.implicits._
 import doobie.util.query.Query0
 import models.model._
 import models.request._
-import models.responses.FinalReport
+import models.responses.ReportFromDb
 
-object Task {
+object TaskQueries {
   implicit val han = LogHandler.jdkLogHandler
 
 
@@ -45,30 +45,30 @@ object Task {
              volume,
              comment
            ) VALUES (
-             ${projectId},
-             ${userId},
+             ${projectId.toInt},
+             ${userId.toInt},
              ${ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime},
              ${create.taskDescription},
              ${start.toLocalDateTime},
              ${end.toLocalDateTime},
-             ${create.durationTime},
+             ${create.durationTime.toInt},
              ${create.volume},
              ${create.comment}
            ) returning id"""
-      .query[Long]
-      .unique
+      .query[Int]
+
   }
 
   def selectLastInsertedTask(id: Long) = {
-    sql"select * from tb_task where id = ${id}".query[TaskTb].option
+    sql"select * from tb_task where id = ${id}".query[Task].option
   }
 
   def deleteTask(taskDescription: String, projectId: Long, userId: Long) = {
     val created = ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime
     fr"""
           update tb_task set delete_time = ${created}, active = false
-          where project_id = ${projectId} and
-          user_id = ${userId}
+          where project_id = ${projectId.toInt} and
+          user_id = ${userId.toInt}
           and task_description = ${taskDescription}
           and active = true
           """.update
@@ -79,11 +79,11 @@ object Task {
           select * from tb_task
           where project_id = ${projectId}
           and active = true
-          """.query[TaskTb]
+          """.query[Task]
   }
 
   def fetchTask(taskDescription: String, userId: Long) = {
-    sql"select * from tb_task where task_description = ${taskDescription} and user_id = ${userId} and active = true".query[TaskTb].option
+    sql"select * from tb_task where task_description = ${taskDescription} and user_id = ${userId} and active = true".query[Task].option
   }
 
   def deleteTasksForProject(projectId: Long, deleteTime: ZonedDateTime): Update0 = {

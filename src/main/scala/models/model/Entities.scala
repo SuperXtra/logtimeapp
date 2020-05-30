@@ -2,12 +2,12 @@ package models.model
 
 import java.time._
 
-case class UserTb(
+case class User(
                    id: Int,
                    userIdentification: String
                  )
 
-case class TaskTb(
+case class Task(
                    id: Int,
                    projectId: Int,
                    userId: Int,
@@ -22,7 +22,7 @@ case class TaskTb(
                    active: Option[Boolean]
                  )
 
-case class ProjectTb(
+case class Project(
                       id: Int,
                       userId: Int,
                       projectName: String,

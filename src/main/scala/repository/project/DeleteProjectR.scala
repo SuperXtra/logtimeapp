@@ -6,12 +6,12 @@ import cats.effect._
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import error._
-import repository.queries.Project
+import repository.query.ProjectQueries
 
 class DeleteProjectR[F[+_]: Sync](tx: Transactor[F]) {
 
   def apply(userId: Long, projectName: String, timeZoneUTC: ZonedDateTime): F[Either[AppError, Int]] =
-    Project
+    ProjectQueries
       .deleteProject(userId,projectName,timeZoneUTC)
       .run
       .transact(tx).attemptSomeSqlState {

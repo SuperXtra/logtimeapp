@@ -6,18 +6,18 @@ import models.request.ChangeProjectNameRequest
 import doobie.implicits._
 import doobie.postgres.sqlstate
 import error.{AppError, ProjectNameExists, ProjectNotCreated, UserNotFound}
-import models.model.ProjectTb
+import models.model.Project
 import repository.project.{FindProjectById, UpdateProjectName}
 import repository.user.GetExistingUserId
 
 
-class UpdateProject[F[+_]: Sync](
+class ProjectUpdate[F[+_]: Sync](
                                 userId: GetExistingUserId[F],
                                 updateProjectName: UpdateProjectName[F],
                                 findProject: FindProjectById[F]) {
 
 
-  def apply(project: ChangeProjectNameRequest, uuid: String): F[Either[AppError, ProjectTb]] = (for {
+  def apply(project: ChangeProjectNameRequest, uuid: String): F[Either[AppError, Project]] = (for {
     userId <- getExistingUserId(uuid)
     _ <- changeProjectName(project.oldProjectName, project.projectName, userId)
     updatedRecord <- findProjectById(project.projectName)
@@ -28,7 +28,7 @@ class UpdateProject[F[+_]: Sync](
     EitherT.fromOptionF(userId(userIdentification), UserNotFound())
   }
 
-  private def findProjectById(projectName: String): EitherT[F, AppError, ProjectTb] =
+  private def findProjectById(projectName: String): EitherT[F, AppError, Project] =
     EitherT.fromOptionF(findProject(projectName), ProjectNotCreated())
 
   private def changeProjectName(oldProjectName: String, projectName: String, userId: Long): EitherT[F, AppError, Int] =

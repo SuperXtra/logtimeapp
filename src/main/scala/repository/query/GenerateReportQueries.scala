@@ -1,22 +1,22 @@
-package repository.queries
+package repository.query
 
 import java.time.format.DateTimeFormatter
 
 import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending}
-import models.request.ReportRequest
+import models.request.ReportBodyWithParamsRequest
 import cats.implicits._
 import doobie.util.log.LogHandler
 import doobie.implicits.javatime._
 import doobie._
 import doobie.util.query.Query0
-import models.responses.FinalReport
+import models.responses.ReportFromDb
 import doobie.implicits._
 
-object Report {
+object GenerateReportQueries {
   implicit val han = LogHandler.jdkLogHandler
 
 
-  def apply(projectQuery: ReportRequest): doobie.Query0[FinalReport] = {
+  def apply(projectQuery: ReportBodyWithParamsRequest): doobie.Query0[ReportFromDb] = {
 
     val selectAllFromCTE =
       fr"""
@@ -57,7 +57,7 @@ object Report {
         case (_, _) => fr""
       }
 
-    val order: Fragment = projectQuery.path.sortDirection match {
+    val order: Fragment = projectQuery.pathParams.sortDirection match {
       case Some(value) => value match {
         case Ascending => fr"ASC"
         case Descending => fr"DESC"
@@ -66,7 +66,7 @@ object Report {
       case None => fr""
     }
 
-    val sortingCTE: Fragment = projectQuery.path.projectSort match {
+    val sortingCTE: Fragment = projectQuery.pathParams.projectSort match {
       case Some(value) => value match {
         case ByCreatedTime => fr" ORDER BY p.create_time ${order}"
         case ByUpdateTime => fr" ORDER BY update ${order}"
@@ -74,7 +74,7 @@ object Report {
       case None => fr""
     }
 
-    val sortingSelect: Fragment = projectQuery.path.projectSort match {
+    val sortingSelect: Fragment = projectQuery.pathParams.projectSort match {
       case Some(value) => value match {
         case ByCreatedTime => fr" ORDER BY p.create_time ${order}, t.create_time ${order}"
         case ByUpdateTime => fr" ORDER BY COALESCE(t.create_time, p.create_time) ${order}"
@@ -84,7 +84,7 @@ object Report {
 
 
 
-    val isActiveFilter = projectQuery.path.active match {
+    val isActiveFilter = projectQuery.pathParams.active match {
       case Some(value) => value match {
         case true => fr"AND COALESCE(t.active , true) = true"
         case false => fr"AND COALESCE(t.active , false) = false"
@@ -93,8 +93,8 @@ object Report {
     }
 
     val paginationFilter = {
-      val offset = ((projectQuery.path.page - 1) * projectQuery.path.quantity).toLong
-      val limitation = projectQuery.path.quantity.toLong
+      val offset = ((projectQuery.pathParams.page - 1) * projectQuery.pathParams.quantity).toLong
+      val limitation = projectQuery.pathParams.quantity.toLong
       fr"""
         LIMIT ${limitation} OFFSET ${offset}
        """
@@ -122,6 +122,6 @@ object Report {
 
     println(reportQuery.toString())
 
-    reportQuery.query[FinalReport]
+    reportQuery.query[ReportFromDb]
   }
 }

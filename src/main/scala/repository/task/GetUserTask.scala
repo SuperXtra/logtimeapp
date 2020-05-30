@@ -3,11 +3,11 @@ package repository.task
 import cats.effect.Sync
 import doobie.Transactor
 import doobie.implicits._
-import repository.queries.Task
+import repository.query.TaskQueries
 
 class GetUserTask[F[_] : Sync](tx: Transactor[F]) {
   def apply(taskDescription: String, userId: Long) = {
-    Task
+    TaskQueries
       .fetchTask(taskDescription, userId)
       .transact(tx)
   }

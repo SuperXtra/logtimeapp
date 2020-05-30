@@ -40,6 +40,7 @@ lazy val doobieVersion            =  "0.9.0"
 
 lazy val akkaHttp                 =  Seq("com.typesafe.akka" %% "akka-http"             % akkaHttpVersion)
 lazy val akkaSteam                =  Seq("com.typesafe.akka" %% "akka-stream"           % akkaVersion)
+lazy val akkaActor                =  Seq("com.typesafe.akka" %% "akka-actor"            % akkaVersion)
 lazy val akkaHttpSpray            =  Seq("com.typesafe.akka" %% "akka-http-spray-json"  % akkaHttpVersion) //TODO remove
 lazy val akkaCirce                =  Seq("de.heikoseeberger" %% "akka-http-circe"       % "1.31.0")
 
@@ -70,6 +71,7 @@ lazy val testContainersPostgres   =  Seq("org.testcontainers" % "postgresql"    
 
 lazy val akka =
   akkaHttp ++
+    akkaActor ++
     akkaSteam ++
     akkaHttpSpray ++
     akkaCirce ++

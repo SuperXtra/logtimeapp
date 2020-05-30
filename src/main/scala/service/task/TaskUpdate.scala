@@ -5,16 +5,16 @@ import java.time.{ZoneOffset, ZonedDateTime}
 import cats.data.EitherT
 import cats.effect.{IO, Sync}
 import models.{model, _}
-import models.model.{TaskTb, TaskToUpdate}
+import models.model.{Task, TaskToUpdate}
 import models.request.UpdateTaskRequest
 import error._
-import repository.task.{GetUserTask, TaskDelete, TaskInsertUpdate}
+import repository.task.{GetUserTask, DeleteTask, TaskInsertUpdate}
 import repository.user.GetExistingUserId
 
-class UpdateTas[F[+_] : Sync](getUserId: GetExistingUserId[F],
-                              getUserTask: GetUserTask[F],
-                              taskDelete: TaskDelete[F],
-                              taskUpdate: TaskInsertUpdate[F]) {
+class TaskUpdate[F[+_] : Sync](getUserId: GetExistingUserId[F],
+                               getUserTask: GetUserTask[F],
+                               taskDelete: DeleteTask[F],
+                               taskUpdate: TaskInsertUpdate[F]) {
 
   def apply(updateTask: UpdateTaskRequest, uuid: String): F[Either[AppError, Long]] = (
     for {
@@ -25,7 +25,7 @@ class UpdateTas[F[+_] : Sync](getUserId: GetExistingUserId[F],
     } yield updated
     ).value
 
-  private def newTask(oldTask: TaskTb, updateTask: UpdateTaskRequest): TaskToUpdate = {
+  private def newTask(oldTask: Task, updateTask: UpdateTaskRequest): TaskToUpdate = {
 
     // TODO beautify
 
@@ -62,7 +62,7 @@ class UpdateTas[F[+_] : Sync](getUserId: GetExistingUserId[F],
     EitherT(taskDelete(taskDescription, projectId,userId))
   }
 
-  private def fetchTask(taskDescription: String, userId: Long): EitherT[F, AppError, TaskTb] = {
+  private def fetchTask(taskDescription: String, userId: Long): EitherT[F, AppError, Task] = {
     EitherT.fromOptionF(getUserTask(taskDescription, userId), TaskNotFound("Task with given name cannot be updated - it does not exist"))
   }
 

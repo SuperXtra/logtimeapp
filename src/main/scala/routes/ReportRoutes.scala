@@ -7,8 +7,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.ParameterDirectives
 import cats.effect.IO
 import error.AppError
-import models.request.{RReq, RRequest, ReportRequest}
-import models.responses.{FinalReport, ProjectReport, RepTasks, Repoooort}
+import models.request.{MainReport, ReportBodyWithParamsRequest, ReportParams, ReportRequest}
+import models.responses.{DetailReport, GeneralReport, ReportFromDb, ReportTask, UserStatisticsReport}
 import io.circe.generic.auto._
 import cats.implicits._
 import cats.effect._
@@ -16,16 +16,16 @@ import ParameterDirectives.ParamMagnet
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending, ProjectSort, SortDirection}
 import routes.ProjectRoutes.Authorization
-import service.auth.AuthService
+import service.auth.Authenticate
 
 import scala.collection.immutable.SortedMap
 
 object ReportRoutes {
 
-  val authorization = new AuthService()
+  val authorization = new Authenticate()
 
 
-  def projectTasksReport(req: String => IO[Either[AppError, ProjectReport]]): Route =
+  def projectTasksReport(req: String => IO[Either[AppError, GeneralReport]]): Route =
     path("project") {
       parameter("name") { name =>
         get {
@@ -41,8 +41,24 @@ object ReportRoutes {
       }
     }
 
+  def detailedReport(req: MainReport => IO[Either[AppError, List[UserStatisticsReport]]]) =
+    path("detailed") {
+      get{
+        Authorization.authenticated { _ =>
+          entity(as[MainReport]) { request =>
+            complete(
+              req(request).map {
+                case Left(err) => err.asLeft
+                case Right(report) => report.asRight
+              }.unsafeToFuture
+            )
+          }
+        }
+      }
+    }
 
-  def mainReport(req: ReportRequest => IO[Either[AppError, List[FinalReport]]]): Route = {
+
+  def mainReport(req: ReportBodyWithParamsRequest => IO[Either[AppError, List[ReportFromDb]]]): Route = {
     path("report") {
       parameters(
         "by".as[String].?,
@@ -53,13 +69,13 @@ object ReportRoutes {
       ).as((a, b, c, d, e) => {
 
         extractQuery(a, b, c, d, e)
-      }) { pathParams: RReq =>
+      }) { pathParams: ReportParams =>
         get {
           Authorization.authenticated { _ =>
-            entity(as[RRequest]) { request: RRequest =>
+            entity(as[ReportRequest]) { request: ReportRequest =>
               complete(
-                req(ReportRequest(request, pathParams)).map {
-                  case Right(response: List[FinalReport]) => {
+                req(ReportBodyWithParamsRequest(request, pathParams)).map {
+                  case Right(response: List[ReportFromDb]) => {
 
                     //TODO preserve order in groupBy
                     val x = response.groupBy(a => (a.project_name, a.project_create_time)).map {
@@ -67,7 +83,7 @@ object ReportRoutes {
 
                         val tasks = value.map(x => {
                           println(x.toString)
-                          RepTasks(x.task_create_time,
+                          ReportTask(x.task_create_time,
                             x.task_description,
                             x.start_time,
                             x.end_time,
@@ -78,7 +94,7 @@ object ReportRoutes {
 
                         )
 
-                        Repoooort(
+                        DetailReport(
                           tuple._1,
                           tuple._2,
                           tasks
@@ -117,7 +133,7 @@ object ReportRoutes {
                             active: Option[Boolean],
                             page: Int,
                             quantity: Int
-                          ): RReq = RReq(
+                          ): ReportParams = ReportParams(
     active,
     sortBy.map(x => {
       resolveSort(x)

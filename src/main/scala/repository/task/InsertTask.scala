@@ -12,13 +12,14 @@ import error._
 import doobie.implicits._
 import doobie.implicits.javasql._
 import doobie.implicits.javatime._
-import repository.queries.Task
+import repository.query.TaskQueries
 
 class InsertTask[F[_] : Sync](tx: Transactor[F]) {
 
-  def apply(create: LogTaskRequest, projectId: Long, userId: Long): F[Either[AppError, Long]] = {
-    Task
+  def apply(create: LogTaskRequest, projectId: Long, userId: Long): F[Either[AppError, Int]] = {
+    TaskQueries
       .insert(create, projectId, userId)
+      .unique
       .transact(tx)
       .attemptSomeSqlState {
         case sqlstate.class23.EXCLUSION_VIOLATION => TaskNotCreated("User can not log task with overlapping time")

@@ -1,14 +1,13 @@
 import java.time.ZonedDateTime
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorLogging, ActorSystem}
+import akka.event.{Logging, LoggingAdapter, MarkerLoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import cats.effect.{ContextShift, IO}
 import com.typesafe.config.ConfigFactory
 import config.DatabaseConfig
-import util.JsonSupport
-
 import scala.concurrent.Future
 import db.DatabaseContext
 import doobie.util.ExecutionContexts
@@ -23,26 +22,21 @@ import service.task._
 import service.user._
 import pureconfig._
 import pureconfig.generic.auto._
-import repository.report.Report
-import service.auth.AuthService
-import spray.json._
+import repository.report.{DetailedReport, Report}
+import service.auth.Authenticate
 
-object WebApp extends App with JsonSupport {
+object WebApp extends App {
 
   val config = ConfigFactory.load("database-configuration.conf")
   val databaseConfig = ConfigSource.fromConfig(config).loadOrThrow[DatabaseConfig]
   //TODO create global String to timestamp converter
 
   implicit val system = ActorSystem("projectAppSystem")
+  implicit val logger: MarkerLoggingAdapter = Logging.withMarker(system, "test")
   implicit val executionContext = system.dispatcher
-
 
   implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
   val tx = DatabaseContext.transactor(databaseConfig)
-
-
-//  val taskService = new TaskService(connection)
-
 
   val deleteProjectR = new DeleteProjectR[IO](tx)
   val deleteTasks = new DeleteTasks[IO](tx)
@@ -55,24 +49,26 @@ object WebApp extends App with JsonSupport {
   val deleteProject = new DeleteProjectR[IO](tx)
   val getProjectTasks = new GetProjectTasks[IO](tx)
   val getUserTask = new GetUserTask[IO](tx)
-  val deleteTask = new TaskDelete[IO](tx)
+  val deleteTask = new DeleteTask[IO](tx)
   val taskInsertUpdate = new TaskInsertUpdate[IO](tx)
   val insertTask = new InsertTask[IO](tx)
   val getTask = new GetTask[IO](tx)
   val report = new Report[IO](tx)
   val userExists = new UserExists[IO](tx)
+  val detailedReport = new DetailedReport[IO](tx)
 
 
-  val createNewProjectService = new CreateNewProject[IO](getExistingUserId, insertProject)
-  val deactivateProjectService = new DeactivateProject[IO](getExistingUserId,deleteProject, findProjectById, deleteTasks)
-  val updateProjectService = new UpdateProject[IO](getExistingUserId, updateProjectName, findProjectById)
-  val createNewUserService = new CreateNewUser[IO](userById, createNewUser)
-  val updateTaskService = new UpdateTas[IO](getExistingUserId, getUserTask, deleteTask,taskInsertUpdate)
-  val logTaskService = new LogTask[IO](findProjectById, getExistingUserId, insertTask, getTask)
-  val projectTaskDurationReport = new ProjectTasksDurationReport[IO](findProjectById, getProjectTasks)
-  val deleteTaskService = new DeleteTas[IO](findProjectById, getExistingUserId, deleteTask)
-  val projectWithTaskFilter = new ProjectWithTasks[IO](report)
-  val authenticateUser = new AuthenticateUser[IO](userExists)
+  val createNewProjectService = new ProjectCreate[IO](getExistingUserId, insertProject)
+  val deactivateProjectService = new ProjectDeactivate[IO](getExistingUserId,deleteProject, findProjectById, deleteTasks)
+  val updateProjectService = new ProjectUpdate[IO](getExistingUserId, updateProjectName, findProjectById)
+  val createNewUserService = new UserCreate[IO](userById, createNewUser)
+  val updateTaskService = new TaskUpdate[IO](getExistingUserId, getUserTask, deleteTask,taskInsertUpdate)
+  val logTaskService = new TaskLog[IO](findProjectById, getExistingUserId, insertTask, getTask)
+  val projectTaskDurationReport = new OverviewReport[IO](findProjectById, getProjectTasks)
+  val deleteTaskService = new TaskDelete[IO](findProjectById, getExistingUserId, deleteTask)
+  val projectWithTaskFilter = new DetailReport[IO](report)
+  val authenticateUser = new UserAuthenticate[IO](userExists)
+  val detailReport = new AdditionalReport[IO](detailedReport)
 
 
   val routes: Route = concat(
@@ -85,7 +81,8 @@ object WebApp extends App with JsonSupport {
     ProjectRoutes.updateProject(updateProjectService.apply),
     ProjectRoutes.deleteProject(deactivateProjectService.apply),
     ReportRoutes.projectTasksReport(projectTaskDurationReport.apply),
-    ReportRoutes.mainReport(projectWithTaskFilter.apply)
+    ReportRoutes.mainReport(projectWithTaskFilter.apply),
+    ReportRoutes.detailedReport(detailReport.apply)
   )
 
 

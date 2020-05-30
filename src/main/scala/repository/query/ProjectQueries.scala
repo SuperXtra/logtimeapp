@@ -1,4 +1,4 @@
-package repository.queries
+package repository.query
 
 import java.time.{ZoneOffset, ZonedDateTime}
 
@@ -11,9 +11,9 @@ import doobie.implicits._
 import doobie.util.query.Query0
 import models.model._
 import models.request._
-import models.responses.FinalReport
+import models.responses.ReportFromDb
 
-object Project {
+object ProjectQueries {
   implicit val han = LogHandler.jdkLogHandler
 
 
@@ -53,7 +53,7 @@ object Project {
   def getProject(projectName: String)= {
     fr"""SELECT * FROM tb_project
            WHERE project_name = ${projectName}"""
-      .query[ProjectTb]
+      .query[Project]
   }
 
   def projectExists(projectName: String): Query0[Boolean] = {

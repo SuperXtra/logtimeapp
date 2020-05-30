@@ -4,19 +4,19 @@ import cats.effect.Sync
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import error.{AppError, ReportCouldNotBeGenerated}
-import models.request.ReportRequest
-import models.responses.FinalReport
-import repository.queries.Report
+import models.request.ReportBodyWithParamsRequest
+import models.responses.ReportFromDb
+import repository.query.GenerateReportQueries
 
-class Report[F[_]: Sync](tx: Transactor[F]) {
+class Report[F[_] : Sync](tx: Transactor[F]) {
 
-  def apply(projectQuert: ReportRequest): F[Either[AppError, List[FinalReport]]] = {
-    Report(projectQuert)
+  def apply(projectQuery: ReportBodyWithParamsRequest): F[Either[AppError, List[ReportFromDb]]] = {
+    GenerateReportQueries(projectQuery)
       .to[List]
       .transact(tx)
-      .attemptSomeSqlState{
+      .attemptSomeSqlState {
         case _ => ReportCouldNotBeGenerated()
-    }
+      }
   }
 
 }

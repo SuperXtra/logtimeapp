@@ -8,7 +8,7 @@ import error._
 import repository.project.InsertProject
 import repository.user.GetExistingUserId
 
-class CreateNewProject[F[+_] : Sync](
+class ProjectCreate[F[+_] : Sync](
                                       getUserId: GetExistingUserId[F],
                                       createProject: InsertProject[F]
                                     ) {

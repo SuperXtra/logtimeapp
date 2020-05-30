@@ -5,12 +5,12 @@ import doobie.postgres.sqlstate
 import doobie.util.transactor.Transactor
 import error._
 import doobie.implicits._
-import repository.queries.Task
+import repository.query.TaskQueries
 
-class TaskDelete[F[+_] : Sync](tx: Transactor[F]) {
+class DeleteTask[F[+_] : Sync](tx: Transactor[F]) {
 
   def apply(taskDescription: String, projectId: Long, userId: Long): F[Either[AppError, Int]] = {
-    Task
+    TaskQueries
       .deleteTask(taskDescription, projectId, userId)
       .run.transact(tx)
       .attemptSomeSqlState {

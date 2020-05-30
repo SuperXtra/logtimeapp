@@ -11,7 +11,7 @@ import cats.effect._
 import cats.implicits._
 import error._
 import io.circe.parser.{parse => json}
-import models.model.TaskTb
+import models.model.Task
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import io.circe.syntax._
@@ -19,12 +19,11 @@ import io.circe.syntax._
 
 import scala.concurrent.duration._
 
-class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
+class TaskQueriesRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
 
   it should "return error project not found" in new Context {
     val result = ProjectNotFound().asLeft
-    val route =
-      Route.seal(TaskRoutes.logTask((_,_) => IO(result)))
+    val route = Route.seal(TaskRoutes.logTask((_,_) => IO(result)))
     Post("/task",
       HttpEntity(
         `application/json`,
@@ -50,7 +49,7 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
   it should "return created task" in new Context {
 
     val duration = 3.days
-    val task = TaskTb(
+    val task = Task(
       id = 283,
       projectId = 213,
       userId = 123,

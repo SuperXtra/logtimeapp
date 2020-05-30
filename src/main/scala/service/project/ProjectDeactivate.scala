@@ -6,12 +6,12 @@ import cats.data.EitherT
 import cats.effect._
 import models.request.DeleteProjectRequest
 import error._
-import models.model.ProjectTb
+import models.model.Project
 import repository.project.{DeleteProjectR, FindProjectById}
 import repository.task.DeleteTasks
 import repository.user.GetExistingUserId
 
-class DeactivateProject[F[+_] : Sync](
+class ProjectDeactivate[F[+_] : Sync](
                                        getUserId: GetExistingUserId[F],
                                        deactivateProject: DeleteProjectR[F],
                                        findProject: FindProjectById[F],
@@ -35,7 +35,7 @@ class DeactivateProject[F[+_] : Sync](
   private def deleteProject(userId: Long, projectName: String, deleteTime: ZonedDateTime): EitherT[F, AppError, Int] =
     EitherT(deactivateProject(userId, projectName, deleteTime))
 
-  private def findProjectById(projectName: String): EitherT[F, AppError, ProjectTb] =
+  private def findProjectById(projectName: String): EitherT[F, AppError, Project] =
     EitherT.fromOptionF(findProject(projectName), ProjectNotCreated())
 
   private def deleteTasksForProject(id: Long, deleteTime: ZonedDateTime): EitherT[F, AppError, Int] =

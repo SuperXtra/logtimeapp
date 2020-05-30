@@ -1,26 +1,25 @@
-package service
+package service.task
 
 import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
-import cats.implicits._
 import cats.effect._
-import models.model.{ProjectTb, TaskTb}
-import service.task._
+import cats.implicits._
 import error.{AppError, ProjectNotFound}
+import models.model.{Project, Task}
 import models.request.LogTaskRequest
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.GivenWhenThen
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import repository.project.FindProjectById
 import repository.task.{GetTask, InsertTask}
-import repository.user.{GetExistingUserId, UserById}
+import repository.user.GetExistingUserId
 
-class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
+class TaskQueriesLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "log work" in new Context {
 
     Given("user wants to log work")
-    val project = ProjectTb(1,123,"test",LocalDateTime.now(),None,None)
+    val project = Project(1,123,"test",LocalDateTime.now(),None,None)
     val userId = 456
     val workDone = LogTaskRequest(
       projectName = "",
@@ -30,7 +29,7 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
       volume = none,
       comment = none
     )
-    val task = TaskTb(
+    val task = Task(
       id = 283,
       projectId = project.id,
       userId = userId,
@@ -50,7 +49,7 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
       project = Some(project),
       userId = userId.some,
       task = task.some,
-      insertTaskResult = task.id.toLong.asRight
+      insertTaskResult = task.id.asRight
     )
 
     When("logging work")
@@ -78,7 +77,7 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
       project = None,
       userId = None,
       task = None,
-      insertTaskResult = 0L.asRight
+      insertTaskResult = 0.asRight
     )
 
     When("logging work")
@@ -98,13 +97,13 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   private trait Context {
 
-    def serviceUnderTest(project: Option[ProjectTb],
+    def serviceUnderTest(project: Option[Project],
                          userId: Option[Int],
-                         task: Option[TaskTb],
-                         insertTaskResult: Either[AppError, Long]): LogTask[IO] = {
+                         task: Option[Task],
+                         insertTaskResult: Either[AppError, Int]): TaskLog[IO] = {
 
       val getProjectId = new FindProjectById[IO](null) {
-        override def apply(projectName: String): IO[Option[ProjectTb]] = project.pure[IO]
+        override def apply(projectName: String): IO[Option[Project]] = project.pure[IO]
       }
 
       val getUserId = new GetExistingUserId[IO](null) {
@@ -112,14 +111,14 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
       }
 
       val insertTask = new InsertTask[IO](null) {
-        override def apply(create: LogTaskRequest, projectId: Long, userId: Long): IO[Either[AppError, Long]] =
+        override def apply(create: LogTaskRequest, projectId: Long, userId: Long): IO[Either[AppError, Int]] =
           insertTaskResult.pure[IO]
       }
 
       val getTask = new GetTask[IO](null) {Long
-        override def apply(id: Long): IO[Option[TaskTb]] = task.pure[IO]
+        override def apply(id: Long): IO[Option[Task]] = task.pure[IO]
       }
-      new LogTask(getProjectId, getUserId, insertTask, getTask)
+      new TaskLog(getProjectId, getUserId, insertTask, getTask)
     }
   }
 }
