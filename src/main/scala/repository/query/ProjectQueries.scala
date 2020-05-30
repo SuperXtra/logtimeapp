@@ -14,8 +14,6 @@ import models.request._
 import models.responses.ReportFromDb
 
 object ProjectQueries {
-  implicit val han = LogHandler.jdkLogHandler
-
 
   def insert(projectName: String, userId: Long) = {
     fr"""INSERT INTO tb_project (user_id, project_name, create_time) VALUES (

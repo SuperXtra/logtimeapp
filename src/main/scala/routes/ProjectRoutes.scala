@@ -1,5 +1,6 @@
 package routes
 
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.{as, complete, delete, entity, path, post, put}
 import akka.http.scaladsl.server.Route
 import cats.effect.IO
@@ -27,8 +28,8 @@ object ProjectRoutes {
           entity(as[CreateProjectRequest]) { project =>
             complete(
               req(project, tokenClaims("uuid").toString).map {
-                case Right(project) => project.asRight
-                case Left(error: AppError) => error.asLeft
+                case Right(_) => StatusCodes.Created
+                case Left(error) => StatusCodes.ExpectationFailed -> error.asLeft
               }.unsafeToFuture
             )
           }
@@ -45,7 +46,7 @@ object ProjectRoutes {
             complete(
               req(project, tokenClaims("uuid").toString).map {
                 case Right(updatedProject: Project) => updatedProject.asLeft
-                case Left(error: AppError) => error.asRight
+                case Left(error: AppError) =>StatusCodes.ExpectationFailed -> error.asRight
               }.unsafeToFuture
             )
 
@@ -62,7 +63,7 @@ object ProjectRoutes {
             complete(
               req(project, tokenClaims("uuid").toString).map {
                 case Right(_) => "Deleted Successfully".asRight
-                case Left(value) => value.asLeft
+                case Left(value) =>StatusCodes.ExpectationFailed -> value.asLeft
               }.unsafeToFuture
             )
           }

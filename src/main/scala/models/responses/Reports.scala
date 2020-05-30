@@ -14,7 +14,7 @@ case class GeneralReport(
 case class Tasks(tasks: List[Task])
 
 
-case class DetailReport(
+case class DetailReportResponse(
                          project_name: Option[String],
                          project_create_time: Option[LocalDateTime],
                          tasks: List[ReportTask]

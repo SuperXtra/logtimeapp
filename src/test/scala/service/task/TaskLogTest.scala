@@ -14,7 +14,7 @@ import repository.project.FindProjectById
 import repository.task.{GetTask, InsertTask}
 import repository.user.GetExistingUserId
 
-class TaskQueriesLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
+class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "log work" in new Context {
 

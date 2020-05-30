@@ -18,8 +18,6 @@ import models.request._
 import models.responses.ReportFromDb
 
 object TaskQueries {
-  implicit val han = LogHandler.jdkLogHandler
-
 
   def insertUpdate(update: TaskToUpdate) = {
     val start = update.startTime

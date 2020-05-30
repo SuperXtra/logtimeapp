@@ -1,5 +1,6 @@
 package routes
 
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.{as, complete, delete, entity, path, post, put}
 import akka.http.scaladsl.server.Route
 import cats.effect.IO
@@ -25,8 +26,8 @@ object TaskRoutes {
           entity(as[LogTaskRequest]) { task =>
             complete(
               logWorkDone(task, tokenClaims("uuid").toString).map {
-                case Right(created) => created.asRight
-                case Left(err) => err.asLeft
+                case Right(created) => StatusCodes.OK -> created.asRight
+                case Left(err) => StatusCodes.ExpectationFailed -> err.asLeft
               }.unsafeToFuture
             )
           }
@@ -41,8 +42,8 @@ object TaskRoutes {
           entity(as[UpdateTaskRequest]) { update =>
             complete(
               updateTask(update, tokenClaims("uuid").toString).map {
-                case Left(value) => value.asRight
-                case Right(err) => err.asLeft
+                case Left(value) => StatusCodes.OK -> value.asRight
+                case Right(err) => StatusCodes.ExpectationFailed -> err.asLeft
               }.unsafeToFuture()
             )
           }
@@ -57,8 +58,8 @@ object TaskRoutes {
         Authorization.authenticated { tokenClaims =>
           entity(as[DeleteTaskRequest]) { delete =>
             complete(deleteTask(delete, tokenClaims("uuid").toString).map {
-              case Right(value) => value.asRight
-              case Left(ex) => ex.asLeft
+              case Right(value) => StatusCodes.OK -> value.asRight
+              case Left(ex) => StatusCodes.ExpectationFailed -> ex.asLeft
             }.unsafeToFuture
             )
           }

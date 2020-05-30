@@ -8,17 +8,16 @@ import akka.http.scaladsl.server.directives.ParameterDirectives
 import cats.effect.IO
 import error.AppError
 import models.request.{MainReport, ReportBodyWithParamsRequest, ReportParams, ReportRequest}
-import models.responses.{DetailReport, GeneralReport, ReportFromDb, ReportTask, UserStatisticsReport}
+import models.responses.{DetailReportResponse, GeneralReport, ReportFromDb, ReportTask, UserStatisticsReport}
 import io.circe.generic.auto._
 import cats.implicits._
 import cats.effect._
 import ParameterDirectives.ParamMagnet
+import akka.http.scaladsl.model.StatusCodes
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending, ProjectSort, SortDirection}
-import routes.ProjectRoutes.Authorization
+import models.responses
 import service.auth.Authenticate
-
-import scala.collection.immutable.SortedMap
 
 object ReportRoutes {
 
@@ -29,11 +28,11 @@ object ReportRoutes {
     path("project") {
       parameter("name") { name =>
         get {
-          Authorization.authenticated { _ =>
+          authorization.authenticated { _ =>
             complete(
               req(name).map {
-                case Right(report) => report.asRight
-                case Left(value: AppError) => value.asLeft
+                case Right(report) => StatusCodes.OK -> report.asRight
+                case Left(value: AppError) => StatusCodes.ExpectationFailed -> value.asLeft
               }.unsafeToFuture
             )
           }
@@ -43,13 +42,13 @@ object ReportRoutes {
 
   def detailedReport(req: MainReport => IO[Either[AppError, List[UserStatisticsReport]]]) =
     path("detailed") {
-      get{
-        Authorization.authenticated { _ =>
+      get {
+        authorization.authenticated { _ =>
           entity(as[MainReport]) { request =>
             complete(
               req(request).map {
-                case Left(err) => err.asLeft
-                case Right(report) => report.asRight
+                case Right(report) => StatusCodes.OK -> report.asRight
+                case Left(err) => StatusCodes.ExpectationFailed -> err.asLeft
               }.unsafeToFuture
             )
           }
@@ -58,60 +57,32 @@ object ReportRoutes {
     }
 
 
-  def mainReport(req: ReportBodyWithParamsRequest => IO[Either[AppError, List[ReportFromDb]]]): Route = {
-    path("report") {
-      parameters(
-        "by".as[String].?,
-        "sort".as[String].?,
-        "active".as[Boolean].?,
-        "page".as[Int],
-        "quantity".as[Int]
-      ).as((a, b, c, d, e) => {
+  def mainReport(req: ReportBodyWithParamsRequest => IO[Either[AppError, Seq[responses.DetailReportResponse]]]): Route = path("report") {
+    parameters(
+      "by".as[String].?,
+      "sort".as[String].?,
+      "active".as[Boolean].?,
+      "page".as[Int],
+      "quantity".as[Int]
+    ).as((a, b, c, d, e) => {
 
-        extractQuery(a, b, c, d, e)
-      }) { pathParams: ReportParams =>
-        get {
-          Authorization.authenticated { _ =>
-            entity(as[ReportRequest]) { request: ReportRequest =>
-              complete(
-                req(ReportBodyWithParamsRequest(request, pathParams)).map {
-                  case Right(response: List[ReportFromDb]) => {
-
-                    //TODO preserve order in groupBy
-                    val x = response.groupBy(a => (a.project_name, a.project_create_time)).map {
-                      case (tuple, value) => {
-
-                        val tasks = value.map(x => {
-                          println(x.toString)
-                          ReportTask(x.task_create_time,
-                            x.task_description,
-                            x.start_time,
-                            x.end_time,
-                            x.duration,
-                            x.volume,
-                            x.comment)
-                        }
-
-                        )
-
-                        DetailReport(
-                          tuple._1,
-                          tuple._2,
-                          tasks
-                        )
-                      }
-                    }
-                    x.asRight
-                  }
-                  case Left(err: AppError) => err.asLeft
-                }.unsafeToFuture
-              )
-            }
+      extractQuery(a, b, c, d, e)
+    }) { pathParams: ReportParams =>
+      get {
+        authorization.authenticated { _ =>
+          entity(as[ReportRequest]) { request: ReportRequest =>
+            complete(
+              req(ReportBodyWithParamsRequest(request, pathParams)).map {
+                case Right(response) => StatusCodes.OK -> response.asRight
+                case Left(err: AppError) => StatusCodes.ExpectationFailed -> err.asLeft
+              }.unsafeToFuture
+            )
           }
         }
       }
     }
   }
+
 
   private def resolveSort(sort: String) = {
     sort match {
@@ -139,8 +110,16 @@ object ReportRoutes {
       resolveSort(x)
     }),
     direction.map(x => resolveDirection(x)),
-    page,
-    quantity
-
+    if (page < 1) 1 else page,
+    if (quantity <= 0) 20 else 20
   )
+
+  def groupByOrdered[A, K](xs: collection.Seq[A])(f: A => K): collection.Seq[(K, collection.Seq[A])] = {
+    val m = collection.mutable.LinkedHashMap.empty[K, collection.Seq[A]].withDefault(_ => new collection.mutable.ArrayBuffer[A])
+    xs.foreach { x =>
+      val k = f(x)
+      m(k) = m(k) :+ x
+    }
+    m.toSeq
+  }
 }

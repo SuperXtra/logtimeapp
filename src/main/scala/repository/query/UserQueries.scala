@@ -13,7 +13,6 @@ import models.request._
 import models.responses.ReportFromDb
 
 object UserQueries {
-  implicit val han = LogHandler.jdkLogHandler
 
   def insertUser(userIdentification: String) = {
     sql"insert into tb_user (user_identification) values (${userIdentification}) returning id".query[Int]

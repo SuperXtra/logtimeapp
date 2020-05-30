@@ -24,8 +24,8 @@ object UserRoutes {
       post {
         complete(
           user.map {
-            case Right(newUser) => newUser.asRight
-            case Left(value) => value.asLeft
+            case Right(newUser) => StatusCodes.OK -> newUser.asRight
+            case Left(value) => StatusCodes.ExpectationFailed -> value.asLeft
           }.unsafeToFuture
         )
       }

@@ -13,8 +13,6 @@ import models.responses.ReportFromDb
 import doobie.implicits._
 
 object GenerateReportQueries {
-  implicit val han = LogHandler.jdkLogHandler
-
 
   def apply(projectQuery: ReportBodyWithParamsRequest): doobie.Query0[ReportFromDb] = {
 
@@ -120,7 +118,6 @@ object GenerateReportQueries {
         isActiveFilter ++
         sortingSelect
 
-    println(reportQuery.toString())
 
     reportQuery.query[ReportFromDb]
   }
