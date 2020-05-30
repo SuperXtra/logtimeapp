@@ -1,6 +1,6 @@
 package routes
 
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives.{as, complete, delete, entity, path, post, put}
 import akka.http.scaladsl.server.Route
 import cats.effect.IO
@@ -11,6 +11,8 @@ import io.circe.generic.auto._
 import cats.implicits._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import service.auth.Authenticate
+import StatusCodes._
+
 
 object ProjectRoutes {
 
@@ -28,8 +30,8 @@ object ProjectRoutes {
           entity(as[CreateProjectRequest]) { project =>
             complete(
               req(project, tokenClaims("uuid").toString).map {
-                case Right(_) => StatusCodes.Created
-                case Left(error) => StatusCodes.ExpectationFailed -> error.asLeft
+                case Right(x) => StatusCodes.OK -> x.asRight
+                case Left(error) =>StatusCodes.ExpectationFailed -> error.asLeft
               }.unsafeToFuture
             )
           }
@@ -45,8 +47,8 @@ object ProjectRoutes {
           entity(as[ChangeProjectNameRequest]) { project =>
             complete(
               req(project, tokenClaims("uuid").toString).map {
-                case Right(updatedProject: Project) => updatedProject.asLeft
-                case Left(error: AppError) =>StatusCodes.ExpectationFailed -> error.asRight
+                case Right(updatedProject: Project) =>StatusCodes.OK -> updatedProject.asRight
+                case Left(error: AppError) =>StatusCodes.ExpectationFailed -> error.asLeft
               }.unsafeToFuture
             )
 
@@ -62,7 +64,7 @@ object ProjectRoutes {
           entity(as[DeleteProjectRequest]) { project =>
             complete(
               req(project, tokenClaims("uuid").toString).map {
-                case Right(_) => "Deleted Successfully".asRight
+                case Right(_) => StatusCodes.OK -> "Deleted Successfully".asRight
                 case Left(value) =>StatusCodes.ExpectationFailed -> value.asLeft
               }.unsafeToFuture
             )
