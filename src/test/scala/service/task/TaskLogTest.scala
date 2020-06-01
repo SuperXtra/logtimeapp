@@ -4,7 +4,7 @@ import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
 import cats.effect._
 import cats.implicits._
-import error.{AppError, ProjectNotFound}
+import errorMessages.{AppBusinessError, ProjectNotFound}
 import models.model.{Project, Task}
 import models.request.LogTaskRequest
 import org.scalatest.GivenWhenThen
@@ -100,7 +100,7 @@ class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
     def serviceUnderTest(project: Option[Project],
                          userId: Option[Int],
                          task: Option[Task],
-                         insertTaskResult: Either[AppError, Int]): TaskLog[IO] = {
+                         insertTaskResult: Either[AppBusinessError, Int]): TaskLog[IO] = {
 
       val getProjectId = new FindActiveProjectById[IO](null) {
         override def apply(projectName: String): IO[Option[Project]] = project.pure[IO]
@@ -111,7 +111,7 @@ class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
       }
 
       val insertTask = new InsertTask[IO](null) {
-        override def apply(create: LogTaskRequest, projectId: Long, userId: Long): IO[Either[AppError, Int]] =
+        override def apply(create: LogTaskRequest, projectId: Long, userId: Long): IO[Either[AppBusinessError, Int]] =
           insertTaskResult.pure[IO]
       }
 

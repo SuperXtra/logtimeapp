@@ -1,5 +1,6 @@
 package routes
 
+import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives.{as, complete, delete, entity, path, post, put}
 import akka.http.scaladsl.server.Route
@@ -10,27 +11,23 @@ import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import cats.implicits._
 import service.auth.Auth
-import error._
+import errorMessages._
 
 
 object ProjectRoutes {
 
-  //TODO prepare responses
-
   val projectPath = "project"
 
-  def createProject(req: (CreateProjectRequest, String) => IO[Either[AppError, Int]])
+  def createProject(req: (CreateProjectRequest, String) => IO[Either[AppBusinessError, Int]])
                    (implicit auth: Auth): Route =
     path(projectPath) {
       post {
         auth.apply { tokenClaims =>
           entity(as[CreateProjectRequest]) { project =>
             complete(
-              req(project, tokenClaims("uuid").toString).map {
-                case Right(x) => StatusCodes.OK ->  x.asRight
-                case Left(x: AuthenticationNotSuccessful) => StatusCodes.Unauthorized -> x.asLeft
-                case Left(x : AppError) => StatusCodes.ExpectationFailed -> x.asLeft
-          }.unsafeToFuture
+              req(project, tokenClaims("uuid").toString)
+                .map(_.leftMap(LeftResponse(_)))
+                .unsafeToFuture
             )
           }
         }
@@ -38,17 +35,16 @@ object ProjectRoutes {
     }
 
 
-  def updateProject(req: (ChangeProjectNameRequest, String) => IO[Either[AppError, Project]])
+  def updateProject(req: (ChangeProjectNameRequest, String) => IO[Either[AppBusinessError, Project]])
                    (implicit auth: Auth): Route =
     path(projectPath) {
       put {
         auth.apply { tokenClaims =>
           entity(as[ChangeProjectNameRequest]) { project =>
             complete(
-              req(project, tokenClaims("uuid").toString).map {
-                case Right(updatedProject: Project) =>StatusCodes.OK -> updatedProject.asRight
-                case Left(error: AppError) =>StatusCodes.ExpectationFailed -> error.asLeft
-              }.unsafeToFuture
+              req(project, tokenClaims("uuid").toString)
+                .map(_.leftMap(LeftResponse(_)))
+                .unsafeToFuture
             )
 
           }
@@ -56,17 +52,16 @@ object ProjectRoutes {
       }
     }
 
-  def deleteProject(req: (DeleteProjectRequest, String) => IO[Either[AppError, Unit]])
+  def deleteProject(req: (DeleteProjectRequest, String) => IO[Either[AppBusinessError, Unit]])
                    (implicit auth: Auth): Route =
     path(projectPath) {
       delete {
         auth.apply { tokenClaims =>
           entity(as[DeleteProjectRequest]) { project =>
             complete(
-              req(project, tokenClaims("uuid").toString).map {
-                case Right(_) => StatusCodes.OK -> "Deleted Successfully".asRight
-                case Left(value) =>StatusCodes.ExpectationFailed -> value.asLeft
-              }.unsafeToFuture
+              req(project, tokenClaims("uuid").toString)
+                .map(_.leftMap(LeftResponse(_)))
+                .unsafeToFuture
             )
           }
         }

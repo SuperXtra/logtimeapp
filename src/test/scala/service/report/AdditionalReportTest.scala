@@ -3,7 +3,7 @@ package service.report
 import java.time.LocalDateTime
 
 import cats.effect.IO
-import error.AppError
+import errorMessages.AppBusinessError
 import models.model.{Project, Task, TaskToUpdate}
 import models.request.{DeleteTaskRequest, MainReport}
 import models.responses.UserStatisticsReport
@@ -43,11 +43,11 @@ class AdditionalReportTest extends AnyFlatSpec with Matchers with GivenWhenThen 
 
   private trait Context {
     def serviceUnderTest(
-                          taskUpdateResult: Either[AppError, List[UserStatisticsReport]]
+                          taskUpdateResult: Either[AppBusinessError, List[UserStatisticsReport]]
                         ): AdditionalReport[IO] = {
 
       val getReport = new DetailedReport[IO](null) {
-        override def apply(req: MainReport): IO[Either[AppError, List[UserStatisticsReport]]] = taskUpdateResult.pure[IO]
+        override def apply(req: MainReport): IO[Either[AppBusinessError, List[UserStatisticsReport]]] = taskUpdateResult.pure[IO]
       }
 
       new AdditionalReport[IO](getReport)

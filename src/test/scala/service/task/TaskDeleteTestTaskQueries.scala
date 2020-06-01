@@ -4,7 +4,7 @@ import java.time._
 
 import cats.effect._
 import cats.implicits._
-import error._
+import errorMessages._
 import models.model._
 import models.request._
 import org.scalatest.GivenWhenThen
@@ -36,7 +36,7 @@ class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhen
     )
 
     When("Deleting task")
-    val result: Either[AppError, Int] = deleteTask(deleteTaskRequest, "dsaadsij12312").unsafeRunSync()
+    val result: Either[AppBusinessError, Int] = deleteTask(deleteTaskRequest, "dsaadsij12312").unsafeRunSync()
 
     Then("returns number of rows updated")
     result shouldBe Right(1)
@@ -60,7 +60,7 @@ class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhen
     )
 
     When("Deleting task")
-    val result: Either[AppError, Int] = deleteTask(deleteTaskRequest, "dsaadsij12312").unsafeRunSync()
+    val result: Either[AppBusinessError, Int] = deleteTask(deleteTaskRequest, "dsaadsij12312").unsafeRunSync()
 
     Then("returns number of rows updated")
     result shouldBe Left(ProjectNotCreated)
@@ -71,7 +71,7 @@ class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhen
 
     def serviceUnderTest(project: Option[Project],
                          userId: Option[Int],
-                         taskDeleteResult: Either[AppError, Int]
+                         taskDeleteResult: Either[AppBusinessError, Int]
                         ): TaskDelete[IO] = {
 
 
@@ -82,7 +82,7 @@ class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhen
         override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
       }
       val delete = new DeleteTask[IO](null) {
-        override def apply(taskDescription: String, projectId: Long, userId: Long): IO[Either[AppError, Int]] = taskDeleteResult.pure[IO]
+        override def apply(taskDescription: String, projectId: Long, userId: Long): IO[Either[AppBusinessError, Int]] = taskDeleteResult.pure[IO]
       }
 
       new TaskDelete(getProjectId, getUserId, delete)

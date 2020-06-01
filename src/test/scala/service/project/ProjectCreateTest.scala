@@ -1,7 +1,7 @@
 package service.project
 
 import cats.effect.IO
-import error.{AppError, ProjectNotCreated, UserNotFound}
+import errorMessages.{AppBusinessError, ProjectNotCreated, UserNotFound}
 import models.model.User
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
@@ -86,14 +86,14 @@ class ProjectCreateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
     def serviceUnderTest(
                           userId: Option[Int],
-                          insertedProjectId: Either[AppError, Int]
+                          insertedProjectId: Either[AppBusinessError, Int]
                         ): ProjectCreate[IO] = {
 
       val getUserId =  new GetExistingUserId[IO](null) {
         override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
       }
       val createProject = new InsertProject[IO](null) {
-        override def apply(projectName: String, userId: Long): IO[Either[AppError, Int]] = insertedProjectId.pure[IO]
+        override def apply(projectName: String, userId: Long): IO[Either[AppBusinessError, Int]] = insertedProjectId.pure[IO]
 
       }
 

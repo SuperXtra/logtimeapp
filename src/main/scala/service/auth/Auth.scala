@@ -9,12 +9,14 @@ import akka.http.scaladsl.server.Directives.{complete, optionalHeaderValueByName
 import authentikat.jwt.{JsonWebToken, JwtClaimsSet, JwtHeader}
 import com.typesafe.config.ConfigFactory
 import config.AuthConfig
-import error.AuthenticationNotSuccessful
+import errorMessages.{AppErrorResponse, AuthenticationNotSuccessful}
 import pureconfig.ConfigSource
 import pureconfig._
 import pureconfig.generic.auto._
 import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
+import routes.LeftResponse
+
 
 
 trait Auth {
@@ -30,16 +32,16 @@ object Auth {
     private val tokenExpiryPeriodInMinutes = authConfig.tokenExpiryPeriodInMinutes
 
     override def apply: Directive1[Map[String, Any]] = {
-      optionalHeaderValueByName("Authorization").flatMap {
-        case Some(token) =>
-          token.split(" ")(0) match {
-            case token if isTokenExpired(token) => complete(StatusCodes.Unauthorized -> AuthenticationNotSuccessful)
+        optionalHeaderValueByName("Authorization").flatMap {
+          case Some(token) =>
+            token.split(" ")(0) match {
+              case token if isTokenExpired(token) => complete(LeftResponse.apply(AuthenticationNotSuccessful()))
 
-            case token if JsonWebToken.validate(token, secretKey) => provide(getClaims(token))
-            case _ => complete(StatusCodes.Unauthorized -> AuthenticationNotSuccessful)
-          }
-        case None => complete(StatusCodes.Unauthorized -> AuthenticationNotSuccessful)
-      }
+              case token if JsonWebToken.validate(token, secretKey) => provide(getClaims(token))
+              case _ => complete(LeftResponse.apply(AuthenticationNotSuccessful()))
+            }
+          case None => complete(LeftResponse.apply(AuthenticationNotSuccessful()))
+        }
     }
 
     override def token(uuid: String): String = {

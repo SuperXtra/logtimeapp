@@ -3,7 +3,7 @@ package service.report
 import cats.data.EitherT
 import cats.effect.{IO, Sync}
 import models.responses.{GeneralReport, Tasks}
-import error._
+import errorMessages._
 import models.model.{Project, Task}
 import repository.project.FindActiveProjectById
 import repository.task.GetProjectTasks
@@ -13,7 +13,7 @@ class OverviewReport[F[+_] : Sync](
                                     tasks: GetProjectTasks[F]
                                               ) {
 
-  def apply(projectName: String): F[Either[AppError, GeneralReport]] =
+  def apply(projectName: String): F[Either[AppBusinessError, GeneralReport]] =
     (for {
       project <- findProjectById(projectName)
       projectTasks <- fetchTasksForProject(project.id)
@@ -23,11 +23,11 @@ class OverviewReport[F[+_] : Sync](
     }).value
 
 
-  private def findProjectById(projectName: String): EitherT[F, AppError, Project] = {
+  private def findProjectById(projectName: String): EitherT[F, AppBusinessError, Project] = {
     EitherT.fromOptionF(findProject(projectName), ProjectNotFound())
   }
 
-  private def fetchTasksForProject(id: Int): EitherT[F, AppError, List[Task]] = {
+  private def fetchTasksForProject(id: Int): EitherT[F, AppBusinessError, List[Task]] = {
     EitherT(tasks(id))
   }
 }

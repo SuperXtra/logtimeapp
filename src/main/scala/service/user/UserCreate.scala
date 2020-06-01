@@ -4,14 +4,14 @@ import java.util.UUID
 
 import cats.data.EitherT
 import cats.effect.{IO, Sync}
-import error.{AppError, CannotCreateUserWithGeneratedUUID, UserNotFound}
+import errorMessages.{AppBusinessError, CannotCreateUserWithGeneratedUUID, UserNotFound}
 import models.model.User
 import repository.user.{CreateUser, UserById}
 
 class UserCreate[F[+_] : Sync](getNewUser: UserById[F],
                                create: CreateUser[F]) {
 
-  def apply(): F[Either[AppError, User]] = (
+  def apply(): F[Either[AppBusinessError, User]] = (
     for {
       id <- createUser()
       user <- getExistingUserById(id)
@@ -19,11 +19,11 @@ class UserCreate[F[+_] : Sync](getNewUser: UserById[F],
     ).value
 
 
-  private def createUser(): EitherT[F, AppError, Int] = {
+  private def createUser(): EitherT[F, AppBusinessError, Int] = {
     EitherT.fromOptionF(create(), CannotCreateUserWithGeneratedUUID())
   }
 
-  private def getExistingUserById(id: Int): EitherT[F, AppError, User] = {
+  private def getExistingUserById(id: Int): EitherT[F, AppBusinessError, User] = {
     EitherT.fromOptionF(getNewUser(id), UserNotFound())
   }
 

@@ -7,7 +7,7 @@ import cats.effect.{IO, Sync}
 import models.{model, _}
 import models.model.{Task, TaskToUpdate}
 import models.request.UpdateTaskRequest
-import error._
+import errorMessages._
 import repository.task.{GetUserTask, DeleteTask, TaskInsertUpdate}
 import repository.user.GetExistingUserId
 
@@ -16,7 +16,7 @@ class TaskUpdate[F[+_] : Sync](getUserId: GetExistingUserId[F],
                                taskDelete: DeleteTask[F],
                                taskUpdate: TaskInsertUpdate[F]) {
 
-  def apply(updateTask: UpdateTaskRequest, uuid: String): F[Either[AppError, Long]] = (
+  def apply(updateTask: UpdateTaskRequest, uuid: String): F[Either[AppBusinessError, Long]] = (
     for {
       userId <- getExistingUserId(uuid)
       oldTask <- fetchTask(updateTask.oldTaskDescription, userId)
@@ -54,19 +54,19 @@ class TaskUpdate[F[+_] : Sync](getUserId: GetExistingUserId[F],
 
 
 
-  private def updateExistingTask(toUpdate: TaskToUpdate): EitherT[F, AppError, Long] = {
+  private def updateExistingTask(toUpdate: TaskToUpdate): EitherT[F, AppBusinessError, Long] = {
     EitherT.fromOptionF(taskUpdate(toUpdate), TaskUpdateUnsuccessful())
   }
 
-  private def deleteTask(taskDescription: String, projectId: Long, userId: Long): EitherT[F, AppError, Int] = {
+  private def deleteTask(taskDescription: String, projectId: Long, userId: Long): EitherT[F, AppBusinessError, Int] = {
     EitherT(taskDelete(taskDescription, projectId,userId))
   }
 
-  private def fetchTask(taskDescription: String, userId: Long): EitherT[F, AppError, Task] = {
+  private def fetchTask(taskDescription: String, userId: Long): EitherT[F, AppBusinessError, Task] = {
     EitherT.fromOptionF(getUserTask(taskDescription, userId), TaskNotFound())
   }
 
-  private def getExistingUserId(uuid: String): EitherT[F, AppError, Int] =
+  private def getExistingUserId(uuid: String): EitherT[F, AppBusinessError, Int] =
     EitherT.fromOptionF(getUserId(uuid), UserNotFound())
 
 }

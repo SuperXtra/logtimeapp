@@ -11,7 +11,7 @@ import repository.project.{FindActiveProjectById, UpdateProjectName}
 import repository.user.{CreateUser, GetExistingUserId, UserById}
 import service.user.UserCreate
 import cats.implicits._
-import error.{AppError, ProjectNameExists, ProjectNotCreated}
+import errorMessages.{AppBusinessError, ProjectNameExists, ProjectNotCreated}
 import models.request.{ChangeProjectNameRequest, DeleteProjectRequest}
 
 class ProjectUpdateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
@@ -32,7 +32,7 @@ class ProjectUpdateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     )
 
     When("updating project")
-    val result: Either[AppError, Project] = updateProject(changeProjectName, "uudissdsa2321hjd8fs").unsafeRunSync()
+    val result: Either[AppBusinessError, Project] = updateProject(changeProjectName, "uudissdsa2321hjd8fs").unsafeRunSync()
 
     Then("returns project")
     result shouldBe Right(project)
@@ -53,7 +53,7 @@ class ProjectUpdateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     )
 
     When("updating project")
-    val result: Either[AppError, Project] = updateProject(changeProjectName, "uudissdsa2321hjd8fs").unsafeRunSync()
+    val result: Either[AppBusinessError, Project] = updateProject(changeProjectName, "uudissdsa2321hjd8fs").unsafeRunSync()
 
     Then("returns project")
     result shouldBe Left(ProjectNotCreated)

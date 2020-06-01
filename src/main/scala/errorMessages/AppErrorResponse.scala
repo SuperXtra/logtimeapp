@@ -1,6 +1,6 @@
-package error
+package errorMessages
 
-case class AppException(
+case class AppErrorResponse(
                          error: String // error.project.not.found
                         // code: AppExceptionCode
                        )

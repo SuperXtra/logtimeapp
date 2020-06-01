@@ -3,7 +3,7 @@ package service.task
 import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
 import cats.effect.IO
-import error.{AppError, ProjectNotFound, TaskDeleteUnsuccessful, TaskNotFound, UserNotFound}
+import errorMessages.{AppBusinessError, ProjectNotFound, TaskDeleteUnsuccessful, TaskNotFound, UserNotFound}
 import models.model.{Project, Task, TaskToUpdate}
 import models.request.{LogTaskRequest, UpdateTaskRequest}
 import org.scalatest.GivenWhenThen
@@ -161,7 +161,7 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
     def serviceUnderTest(
                           userId: Option[Int],
                           userTask: Option[Task],
-                          taskDeleteResult: Either[AppError, Int],
+                          taskDeleteResult: Either[AppBusinessError, Int],
                           taskUpdateResult: Option[Long]
                         ): TaskUpdate[IO] = {
 
@@ -172,7 +172,7 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
         override def apply(taskDescription: String, userId: Long): IO[Option[Task]] = userTask.pure[IO]
       }
       val taskDelete = new DeleteTask[IO](null) {
-        override def apply(taskDescription: String, projectId: Long, userId: Long): IO[Either[AppError, Int]] = taskDeleteResult.pure[IO]
+        override def apply(taskDescription: String, projectId: Long, userId: Long): IO[Either[AppBusinessError, Int]] = taskDeleteResult.pure[IO]
       }
       val taskUpdate = new TaskInsertUpdate[IO](null) {
         override def apply(toUpdate: TaskToUpdate): IO[Option[Long]] = taskUpdateResult.pure[IO]

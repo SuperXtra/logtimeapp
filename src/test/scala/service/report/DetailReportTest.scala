@@ -3,7 +3,7 @@ package service.report
 import java.time.LocalDateTime
 
 import cats.effect.IO
-import error.AppError
+import errorMessages.AppBusinessError
 import models.request._
 import models.responses._
 import repository.report.Report
@@ -48,11 +48,11 @@ class DetailReportTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
 
   private trait Context {
-    def serviceUnderTest(report: Either[AppError, List[ReportFromDb]]): DetailReport[IO] = {
+    def serviceUnderTest(report: Either[AppBusinessError, List[ReportFromDb]]): DetailReport[IO] = {
 
 
       val getReport = new Report[IO](null){
-        override def apply(projectQuery: ReportBodyWithParamsRequest): IO[Either[AppError, List[ReportFromDb]]] = report.pure[IO]
+        override def apply(projectQuery: ReportBodyWithParamsRequest): IO[Either[AppBusinessError, List[ReportFromDb]]] = report.pure[IO]
       }
 
       new DetailReport[IO](getReport)

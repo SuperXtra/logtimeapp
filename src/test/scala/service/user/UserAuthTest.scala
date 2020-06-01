@@ -6,7 +6,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import repository.user.UserExists
 import cats.implicits._
-import error.AppError
+import errorMessages.AppBusinessError
 import models.model.User
 import models.request.DeleteTaskRequest
 

@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.server.Directives._
 import cats.effect.IO
-import error.AppError
+import errorMessages.AppBusinessError
 import models.model.User
 import io.circe.generic.auto._
 import cats.implicits._
@@ -13,18 +13,16 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import models.request.AuthorizationRequest
 import service.auth.Auth
 import StatusCodes._
-import akka.http.scaladsl.model.headers.Authorization
 
 object UserRoutes {
 
-  def createUser(user: => IO[Either[AppError, User]]) =
+  def createUser(user: => IO[Either[AppBusinessError, User]]) =
     path("user") {
       post {
         complete(
-          user.map {
-            case Right(newUser) => StatusCodes.OK -> newUser.asRight
-            case Left(value) => StatusCodes.ExpectationFailed -> value.asLeft
-          }.unsafeToFuture
+          user
+            .map(_.leftMap(LeftResponse(_)))
+            .unsafeToFuture
         )
       }
     }

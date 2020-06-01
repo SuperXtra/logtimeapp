@@ -1,48 +1,44 @@
 package routes
 
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.Directives.{as, complete, delete, entity, path, post, put}
+import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import models.request.{DeleteTaskRequest, LogTaskRequest, UpdateTaskRequest}
-import error._
+import errorMessages._
 import models.model.Task
 import io.circe.generic.auto._
 import cats.implicits._
 import service.auth.Auth
-//import cats.effect._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 
 object TaskRoutes {
 
-  def logTask(logWorkDone: (LogTaskRequest, String) => IO[Either[AppError, Task]])
+  def logTask(logWorkDone: (LogTaskRequest, String) => IO[Either[AppBusinessError, Task]])
              (implicit auth: Auth): Route =
     path("task") {
       post {
         auth.apply { tokenClaims =>
           entity(as[LogTaskRequest]) { task =>
             complete(
-              logWorkDone(task, tokenClaims("uuid").toString).map {
-                case Right(created) => StatusCodes.OK -> created.asRight
-                case Left(err) => StatusCodes.ExpectationFailed -> err.asLeft
-              }.unsafeToFuture
+              logWorkDone(task, tokenClaims("uuid").toString)
+                .map(_.leftMap(LeftResponse(_)))
+                .unsafeToFuture
             )
           }
         }
       }
     }
 
-  def updateTask(updateTask: (UpdateTaskRequest, String) => IO[Either[AppError, Long]])
+  def updateTask(updateTask: (UpdateTaskRequest, String) => IO[Either[AppBusinessError, Long]])
                 (implicit auth: Auth): Route =
     path("task") {
       put {
         auth.apply { tokenClaims =>
           entity(as[UpdateTaskRequest]) { update =>
             complete(
-              updateTask(update, tokenClaims("uuid").toString).map {
-                case Left(value) => StatusCodes.OK -> value.asRight
-                case Right(err) => StatusCodes.ExpectationFailed -> err.asLeft
-              }.unsafeToFuture()
+              updateTask(update, tokenClaims("uuid").toString)
+                .map(_.leftMap(LeftResponse(_)))
+                .unsafeToFuture
             )
           }
         }
@@ -50,16 +46,15 @@ object TaskRoutes {
     }
 
 
-  def deleteTask(deleteTask: (DeleteTaskRequest,String) => IO[Either[AppError, Int]])
+  def deleteTask(deleteTask: (DeleteTaskRequest,String) => IO[Either[AppBusinessError, Int]])
                 (implicit auth: Auth): Route =
     path("task") {
       delete {
         auth.apply { tokenClaims =>
           entity(as[DeleteTaskRequest]) { delete =>
-            complete(deleteTask(delete, tokenClaims("uuid").toString).map {
-              case Right(value) => StatusCodes.OK -> value.asRight
-              case Left(ex) => StatusCodes.ExpectationFailed -> ex.asLeft
-            }.unsafeToFuture
+            complete(deleteTask(delete, tokenClaims("uuid").toString)
+              .map(_.leftMap(LeftResponse(_)))
+              .unsafeToFuture
             )
           }
         }

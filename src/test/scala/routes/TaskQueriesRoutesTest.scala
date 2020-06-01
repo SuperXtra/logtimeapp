@@ -9,7 +9,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import cats.effect._
 import cats.implicits._
-import error._
+import errorMessages._
 import io.circe.parser.{parse => json}
 import models.model.Task
 import org.scalatest.flatspec.AnyFlatSpec

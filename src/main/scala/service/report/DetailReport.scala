@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 import cats.data.EitherT
 import cats.effect.Sync
-import error.{AppError, ReportCouldNotBeGenerated}
+import errorMessages.{AppBusinessError, ReportCouldNotBeGenerated}
 import models.request.ReportBodyWithParamsRequest
 import models.responses._
 import repository.project.FindActiveProjectById
@@ -14,11 +14,11 @@ import repository.task.GetProjectTasks
 class DetailReport[F[+_] : Sync](getReport: Report[F]) {
 
   //TODO add page and limit
-  def apply(projectQuery: ReportBodyWithParamsRequest): F[Either[AppError, Seq[DetailReportResponse]]] =
+  def apply(projectQuery: ReportBodyWithParamsRequest): F[Either[AppBusinessError, Seq[DetailReportResponse]]] =
     generateReport(projectQuery)
 
 
-  private def generateReport(projectQuery: ReportBodyWithParamsRequest): F[Either[AppError, Seq[DetailReportResponse]]] = {
+  private def generateReport(projectQuery: ReportBodyWithParamsRequest): F[Either[AppBusinessError, Seq[DetailReportResponse]]] = {
     EitherT(getReport(projectQuery)).map(x => groupByOrdered(x)(x => (x.project_name, x.project_create_time)).map {
       case ((projectName, projectCreatedTime), list) => {
 

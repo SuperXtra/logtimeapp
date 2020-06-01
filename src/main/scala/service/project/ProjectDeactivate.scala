@@ -5,7 +5,7 @@ import java.time.{ZonedDateTime, _}
 import cats.data.EitherT
 import cats.effect._
 import models.request.DeleteProjectRequest
-import error._
+import errorMessages._
 import models.model.Project
 import repository.project._
 import repository.task.DeleteTasks
@@ -18,7 +18,7 @@ class ProjectDeactivate[F[+_] : Sync](
                                        checkIfOwner: CheckIfIsProjectOwner[F]
                                      ) {
 
-  def apply(projectRequest: DeleteProjectRequest, uuid: String): F[Either[AppError, Unit]] = {
+  def apply(projectRequest: DeleteProjectRequest, uuid: String): F[Either[AppBusinessError, Unit]] = {
     //TODO try to move delete time to for-comp
     (for {
       userId <- getUserId(uuid)
@@ -29,19 +29,19 @@ class ProjectDeactivate[F[+_] : Sync](
     } yield ()).value
   }
 
-  private def getUserId(userIdentification: String): EitherT[F, AppError, Int] =
+  private def getUserId(userIdentification: String): EitherT[F, AppBusinessError, Int] =
     EitherT.fromOptionF(userId(userIdentification), ProjectDeleteUnsuccessful())
 
 
-  private def findProjectById(projectName: String): EitherT[F, AppError, Project] = {
+  private def findProjectById(projectName: String): EitherT[F, AppBusinessError, Project] = {
     EitherT.fromOptionF(findProject(projectName), ProjectNotFound())
   }
 
-  private def verifyIfUserIsTheOwnerOfTheProject(userId: Int, projectName: String): EitherT[F, AppError, Boolean] = {
+  private def verifyIfUserIsTheOwnerOfTheProject(userId: Int, projectName: String): EitherT[F, AppBusinessError, Boolean] = {
     EitherT(checkIfOwner(userId, projectName))
   }
 
-  private def deleteProjectWithTasks(userId: Int, projectName: String, projectId: Int, deleteTime: ZonedDateTime): EitherT[F, AppError, Unit] = {
+  private def deleteProjectWithTasks(userId: Int, projectName: String, projectId: Int, deleteTime: ZonedDateTime): EitherT[F, AppBusinessError, Unit] = {
     EitherT(deactivateProject(userId, projectName, projectId, deleteTime))
   }
 }

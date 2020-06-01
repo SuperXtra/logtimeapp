@@ -4,7 +4,7 @@ import java.time._
 
 import cats.effect._
 import cats.implicits._
-import error._
+import errorMessages._
 import models.model._
 import models.request._
 import org.scalatest.GivenWhenThen
@@ -32,7 +32,7 @@ class UserCreateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     )
 
     When("Deleting task")
-    val result: Either[AppError, User] = createUser().unsafeRunSync()
+    val result: Either[AppBusinessError, User] = createUser().unsafeRunSync()
 
     Then("returns number of rows updated")
     result shouldBe Right(user)
