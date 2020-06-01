@@ -1,5 +1,7 @@
 package service.task
 
+import java.time.{ZoneOffset, ZonedDateTime}
+
 import cats.data.EitherT
 import cats.effect._
 import models.request.DeleteTaskRequest
@@ -23,12 +25,12 @@ class TaskDelete[F[+_] : Sync](
 
 
   private def findProjectById(projectName: String): EitherT[F, AppBusinessError, Project] = {
-    EitherT(getProjectId(projectName))
+    EitherT.fromOptionF(getProjectId(projectName), ProjectNotFound())
   }
 
   private def getExistingUserId(uuid: String): EitherT[F, AppBusinessError, Int] =
     EitherT.fromOptionF(getUserId(uuid), UserNotFound())
 
   private def deleteTask(taskDescription: String, projectId: Long, userId: Long): EitherT[F, AppBusinessError, Int] =
-    EitherT(delete(taskDescription, projectId, userId))
+    EitherT(delete(taskDescription, projectId, userId, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime))
 }

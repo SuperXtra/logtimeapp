@@ -21,12 +21,12 @@ class ProjectDeactivateTest extends AnyFlatSpec with Matchers with GivenWhenThen
     Given("user id, deactivated project id, project and result of deactivation = task count")
     val userId = Some(1)
     val deactivatedProjectResult = ().asRight
-    val project = Some(Project(1,1,"Test project name", LocalDateTime.now(), Some(LocalDateTime.now().plusHours(2)), Some(true)))
+    val project = Project(1,1,"Test project name", LocalDateTime.now(), Some(LocalDateTime.now().plusHours(2)), Some(true))
     val deactivateTaskResult = 3.asRight
     val isOwner = true.asRight
 
     And("a service will deactivate project with tasks")
-    val deactivateProject = serviceUnderTest(userId, deactivatedProjectResult, project, deactivateTaskResult, isOwner)
+    val deactivateProject = serviceUnderTest(userId, deactivatedProjectResult, project.asRight, deactivateTaskResult, isOwner)
 
     val deleteProjectRequest = DeleteProjectRequest(
       projectName = "Test project name"
@@ -43,12 +43,12 @@ class ProjectDeactivateTest extends AnyFlatSpec with Matchers with GivenWhenThen
     Given("user id, deactivated project id, project and result of deactivation = task count")
     val userId = Some(1)
     val deactivatedProjectResult = ProjectDeleteUnsuccessful().asLeft
-    val project = Some(Project(1,1,"Test project name", LocalDateTime.now(), Some(LocalDateTime.now().plusHours(2)), Some(true)))
+    val project = Project(1,1,"Test project name", LocalDateTime.now(), Some(LocalDateTime.now().plusHours(2)), Some(true))
     val deactivateTaskResult = 3.asRight
     val isOwner = true.asRight
 
     And("a service will not deactivate project with tasks")
-    val deactivateProject = serviceUnderTest(userId, deactivatedProjectResult, project, deactivateTaskResult, isOwner)
+    val deactivateProject = serviceUnderTest(userId, deactivatedProjectResult, project.asRight, deactivateTaskResult, isOwner)
 
     val deleteProjectRequest = DeleteProjectRequest(
       projectName = "Test project name"
@@ -58,7 +58,7 @@ class ProjectDeactivateTest extends AnyFlatSpec with Matchers with GivenWhenThen
     val result: Either[AppBusinessError, Unit] = deactivateProject(deleteProjectRequest, "dkjasjl32kads123jk").unsafeRunSync()
 
     Then("returns project delete unsuccessful")
-    result shouldBe Left(ProjectDeleteUnsuccessful)
+    result shouldBe Left(ProjectDeleteUnsuccessful())
   }
 
   private trait Context {
@@ -66,7 +66,7 @@ class ProjectDeactivateTest extends AnyFlatSpec with Matchers with GivenWhenThen
     def serviceUnderTest(
                           userId: Option[Int],
                           deactivatedProjectResult: Either[AppBusinessError, Unit],
-                          project: Option[Project],
+                          project: Either[AppBusinessError, Project],
                           deactivateTaskResult: Either[AppBusinessError, Int],
                           isProjectOwner: Either[AppBusinessError, Boolean]
                         ): ProjectDeactivate[IO] = {
@@ -75,14 +75,14 @@ class ProjectDeactivateTest extends AnyFlatSpec with Matchers with GivenWhenThen
         override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
       }
       val deactivateProject = new DeleteProjectWithTasks[IO](null) {
-        override def apply(userId: Int, projectName: String, projectId: Int, deleteTime: ZonedDateTime): IO[Either[AppBusinessError, Unit]] = deactivatedProjectResult.pure[IO]
+        override def apply(userId: Int, projectName: String, projectId: Int, deleteTime: LocalDateTime): IO[Either[AppBusinessError, Unit]] = deactivatedProjectResult.pure[IO]
       }
       val findProject = new FindProjectById[IO](null) {
-        override def apply(projectName: String): IO[Option[Project]] = project.pure[IO]
+        override def apply(projectName: String): IO[Either[AppBusinessError, Project]] = project.pure[IO]
       }
 
       val checkIfIsProjectOwner = new CheckIfIsProjectOwner[IO](null){
-        override def apply(userId: Int, projectName: String): IO[Either[AppBusinessError, Boolean]] = ???
+        override def apply(userId: Int, projectName: String): IO[Either[AppBusinessError, Boolean]] = isProjectOwner.pure[IO]
       }
 
 

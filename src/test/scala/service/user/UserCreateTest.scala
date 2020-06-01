@@ -50,7 +50,7 @@ class UserCreateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
         override def apply(id: Int): IO[Option[User]] = createdUser.pure[IO]
       }
       val create = new CreateUser[IO](null) {
-        override def apply(): IO[Option[Int]] = userId.pure[IO]
+        override def apply(uuid: String): IO[Option[Int]] = userId.pure[IO]
       }
 
       new UserCreate[IO](getNewUser, create)

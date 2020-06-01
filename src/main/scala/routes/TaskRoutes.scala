@@ -29,7 +29,7 @@ object TaskRoutes {
       }
     }
 
-  def updateTask(updateTask: (UpdateTaskRequest, String) => IO[Either[AppBusinessError, Long]])
+  def updateTask(updateTask: (UpdateTaskRequest, String) => IO[Either[AppBusinessError, Unit]])
                 (implicit auth: Auth): Route =
     path("task") {
       put {

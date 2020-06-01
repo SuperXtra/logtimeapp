@@ -12,6 +12,8 @@ import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
+import scala.collection.mutable.ArrayBuffer
+
 class DetailReportTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "delete task" in new Context {
@@ -40,8 +42,11 @@ class DetailReportTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     When("Deleting task")
     val result = report(query).unsafeRunSync()
 
+    val taskList = List(ReportTask(reportFromDb.task_create_time, reportFromDb.task_description, reportFromDb.start_time, reportFromDb.end_time, reportFromDb.duration, reportFromDb.volume, reportFromDb.comment))
+    val response = DetailReportResponse(reportFromDb.project_name, reportFromDb.project_create_time, taskList)
+
     Then("returns number of rows updated")
-    result shouldBe Right(List(reportFromDb))
+    result shouldBe Right(ArrayBuffer(response))
   }
 
 

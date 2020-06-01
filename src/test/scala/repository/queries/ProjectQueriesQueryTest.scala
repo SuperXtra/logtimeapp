@@ -1,6 +1,6 @@
 package repository.queries
 
-import java.time.{ZoneOffset, ZonedDateTime}
+import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
 import repository.query.ProjectQueries
 
@@ -15,7 +15,7 @@ class ProjectQueriesQueryTest extends QueryTest {
   }
 
   test("Project delete should check") {
-    check(ProjectQueries.deleteProject(1, "test project", ZonedDateTime.now(ZoneOffset.UTC)))
+    check(ProjectQueries.deleteProject(1, "test project", LocalDateTime.now()))
   }
 
   test("Project insert should check") {

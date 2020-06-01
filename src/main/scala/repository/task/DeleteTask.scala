@@ -1,5 +1,7 @@
 package repository.task
 
+import java.time.LocalDateTime
+
 import cats.effect.Sync
 import doobie.postgres.sqlstate
 import doobie.util.transactor.Transactor
@@ -10,9 +12,9 @@ import cats.implicits._
 
 class DeleteTask[F[+_] : Sync](tx: Transactor[F]) {
 
-  def apply(taskDescription: String, projectId: Long, userId: Long): F[Either[AppBusinessError, Int]] = {
+  def apply(taskDescription: String, projectId: Long, userId: Long, deleteTime: LocalDateTime): F[Either[AppBusinessError, Int]] = {
     TaskQueries
-      .deleteTask(taskDescription, projectId, userId)
+      .deleteTask(taskDescription, projectId, userId, deleteTime)
       .run
       .transact(tx)
       .attemptSomeSqlState {

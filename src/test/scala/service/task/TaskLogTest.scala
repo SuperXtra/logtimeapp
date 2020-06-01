@@ -84,7 +84,7 @@ class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
     val result = logWork(workDone, "test string").unsafeRunSync
 
     Then("returns error message: project not found")
-    result shouldBe Left(ProjectNotFound)
+    result shouldBe Left(ProjectNotFound())
   }
 
   // not allow to log work if user id does not exist
@@ -111,8 +111,7 @@ class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
       }
 
       val insertTask = new InsertTask[IO](null) {
-        override def apply(create: LogTaskRequest, projectId: Long, userId: Long): IO[Either[AppBusinessError, Int]] =
-          insertTaskResult.pure[IO]
+        override def apply(create: LogTaskRequest, projectId: Long, userId: Long, startTime: LocalDateTime): IO[Either[AppBusinessError, Int]] = insertTaskResult.pure[IO]
       }
 
       val getTask = new GetTask[IO](null) {Long

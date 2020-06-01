@@ -1,5 +1,7 @@
 package service.task
 
+import java.time.{ZoneOffset, ZonedDateTime}
+
 import cats.data.EitherT
 import cats.effect.Sync
 import models.request.LogTaskRequest
@@ -26,13 +28,13 @@ class TaskLog[F[+_]: Sync](
   }
 
   private def getExistingProjectId(projectName: String): EitherT[F, AppBusinessError, Project] =
-    EitherT(getProjectId(projectName))
+    EitherT.fromOptionF(getProjectId(projectName), ProjectNotFound())
 
   private def getExistingUserId(userIdentification: String): EitherT[F, AppBusinessError, Int] =
     EitherT.fromOptionF(getUserId(userIdentification), UserNotFound())
 
   private def insertNewTask(work: LogTaskRequest, projectId: Long, userId: Long): EitherT[F, AppBusinessError, Int] =
-    EitherT(insertTask(work, projectId, userId))
+    EitherT(insertTask(work, projectId, userId, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime))
 
   private def getExistingTask(taskId: Long): EitherT[F, AppBusinessError, Task] =
     EitherT.fromOptionF(getTask(taskId), TaskNotCreated())

@@ -19,9 +19,11 @@ import service.auth.Auth
 
 object ReportRoutes {
 
+
+
   def projectTasksReport(req: String => IO[Either[AppBusinessError, GeneralReport]])
                         (implicit auth: Auth): Route =
-    path("project") {
+    pathPrefix("report" / "project") {
       parameter("name") { name =>
         get {
           auth.apply { _ =>
@@ -37,7 +39,7 @@ object ReportRoutes {
 
   def detailedReport(req: MainReport => IO[Either[AppBusinessError, List[UserStatisticsReport]]])
                     (implicit auth: Auth) =
-    path("detailed") {
+    pathPrefix("report" / "users") {
       get {
         auth.apply { _ =>
           entity(as[MainReport]) { request =>
@@ -53,7 +55,8 @@ object ReportRoutes {
 
 
   def mainReport(req: ReportBodyWithParamsRequest => IO[Either[AppBusinessError, Seq[responses.DetailReportResponse]]])
-                (implicit auth: Auth): Route = path("report") {
+                (implicit auth: Auth): Route =
+    pathPrefix("report" / "detail") {
     parameters(
       "by".as[String].?,
       "sort".as[String].?,

@@ -31,7 +31,7 @@ class ProjectUpdate[F[+_]: Sync](
   private def findProjectById(projectName: String): EitherT[F, AppBusinessError, Project] =
     EitherT.fromOptionF(findProject(projectName), ProjectNotCreated())
 
-  private def changeProjectName(oldProjectName: String, projectName: String, userId: Long): EitherT[F, AppBusinessError, Int] =
+  private def changeProjectName(oldProjectName: String, projectName: String, userId: Long): EitherT[F, AppBusinessError, Either[AppBusinessError, Unit]] =
     EitherT(updateProjectName(oldProjectName, projectName, userId).attemptSomeSqlState {
       case sqlstate.class23.UNIQUE_VIOLATION => ProjectNameExists()
     })

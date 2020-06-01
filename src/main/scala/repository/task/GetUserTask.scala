@@ -9,14 +9,10 @@ import errorMessages._
 import models.model._
 
 class GetUserTask[F[_] : Sync](tx: Transactor[F]) {
-  def apply(taskDescription: String, userId: Long) = {
+  def apply(taskDescription: String, userId: Long)= {
     TaskQueries
       .fetchTask(taskDescription, userId)
       .option
-      .map {
-        case Some(task) => task.asRight
-        case None => TaskNotFound().asLeft
-      }
       .transact(tx)
   }
 }

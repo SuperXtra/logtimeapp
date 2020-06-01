@@ -20,7 +20,7 @@ class UserCreate[F[+_] : Sync](getNewUser: UserById[F],
 
 
   private def createUser(): EitherT[F, AppBusinessError, Int] = {
-    EitherT.fromOptionF(create(), CannotCreateUserWithGeneratedUUID())
+    EitherT.fromOptionF(create(UUID.randomUUID().toString), CannotCreateUserWithGeneratedUUID())
   }
 
   private def getExistingUserById(id: Int): EitherT[F, AppBusinessError, User] = {

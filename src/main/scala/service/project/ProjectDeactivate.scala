@@ -34,7 +34,7 @@ class ProjectDeactivate[F[+_] : Sync](
 
 
   private def findProjectById(projectName: String): EitherT[F, AppBusinessError, Project] = {
-    EitherT.fromOptionF(findProject(projectName), ProjectNotFound())
+    EitherT(findProject(projectName))
   }
 
   private def verifyIfUserIsTheOwnerOfTheProject(userId: Int, projectName: String): EitherT[F, AppBusinessError, Boolean] = {
@@ -42,6 +42,6 @@ class ProjectDeactivate[F[+_] : Sync](
   }
 
   private def deleteProjectWithTasks(userId: Int, projectName: String, projectId: Int, deleteTime: ZonedDateTime): EitherT[F, AppBusinessError, Unit] = {
-    EitherT(deactivateProject(userId, projectName, projectId, deleteTime))
+    EitherT(deactivateProject(userId, projectName, projectId, deleteTime.toLocalDateTime))
   }
 }

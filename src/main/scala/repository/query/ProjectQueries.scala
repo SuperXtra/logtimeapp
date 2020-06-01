@@ -10,7 +10,7 @@ import doobie.implicits.javatime._
 
 object ProjectQueries {
 
-  def insert(projectName: String, userId: Long) = {
+  def insert(projectName: String, userId: Long): doobie.Query0[Int] = {
     fr"""INSERT INTO tb_project (user_id, project_name, create_time) VALUES (
            ${userId.toInt},
            ${projectName},
@@ -28,9 +28,9 @@ object ProjectQueries {
         """.update
   }
 
-  def deleteProject(requestingUserId: Long, projectName: String, deleteTime: ZonedDateTime): Update0 = {
+  def deleteProject(requestingUserId: Long, projectName: String, deleteTime: LocalDateTime): Update0 = {
     fr"""UPDATE tb_project
-           SET delete_time = ${deleteTime.toLocalDateTime}, active = false
+           SET delete_time = ${deleteTime}, active = false
            WHERE project_name = $projectName
            AND user_id = ${requestingUserId.toInt}
            """
@@ -66,7 +66,7 @@ object ProjectQueries {
       .query[Boolean]
   }
 
-  def checkIfIsOwner(userId: Int, projectName: String) = {
+  def checkIfIsOwner(userId: Int, projectName: String): doobie.Query0[Boolean] = {
     fr"""
         SELECT EXISTS ( select (id) FROM tb_project WHERE project_name = ${projectName} AND user_id = ${userId} and active = true)
         """.query[Boolean]

@@ -63,7 +63,7 @@ class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhen
     val result: Either[AppBusinessError, Int] = deleteTask(deleteTaskRequest, "dsaadsij12312").unsafeRunSync()
 
     Then("returns number of rows updated")
-    result shouldBe Left(ProjectNotCreated)
+    result shouldBe Left(ProjectNotFound())
   }
 
 
@@ -82,7 +82,7 @@ class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhen
         override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
       }
       val delete = new DeleteTask[IO](null) {
-        override def apply(taskDescription: String, projectId: Long, userId: Long): IO[Either[AppBusinessError, Int]] = taskDeleteResult.pure[IO]
+        override def apply(taskDescription: String, projectId: Long, userId: Long, deleteTime: LocalDateTime): IO[Either[AppBusinessError, Int]] = taskDeleteResult.pure[IO]
       }
 
       new TaskDelete(getProjectId, getUserId, delete)

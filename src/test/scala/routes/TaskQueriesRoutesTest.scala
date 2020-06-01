@@ -42,7 +42,7 @@ class TaskQueriesRoutesTest extends AnyFlatSpec with Matchers with ScalatestRout
       response.status shouldBe StatusCodes.NotFound
       json(response.raw) shouldBe json("""
         {
-            "error" : "error.project.not.found"
+            "error" : "error.project.name.not.found"
         }
         """
       )

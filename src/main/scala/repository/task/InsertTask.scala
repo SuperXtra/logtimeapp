@@ -16,9 +16,9 @@ import repository.query.TaskQueries
 
 class InsertTask[F[_] : Sync](tx: Transactor[F]) {
 
-  def apply(create: LogTaskRequest, projectId: Long, userId: Long): F[Either[AppBusinessError, Int]] =
+  def apply(create: LogTaskRequest, projectId: Long, userId: Long, startTime: LocalDateTime): F[Either[AppBusinessError, Int]] =
     TaskQueries
-      .insert(create, projectId, userId)
+      .insert(create, projectId, userId, startTime)
       .unique
       .transact(tx)
       .attemptSomeSqlState {

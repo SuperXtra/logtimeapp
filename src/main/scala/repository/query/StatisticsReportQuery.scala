@@ -2,14 +2,11 @@ package repository.query
 
 import java.time.{LocalDateTime, YearMonth}
 
-import akka.http.javadsl.model.DateTime
-import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending}
-import models.request.{MainReport, ReportBodyWithParamsRequest}
+import models.request._
 import cats.implicits._
 import doobie.implicits.javatime._
 import doobie._
-import doobie.util.query.Query0
-import models.responses.{ReportFromDb, UserStatisticsReport}
+import models.responses._
 import doobie.implicits._
 
 object StatisticsReportQuery {

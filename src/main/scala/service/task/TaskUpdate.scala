@@ -16,7 +16,7 @@ class TaskUpdate[F[+_] : Sync](getUserId: GetExistingUserId[F],
                                taskDelete: DeleteTask[F],
                                taskUpdate: TaskInsertUpdate[F]) {
 
-  def apply(updateTask: UpdateTaskRequest, uuid: String): F[Either[AppBusinessError, Long]] = (
+  def apply(updateTask: UpdateTaskRequest, uuid: String): F[Either[AppBusinessError, Unit]] = (
     for {
       userId <- getExistingUserId(uuid)
       oldTask <- fetchTask(updateTask.oldTaskDescription, userId)
@@ -54,12 +54,12 @@ class TaskUpdate[F[+_] : Sync](getUserId: GetExistingUserId[F],
 
 
 
-  private def updateExistingTask(toUpdate: TaskToUpdate): EitherT[F, AppBusinessError, Long] = {
-    EitherT.fromOptionF(taskUpdate(toUpdate), TaskUpdateUnsuccessful())
+  private def updateExistingTask(toUpdate: TaskToUpdate): EitherT[F, AppBusinessError, Unit] = {
+    EitherT(taskUpdate(toUpdate, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime))
   }
 
   private def deleteTask(taskDescription: String, projectId: Long, userId: Long): EitherT[F, AppBusinessError, Int] = {
-    EitherT(taskDelete(taskDescription, projectId,userId))
+    EitherT(taskDelete(taskDescription, projectId,userId, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime))
   }
 
   private def fetchTask(taskDescription: String, userId: Long): EitherT[F, AppBusinessError, Task] = {

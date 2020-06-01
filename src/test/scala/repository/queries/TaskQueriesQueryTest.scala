@@ -1,6 +1,6 @@
 package repository.queries
 
-import java.time.{ZoneOffset, ZonedDateTime}
+import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
 import models.request.LogTaskRequest
 import repository.query.{TaskQueries, UserQueries}
@@ -15,11 +15,11 @@ class TaskQueriesQueryTest extends QueryTest {
       ZonedDateTime.now(ZoneOffset.UTC),
       50,
       Some(2),
-      Some("test comment")), 2, 2))
+      Some("test comment")), 2, 2, LocalDateTime.now()))
   }
 
   test("User delete test") {
-    check(TaskQueries.deleteTask("task", 1, 1))
+    check(TaskQueries.deleteTask("task", 1, 1, LocalDateTime.now()))
   }
 
   test("test if user exist with given uuid query") {
@@ -37,8 +37,5 @@ class TaskQueriesQueryTest extends QueryTest {
 
   test("Select by user id") {
     check(UserQueries.selectByUserIdentity(1))
-  }
-  test("User, select last inserted user") {
-    check(UserQueries.selectLastInsertedUser())
   }
 }

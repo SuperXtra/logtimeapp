@@ -3,14 +3,14 @@ package service.task
 import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
 import cats.effect.IO
-import errorMessages.{AppBusinessError, ProjectNotFound, TaskDeleteUnsuccessful, TaskNotFound, UserNotFound}
+import errorMessages.{AppBusinessError, ProjectNotFound, ProjectUpdateUnsuccessful, TaskDeleteUnsuccessful, TaskNotFound, UserNotFound}
 import models.model.{Project, Task, TaskToUpdate}
 import models.request.{LogTaskRequest, UpdateTaskRequest}
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import repository.project.FindActiveProjectById
-import repository.task.{GetTask, GetUserTask, InsertTask, DeleteTask, TaskInsertUpdate}
+import repository.task.{DeleteTask, GetTask, GetUserTask, InsertTask, TaskInsertUpdate}
 import repository.user.GetExistingUserId
 import cats.implicits._
 
@@ -50,14 +50,14 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
       userId.some,
       task.some,
       1.asRight,
-      Some(1L)
+      ().asRight
     )
 
     When("logging work")
     val result = updateWork((updateTaskRequest), "test string").unsafeRunSync
 
     Then("returns created task")
-    result shouldBe Right(1)
+    result shouldBe Right(())
 
   }
 
@@ -77,14 +77,14 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
       userId = None,
       userTask = None,
       taskDeleteResult = TaskDeleteUnsuccessful().asLeft,
-      taskUpdateResult = None
+      taskUpdateResult = ProjectUpdateUnsuccessful().asLeft
     )
 
     When("updating work")
     val result = updateTask(updateTaskRequest, "test string").unsafeRunSync
 
     Then("returns error message: project not found")
-    result shouldBe Left(UserNotFound)
+    result shouldBe Left(UserNotFound())
   }
 
   it should "not allow to update work if user task does not exist" in new Context {
@@ -103,14 +103,14 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
       userId = Some(1),
       userTask = None,
       taskDeleteResult = TaskDeleteUnsuccessful().asLeft,
-      taskUpdateResult = None
+      taskUpdateResult = ().asRight
     )
 
     When("updating work")
     val result = updateTask(updateTaskRequest, "test string").unsafeRunSync
 
     Then("returns error message: project not found")
-    result shouldBe Left(TaskNotFound)
+    result shouldBe Left(TaskNotFound())
   }
 
 
@@ -145,14 +145,14 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
       userId = Some(1),
       userTask = Some(task),
       taskDeleteResult = TaskDeleteUnsuccessful().asLeft,
-      taskUpdateResult = None
+      taskUpdateResult = ProjectUpdateUnsuccessful().asLeft
     )
 
     When("updating work")
     val result = updateTask(updateTaskRequest, "test string").unsafeRunSync
 
     Then("returns error message: project not found")
-    result shouldBe Left(TaskDeleteUnsuccessful)
+    result shouldBe Left(TaskDeleteUnsuccessful())
   }
 
 
@@ -162,7 +162,7 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
                           userId: Option[Int],
                           userTask: Option[Task],
                           taskDeleteResult: Either[AppBusinessError, Int],
-                          taskUpdateResult: Option[Long]
+                          taskUpdateResult: Either[ProjectUpdateUnsuccessful, Unit]
                         ): TaskUpdate[IO] = {
 
       val getUserId = new GetExistingUserId[IO](null) {
@@ -172,12 +172,11 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
         override def apply(taskDescription: String, userId: Long): IO[Option[Task]] = userTask.pure[IO]
       }
       val taskDelete = new DeleteTask[IO](null) {
-        override def apply(taskDescription: String, projectId: Long, userId: Long): IO[Either[AppBusinessError, Int]] = taskDeleteResult.pure[IO]
+        override def apply(taskDescription: String, projectId: Long, userId: Long, deleteTime: LocalDateTime): IO[Either[AppBusinessError, Int]] = taskDeleteResult.pure[IO]
       }
       val taskUpdate = new TaskInsertUpdate[IO](null) {
-        override def apply(toUpdate: TaskToUpdate): IO[Option[Long]] = taskUpdateResult.pure[IO]
+        override def apply(toUpdate: TaskToUpdate, created: LocalDateTime): IO[Either[ProjectUpdateUnsuccessful, Unit]] = taskUpdateResult.pure[IO]
       }
-
 
       new TaskUpdate(getUserId, getUserTask, taskDelete, taskUpdate)
     }

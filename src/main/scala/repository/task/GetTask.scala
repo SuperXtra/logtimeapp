@@ -11,5 +11,6 @@ class GetTask[F[_] : Sync](tx: Transactor[F]) {
   def apply(id: Long): F[Option[Task]] =
     TaskQueries
       .getTaskById(id)
+      .option
       .transact(tx)
 }

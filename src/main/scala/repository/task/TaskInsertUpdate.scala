@@ -1,5 +1,7 @@
 package repository.task
 
+import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
+
 import cats.effect.Sync
 import models.model.TaskToUpdate
 import doobie.Transactor
@@ -10,9 +12,9 @@ import cats.implicits._
 
 class TaskInsertUpdate[F[_] : Sync](tx: Transactor[F]) {
 
-  def apply(toUpdate: TaskToUpdate) = {
+  def apply(toUpdate: TaskToUpdate, created: LocalDateTime) = {
     TaskQueries
-      .insertUpdate(toUpdate)
+      .insertUpdate(toUpdate, created)
       .option
       .map {
         case Some(x) if x > 0 => ().asRight

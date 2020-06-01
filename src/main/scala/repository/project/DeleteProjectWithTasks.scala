@@ -1,6 +1,6 @@
 package repository.project
 
-import java.time.ZonedDateTime
+import java.time.{LocalDateTime, ZonedDateTime}
 
 import cats.effect._
 import doobie.implicits._
@@ -12,7 +12,7 @@ import repository.query.{ProjectQueries, TaskQueries, UserQueries}
 
 class DeleteProjectWithTasks[F[+_] : Sync](tx: Transactor[F]) {
 
-  def apply(userId: Int, projectName: String, projectId: Int, deleteTime: ZonedDateTime): F[Either[AppBusinessError, Unit]] = {
+  def apply(userId: Int, projectName: String, projectId: Int, deleteTime: LocalDateTime): F[Either[AppBusinessError, Unit]] = {
 
     (for {
       _ <- ProjectQueries.deleteProject(userId, projectName, deleteTime).run
