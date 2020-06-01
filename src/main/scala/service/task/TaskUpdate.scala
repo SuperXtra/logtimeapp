@@ -63,7 +63,7 @@ class TaskUpdate[F[+_] : Sync](getUserId: GetExistingUserId[F],
   }
 
   private def fetchTask(taskDescription: String, userId: Long): EitherT[F, AppError, Task] = {
-    EitherT.fromOptionF(getUserTask(taskDescription, userId), TaskNotFound("Task with given name cannot be updated - it does not exist"))
+    EitherT.fromOptionF(getUserTask(taskDescription, userId), TaskNotFound())
   }
 
   private def getExistingUserId(uuid: String): EitherT[F, AppError, Int] =

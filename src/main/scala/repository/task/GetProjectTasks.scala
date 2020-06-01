@@ -15,7 +15,7 @@ class GetProjectTasks[F[_] : Sync](tx: Transactor[F]) {
       .to[List]
       .transact(tx)
       .attemptSomeSqlState {
-        case x => TaskNotFound(detailErrorMessage = x.value)
+        case x => TaskNotFound()
       }
   }
 

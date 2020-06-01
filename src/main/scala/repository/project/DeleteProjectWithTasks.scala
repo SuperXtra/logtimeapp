@@ -19,7 +19,7 @@ class DeleteProjectWithTasks[F[+_]: Sync](tx: Transactor[F]) {
     _ <- TaskQueries.deleteTasksForProject(projectId, deleteTime).run
     } yield ()).transact(tx)
         .attemptSomeSqlState {
-          case _ =>ProjectDeleteUnsuccessful
+          case _ =>ProjectDeleteUnsuccessful()
         }
   }
 

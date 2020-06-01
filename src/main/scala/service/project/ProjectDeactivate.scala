@@ -30,11 +30,11 @@ class ProjectDeactivate[F[+_] : Sync](
   }
 
   private def getUserId(userIdentification: String): EitherT[F, AppError, Int] =
-    EitherT.fromOptionF(userId(userIdentification), ProjectDeleteUnsuccessful)
+    EitherT.fromOptionF(userId(userIdentification), ProjectDeleteUnsuccessful())
 
 
   private def findProjectById(projectName: String): EitherT[F, AppError, Project] = {
-    EitherT.fromOptionF(findProject(projectName), ProjectNotFound)
+    EitherT.fromOptionF(findProject(projectName), ProjectNotFound())
   }
 
   private def verifyIfUserIsTheOwnerOfTheProject(userId: Int, projectName: String): EitherT[F, AppError, Boolean] = {

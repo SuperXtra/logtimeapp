@@ -23,7 +23,7 @@ class TaskDelete[F[+_] : Sync](
 
 
   private def findProjectById(projectName: String): EitherT[F, AppError, Project] = {
-    EitherT.fromOptionF(getProjectId(projectName), ProjectNotCreated)
+    EitherT.fromOptionF(getProjectId(projectName), ProjectNotCreated())
   }
 
   private def getExistingUserId(uuid: String): EitherT[F, AppError, Int] =

@@ -55,13 +55,13 @@ class ProjectCreateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     val result = createProject(request, "dsaddas32ndsjkn").unsafeRunSync()
 
     Then("returns  user not found")
-    result shouldBe Left(UserNotFound())
+    result shouldBe Left(UserNotFound)
   }
 
   it should "not create new project due to problem with insert" in new Context {
     Given("project error and userId")
     val userId  = Some(1)
-    val insertedProjectId = ProjectNotCreated.asLeft
+    val insertedProjectId = ProjectNotCreated().asLeft
 
     val request = CreateProjectRequest("Test project name")
 

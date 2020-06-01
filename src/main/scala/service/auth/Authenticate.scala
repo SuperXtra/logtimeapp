@@ -10,11 +10,11 @@ import authentikat.jwt.{JsonWebToken, JwtClaimsSet, JwtHeader}
 import com.typesafe.config.ConfigFactory
 import config.AuthConfig
 import error.AuthenticationNotSuccessful
-import io.circe.generic.auto._
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import pureconfig.ConfigSource
 import pureconfig._
 import pureconfig.generic.auto._
+import io.circe.generic.auto._
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 
 class Authenticate() {
 
@@ -43,12 +43,12 @@ class Authenticate() {
     optionalHeaderValueByName("Authorization").flatMap {
       case Some(token) =>
         token.split(" ")(0) match {
-          case token if isTokenExpired(token) => complete(StatusCodes.Unauthorized -> AuthenticationNotSuccessful(detailErrorMessage = "Session expired"))
+          case token if isTokenExpired(token) => complete(StatusCodes.Unauthorized -> AuthenticationNotSuccessful)
 
           case token if JsonWebToken.validate(token, secretKey) => provide(getClaims(token))
-          case _ => complete(StatusCodes.Unauthorized -> AuthenticationNotSuccessful(detailErrorMessage = "Invalid Token"))
+          case _ => complete(StatusCodes.Unauthorized -> AuthenticationNotSuccessful)
         }
-      case None => complete(StatusCodes.Unauthorized -> AuthenticationNotSuccessful(detailErrorMessage = "Token not Provided"))
+      case None => complete(StatusCodes.Unauthorized -> AuthenticationNotSuccessful)
     }
   }
 

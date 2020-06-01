@@ -22,7 +22,7 @@ import scala.concurrent.duration._
 class TaskQueriesRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
 
   it should "return error project not found" in new Context {
-    val result = ProjectNotFound.asLeft
+    val result = ProjectNotFound().asLeft
     val route = Route.seal(TaskRoutes.logTask((_,_) => IO(result)))
     Post("/task",
       HttpEntity(

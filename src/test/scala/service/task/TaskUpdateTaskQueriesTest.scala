@@ -84,7 +84,7 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
     val result = updateTask(updateTaskRequest, "test string").unsafeRunSync
 
     Then("returns error message: project not found")
-    result shouldBe Left(UserNotFound())
+    result shouldBe Left(UserNotFound)
   }
 
   it should "not allow to update work if user task does not exist" in new Context {
@@ -110,7 +110,7 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
     val result = updateTask(updateTaskRequest, "test string").unsafeRunSync
 
     Then("returns error message: project not found")
-    result shouldBe Left(TaskNotFound("Task with given name cannot be updated - it does not exist"))
+    result shouldBe Left(TaskNotFound)
   }
 
 
@@ -152,7 +152,7 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
     val result = updateTask(updateTaskRequest, "test string").unsafeRunSync
 
     Then("returns error message: project not found")
-    result shouldBe Left(TaskDeleteUnsuccessful())
+    result shouldBe Left(TaskDeleteUnsuccessful)
   }
 
 

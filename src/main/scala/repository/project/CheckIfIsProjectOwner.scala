@@ -15,7 +15,7 @@ class CheckIfIsProjectOwner[F[+_]: Sync](tx: Transactor[F]) {
       .unique
     .map{
       case true => true.asRight
-      case false => ProjectDeleteUnsuccessful.asLeft
+      case false => ProjectDeleteUnsuccessful().asLeft
     }
       .transact(tx)
 

@@ -42,7 +42,7 @@ class ProjectDeactivateTest extends AnyFlatSpec with Matchers with GivenWhenThen
   it should "should not deactivate project" in new Context {
     Given("user id, deactivated project id, project and result of deactivation = task count")
     val userId = Some(1)
-    val deactivatedProjectResult = ProjectDeleteUnsuccessful.asLeft
+    val deactivatedProjectResult = ProjectDeleteUnsuccessful().asLeft
     val project = Some(Project(1,1,"Test project name", LocalDateTime.now(), Some(LocalDateTime.now().plusHours(2)), Some(true)))
     val deactivateTaskResult = 3.asRight
     val isOwner = true.asRight

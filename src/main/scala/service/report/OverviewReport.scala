@@ -24,7 +24,7 @@ class OverviewReport[F[+_] : Sync](
 
 
   private def findProjectById(projectName: String): EitherT[F, AppError, Project] = {
-    EitherT.fromOptionF(findProject(projectName), ProjectNotFound)
+    EitherT.fromOptionF(findProject(projectName), ProjectNotFound())
   }
 
   private def fetchTasksForProject(id: Int): EitherT[F, AppError, List[Task]] = {

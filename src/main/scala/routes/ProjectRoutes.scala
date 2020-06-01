@@ -5,13 +5,12 @@ import akka.http.scaladsl.server.Directives.{as, complete, delete, entity, path,
 import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import models.request.{ChangeProjectNameRequest, CreateProjectRequest, DeleteProjectRequest}
-import error.AppError
 import models.model.Project
 import io.circe.generic.auto._
-import cats.implicits._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
+import cats.implicits._
 import service.auth.Authenticate
-import StatusCodes._
+import error._
 
 
 object ProjectRoutes {
@@ -19,7 +18,6 @@ object ProjectRoutes {
   //TODO prepare responses
 
   val Authorization = new Authenticate()
-
 
   val projectPath = "project"
 
@@ -30,9 +28,10 @@ object ProjectRoutes {
           entity(as[CreateProjectRequest]) { project =>
             complete(
               req(project, tokenClaims("uuid").toString).map {
-                case Right(x) => StatusCodes.OK -> x.asRight
-                case Left(error) =>StatusCodes.ExpectationFailed -> error.asLeft
-              }.unsafeToFuture
+                case Right(x) => StatusCodes.OK ->  x.asRight
+                case Left(x: AuthenticationNotSuccessful) => StatusCodes.Unauthorized -> x.asLeft
+                case Left(x : AppError) => StatusCodes.ExpectationFailed -> x.asLeft
+          }.unsafeToFuture
             )
           }
         }
