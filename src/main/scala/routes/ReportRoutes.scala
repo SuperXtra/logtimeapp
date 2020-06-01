@@ -17,18 +17,16 @@ import ParameterDirectives.ParamMagnet
 import akka.http.scaladsl.model.{HttpEntity, StatusCodes}
 import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending, ProjectSort, SortDirection}
 import models.responses
-import service.auth.Authenticate
+import service.auth.Auth
 
 object ReportRoutes {
 
-  val authorization = new Authenticate()
-
-
-  def projectTasksReport(req: String => IO[Either[AppError, GeneralReport]]): Route =
+  def projectTasksReport(req: String => IO[Either[AppError, GeneralReport]])
+                        (implicit auth: Auth): Route =
     path("project") {
       parameter("name") { name =>
         get {
-          authorization.authenticated { _ =>
+          auth.apply { _ =>
             complete(
               req(name).map {
                 case Right(report) => StatusCodes.OK -> report.asRight
@@ -40,10 +38,11 @@ object ReportRoutes {
       }
     }
 
-  def detailedReport(req: MainReport => IO[Either[AppError, List[UserStatisticsReport]]]) =
+  def detailedReport(req: MainReport => IO[Either[AppError, List[UserStatisticsReport]]])
+                    (implicit auth: Auth) =
     path("detailed") {
       get {
-        authorization.authenticated { _ =>
+        auth.apply { _ =>
           entity(as[MainReport]) { request =>
             complete(
               req(request).map {
@@ -57,7 +56,8 @@ object ReportRoutes {
     }
 
 
-  def mainReport(req: ReportBodyWithParamsRequest => IO[Either[AppError, Seq[responses.DetailReportResponse]]]): Route = path("report") {
+  def mainReport(req: ReportBodyWithParamsRequest => IO[Either[AppError, Seq[responses.DetailReportResponse]]])
+                (implicit auth: Auth): Route = path("report") {
     parameters(
       "by".as[String].?,
       "sort".as[String].?,
@@ -69,7 +69,7 @@ object ReportRoutes {
       extractQuery(a, b, c, d, e)
     }) { pathParams: ReportParams =>
       get {
-        authorization.authenticated { _ =>
+        auth.apply { _ =>
           entity(as[ReportRequest]) { request: ReportRequest =>
             complete(
               req(ReportBodyWithParamsRequest(request, pathParams)).map {

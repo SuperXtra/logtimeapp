@@ -15,7 +15,7 @@ import models.model.Task
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import io.circe.syntax._
-
+import service.auth.Auth
 
 import scala.concurrent.duration._
 
@@ -30,19 +30,22 @@ class TaskQueriesRoutesTest extends AnyFlatSpec with Matchers with ScalatestRout
         s"""
            |{
            |"projectName": "Project 23!",
-           |"userIdentification": "38862bd8-ad69-4a21-b159-4f52a27edee6",
            |"taskDescription": "this is task description",
            |"startTime": "${ZonedDateTime.now.minusDays(3)}",
            |"durationTime": ${3.days.toSeconds},
            |"volume": 8,
-           |"deleteTime" : null,
            |"comment": "this is comment"
            |}
            |""".stripMargin
       )
     ) ~> route ~> check {
-      response.status shouldBe StatusCodes.OK
-      json(response.raw) shouldBe ""
+      response.status shouldBe StatusCodes.NotFound
+      json(response.raw) shouldBe json("""
+        {
+            "error" : "error.project.not.found"
+        }
+        """
+      )
     }
   }
 
@@ -56,34 +59,49 @@ class TaskQueriesRoutesTest extends AnyFlatSpec with Matchers with ScalatestRout
       taskDescription = "this is description",
       startTime = LocalDateTime.now().minusSeconds(3.days.toSeconds),
       endTime = LocalDateTime.now,
-      duration=3.days.toSeconds.toInt,
+      duration = 3.days.toSeconds.toInt,
       createTime = ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime,
       volume = 2.some,
       comment = "this is comment".some,
       deleteTime = none,
       active = Some(false)
     )
-
     val route =
-      Route.seal(TaskRoutes.logTask((_,_) => IO(task.asRight)))
+      Route.seal(TaskRoutes.logTask((_, _) => IO(task.asRight)))
     Post("/task",
       HttpEntity(
         `application/json`,
         s"""
            |{
-           |"projectName": "Project 23!",
-           |"userIdentification": "38862bd8-ad69-4a21-b159-4f52a27edee6",
-           |"taskDescription": "${task.taskDescription}",
-           |"startTime": "${task.startTime}",
-           |"durationTime": ${duration.toSeconds},
-           |"volume": ${task.volume.get},
-           |"deleteTime" : null,
-           |"comment": "${task.comment.get}"
+           |  "projectName": "Project 23!",
+           |  "taskDescription": "${task.taskDescription}",
+           |  "startTime": "${ZonedDateTime.of(task.startTime, ZoneOffset.UTC)}",
+           |  "durationTime": ${duration.toSeconds},
+           |  "volume": ${task.volume.get},
+           |  "comment": "${task.comment.get}"
            |}
            |""".stripMargin
       )
     ) ~> route ~> check {
       response.status shouldBe StatusCodes.OK
+      json(response.raw) shouldBe json(
+        s"""
+        {
+          "id" : 283,
+          "projectId" : 213,
+          "userId" : 123,
+          "createTime" : "${task.createTime}",
+          "taskDescription" : "this is description",
+          "startTime" : "${task.startTime}",
+          "endTime" : "${task.endTime}",
+          "duration" : ${task.duration},
+          "volume" : 2,
+          "comment" : "this is comment",
+          "deleteTime" : null,
+          "active" : false
+        }
+        """
+      )
     }
   }
 
@@ -91,6 +109,13 @@ class TaskQueriesRoutesTest extends AnyFlatSpec with Matchers with ScalatestRout
     implicit class RawResponseOps(response: HttpResponse) {
       import org.scalatest.concurrent.ScalaFutures._
       def raw: String = Unmarshal(response.entity).to[String].futureValue
+    }
+
+    import akka.http.scaladsl.server.directives.BasicDirectives._
+    implicit val auth: Auth = new Auth {
+      def apply: Directive1[Map[String, Any]] = provide(Map("uuid" -> "test_token"))
+
+      override def token(uuid: String): String = "test_token"
     }
   }
 }

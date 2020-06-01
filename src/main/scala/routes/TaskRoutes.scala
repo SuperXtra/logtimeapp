@@ -9,20 +9,17 @@ import error._
 import models.model.Task
 import io.circe.generic.auto._
 import cats.implicits._
-import routes.ProjectRoutes.Authorization
-import service.auth.Authenticate
+import service.auth.Auth
 //import cats.effect._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 
 object TaskRoutes {
 
-  val authorization = new Authenticate()
-
-
-  def logTask(logWorkDone: (LogTaskRequest, String) => IO[Either[AppError, Task]]): Route =
+  def logTask(logWorkDone: (LogTaskRequest, String) => IO[Either[AppError, Task]])
+             (implicit auth: Auth): Route =
     path("task") {
       post {
-        Authorization.authenticated { tokenClaims =>
+        auth.apply { tokenClaims =>
           entity(as[LogTaskRequest]) { task =>
             complete(
               logWorkDone(task, tokenClaims("uuid").toString).map {
@@ -35,10 +32,11 @@ object TaskRoutes {
       }
     }
 
-  def updateTask(updateTask: (UpdateTaskRequest, String) => IO[Either[AppError, Long]]): Route =
+  def updateTask(updateTask: (UpdateTaskRequest, String) => IO[Either[AppError, Long]])
+                (implicit auth: Auth): Route =
     path("task") {
       put {
-        Authorization.authenticated { tokenClaims =>
+        auth.apply { tokenClaims =>
           entity(as[UpdateTaskRequest]) { update =>
             complete(
               updateTask(update, tokenClaims("uuid").toString).map {
@@ -52,10 +50,11 @@ object TaskRoutes {
     }
 
 
-  def deleteTask(deleteTask: (DeleteTaskRequest,String) => IO[Either[AppError, Int]]): Route =
+  def deleteTask(deleteTask: (DeleteTaskRequest,String) => IO[Either[AppError, Int]])
+                (implicit auth: Auth): Route =
     path("task") {
       delete {
-        Authorization.authenticated { tokenClaims =>
+        auth.apply { tokenClaims =>
           entity(as[DeleteTaskRequest]) { delete =>
             complete(deleteTask(delete, tokenClaims("uuid").toString).map {
               case Right(value) => StatusCodes.OK -> value.asRight

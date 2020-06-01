@@ -1,5 +1,6 @@
 import java.time.ZonedDateTime
 
+import WebApp.authConfig
 import akka.actor.{ActorLogging, ActorSystem}
 import akka.event.{Logging, LoggingAdapter, MarkerLoggingAdapter}
 import akka.http.scaladsl.Http
@@ -7,8 +8,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import cats.effect.{ContextShift, IO}
 import com.typesafe.config.ConfigFactory
-import config.DatabaseConfig
-import scala.concurrent.Future
+import config.{AuthConfig, DatabaseConfig}
+
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import db.DatabaseContext
 import doobie.util.ExecutionContexts
 import pureconfig.ConfigSource
@@ -23,17 +25,19 @@ import service.user._
 import pureconfig._
 import pureconfig.generic.auto._
 import repository.report.{DetailedReport, Report}
-import service.auth.Authenticate
+import service.auth.Auth
 
 object WebApp extends App {
 
-  val config = ConfigFactory.load("database-configuration.conf")
-  val databaseConfig = ConfigSource.fromConfig(config).loadOrThrow[DatabaseConfig]
-  //TODO create global String to timestamp converter
+  val databaseConfiguration = ConfigFactory.load("database-configuration.conf")
+  val databaseConfig = ConfigSource.fromConfig(databaseConfiguration).loadOrThrow[DatabaseConfig]
+  val authConfiguration = ConfigFactory.load("auth-configuration.conf")
+  val authConfig: AuthConfig = ConfigSource.fromConfig(authConfiguration).loadOrThrow[AuthConfig]
 
-  implicit val system = ActorSystem("projectAppSystem")
+
+  implicit val system: ActorSystem = ActorSystem("projectAppSystem")
   implicit val logger: MarkerLoggingAdapter = Logging.withMarker(system, "test")
-  implicit val executionContext = system.dispatcher
+  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
   val tx = DatabaseContext.transactor(databaseConfig)
@@ -71,6 +75,8 @@ object WebApp extends App {
   val authenticateUser = new UserAuthenticate[IO](userExists)
   val detailReport = new AdditionalReport[IO](detailedReport)
 
+
+  implicit val authentication: Auth = Auth(authConfig)
 
   val routes: Route = concat(
     TaskRoutes.logTask(logTaskService.apply),

@@ -11,13 +11,11 @@ import io.circe.generic.auto._
 import cats.implicits._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import models.request.AuthorizationRequest
-import service.auth.Authenticate
+import service.auth.Auth
 import StatusCodes._
 import akka.http.scaladsl.model.headers.Authorization
 
 object UserRoutes {
-
-  val authorization = new Authenticate()
 
   def createUser(user: => IO[Either[AppError, User]]) =
     path("user") {
@@ -32,13 +30,14 @@ object UserRoutes {
     }
 
 
-  def authorizeUser(userId: String => IO[Boolean]) =
+  def authorizeUser(userId: String => IO[Boolean])
+                   (implicit auth: Auth) =
     path("login") {
       post {
         entity(as[AuthorizationRequest]) { req => {
           complete(
             userId(req.userUUID).map {
-              case true => HttpResponse(OK).withEntity(authorization.generateToken(req.userUUID))
+              case true => HttpResponse(OK).withEntity(auth.token(req.userUUID))
               case false => HttpResponse(Unauthorized)
             }.unsafeToFuture
           )

@@ -9,7 +9,7 @@ import models.model.Project
 import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import cats.implicits._
-import service.auth.Authenticate
+import service.auth.Auth
 import error._
 
 
@@ -17,14 +17,13 @@ object ProjectRoutes {
 
   //TODO prepare responses
 
-  val Authorization = new Authenticate()
-
   val projectPath = "project"
 
-  def createProject(req: (CreateProjectRequest, String) => IO[Either[AppError, Int]]): Route =
+  def createProject(req: (CreateProjectRequest, String) => IO[Either[AppError, Int]])
+                   (implicit auth: Auth): Route =
     path(projectPath) {
       post {
-        Authorization.authenticated { tokenClaims =>
+        auth.apply { tokenClaims =>
           entity(as[CreateProjectRequest]) { project =>
             complete(
               req(project, tokenClaims("uuid").toString).map {
@@ -39,10 +38,11 @@ object ProjectRoutes {
     }
 
 
-  def updateProject(req: (ChangeProjectNameRequest, String) => IO[Either[AppError, Project]]): Route =
+  def updateProject(req: (ChangeProjectNameRequest, String) => IO[Either[AppError, Project]])
+                   (implicit auth: Auth): Route =
     path(projectPath) {
       put {
-        Authorization.authenticated { tokenClaims =>
+        auth.apply { tokenClaims =>
           entity(as[ChangeProjectNameRequest]) { project =>
             complete(
               req(project, tokenClaims("uuid").toString).map {
@@ -56,10 +56,11 @@ object ProjectRoutes {
       }
     }
 
-  def deleteProject(req: (DeleteProjectRequest, String) => IO[Either[AppError, Unit]]): Route =
+  def deleteProject(req: (DeleteProjectRequest, String) => IO[Either[AppError, Unit]])
+                   (implicit auth: Auth): Route =
     path(projectPath) {
       delete {
-        Authorization.authenticated { tokenClaims =>
+        auth.apply { tokenClaims =>
           entity(as[DeleteProjectRequest]) { project =>
             complete(
               req(project, tokenClaims("uuid").toString).map {

@@ -10,7 +10,7 @@ import error.AppError
 import models.model.User
 import models.request.DeleteTaskRequest
 
-class UserAuthenticateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
+class UserAuthTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "confirm that user exists" in new Context {
     Given("user uuid to verify")
