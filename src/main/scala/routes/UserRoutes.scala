@@ -5,14 +5,16 @@ import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.server.Directives._
 import cats.effect.IO
-import errorMessages.AppBusinessError
+import errorMessages.{AppBusinessError, AuthenticationNotSuccessful}
 import models.model.User
 import io.circe.generic.auto._
 import cats.implicits._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import models.request.AuthorizationRequest
 import service.auth.Auth
-import StatusCodes._
+import akka.http.scaladsl.marshalling.ToResponseMarshallable
+import akka.http.scaladsl.server.Route
+import models.responses.AuthResponse
 
 object UserRoutes {
 
@@ -29,14 +31,14 @@ object UserRoutes {
 
 
   def authorizeUser(userId: String => IO[Boolean])
-                   (implicit auth: Auth) =
+                   (implicit auth: Auth): Route =
     path("login") {
       post {
         entity(as[AuthorizationRequest]) { req => {
           complete(
-            userId(req.userUUID).map {
-              case true => HttpResponse(OK).withEntity(auth.token(req.userUUID))
-              case false => HttpResponse(Unauthorized)
+            userId(req.userUUID).map[ToResponseMarshallable] {
+              case true => AuthResponse(auth.token(req.userUUID))
+              case false => LeftResponse.apply(AuthenticationNotSuccessful())
             }.unsafeToFuture
           )
         }

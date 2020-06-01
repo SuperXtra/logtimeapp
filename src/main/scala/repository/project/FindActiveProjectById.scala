@@ -10,12 +10,9 @@ import cats.implicits._
 
 
 class FindActiveProjectById[F[+_] : Sync](tx: Transactor[F]) {
-  def apply(projectName: String): F[Either[AppBusinessError, Project]] =
+  def apply(projectName: String): F[Option[Project]] =
     ProjectQueries
       .getActiveProjectById(projectName)
       .option
-      .map {
-        case Some(project) => project.asRight
-        case None => ProjectNotFound().asLeft
-      }.transact(tx)
+      .transact(tx)
 }

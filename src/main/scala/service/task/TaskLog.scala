@@ -26,7 +26,7 @@ class TaskLog[F[+_]: Sync](
   }
 
   private def getExistingProjectId(projectName: String): EitherT[F, AppBusinessError, Project] =
-    EitherT.fromOptionF(getProjectId(projectName), ProjectNotFound())
+    EitherT(getProjectId(projectName))
 
   private def getExistingUserId(userIdentification: String): EitherT[F, AppBusinessError, Int] =
     EitherT.fromOptionF(getUserId(userIdentification), UserNotFound())

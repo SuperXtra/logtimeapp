@@ -16,7 +16,7 @@ class DeleteTasks[F[+_]: Sync](tx: Transactor[F]) {
       .run
       .transact(tx)
       .attemptSomeSqlState {
-        case x =>TaskDeleteUnsuccessful()
+        case _ =>TaskDeleteUnsuccessful()
       }
   }
 }

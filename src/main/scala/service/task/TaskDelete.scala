@@ -23,14 +23,12 @@ class TaskDelete[F[+_] : Sync](
 
 
   private def findProjectById(projectName: String): EitherT[F, AppBusinessError, Project] = {
-    EitherT.fromOptionF(getProjectId(projectName), ProjectNotCreated())
+    EitherT(getProjectId(projectName))
   }
 
   private def getExistingUserId(uuid: String): EitherT[F, AppBusinessError, Int] =
     EitherT.fromOptionF(getUserId(uuid), UserNotFound())
 
-  private def deleteTask(taskDescription: String, projectId: Long, userId: Long): EitherT[F, AppBusinessError, Int] = {
+  private def deleteTask(taskDescription: String, projectId: Long, userId: Long): EitherT[F, AppBusinessError, Int] =
     EitherT(delete(taskDescription, projectId, userId))
-  }
-
 }

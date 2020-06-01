@@ -16,7 +16,7 @@ import repository.query.TaskQueries
 
 class InsertTask[F[_] : Sync](tx: Transactor[F]) {
 
-  def apply(create: LogTaskRequest, projectId: Long, userId: Long): F[Either[AppBusinessError, Int]] = {
+  def apply(create: LogTaskRequest, projectId: Long, userId: Long): F[Either[AppBusinessError, Int]] =
     TaskQueries
       .insert(create, projectId, userId)
       .unique
@@ -25,5 +25,4 @@ class InsertTask[F[_] : Sync](tx: Transactor[F]) {
         case sqlstate.class23.EXCLUSION_VIOLATION => TaskNotCreated()
         case sqlstate.class23.UNIQUE_VIOLATION => TaskNameExists()
       }
-  }
 }

@@ -10,6 +10,6 @@ class GetTask[F[_] : Sync](tx: Transactor[F]) {
 
   def apply(id: Long): F[Option[Task]] =
     TaskQueries
-      .selectLastInsertedTask(id)
+      .getTaskById(id)
       .transact(tx)
 }
