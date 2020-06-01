@@ -10,7 +10,7 @@ import models.request._
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.FindProjectById
+import repository.project.FindActiveProjectById
 import repository.task._
 import repository.user.{CreateUser, GetExistingUserId, UserById}
 import service.task.TaskDelete

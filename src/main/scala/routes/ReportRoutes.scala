@@ -10,11 +10,11 @@ import error.AppError
 import models.request.{MainReport, ReportBodyWithParamsRequest, ReportParams, ReportRequest}
 import models.responses.{DetailReportResponse, GeneralReport, ReportFromDb, ReportTask, UserStatisticsReport}
 import io.circe.generic.auto._
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import cats.implicits._
 import cats.effect._
 import ParameterDirectives.ParamMagnet
-import akka.http.scaladsl.model.StatusCodes
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
+import akka.http.scaladsl.model.{HttpEntity, StatusCodes}
 import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending, ProjectSort, SortDirection}
 import models.responses
 import service.auth.Authenticate

@@ -5,14 +5,14 @@ import cats.effect._
 import models.request.DeleteTaskRequest
 import error._
 import models.model.Project
-import repository.project.FindProjectById
+import repository.project.FindActiveProjectById
 import repository.task.DeleteTask
 import repository.user.GetExistingUserId
 
 class TaskDelete[F[+_] : Sync](
-                               getProjectId: FindProjectById[F],
-                               getUserId: GetExistingUserId[F],
-                               delete: DeleteTask[F]) {
+                                getProjectId: FindActiveProjectById[F],
+                                getUserId: GetExistingUserId[F],
+                                delete: DeleteTask[F]) {
 
 
   def apply(deleteTaskRequest: DeleteTaskRequest, uuid: String): F[Either[AppError, Int]] = (for {
@@ -23,7 +23,7 @@ class TaskDelete[F[+_] : Sync](
 
 
   private def findProjectById(projectName: String): EitherT[F, AppError, Project] = {
-    EitherT.fromOptionF(getProjectId(projectName), ProjectNotCreated())
+    EitherT.fromOptionF(getProjectId(projectName), ProjectNotCreated)
   }
 
   private def getExistingUserId(uuid: String): EitherT[F, AppError, Int] =

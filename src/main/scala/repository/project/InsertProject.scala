@@ -15,6 +15,6 @@ class InsertProject[F[+_] : Sync](tx: Transactor[F]) {
       .unique
       .transact(tx)
       .attemptSomeSqlState {
-        case sqlstate.class23.UNIQUE_VIOLATION => ProjectNotCreated(s"Cannot create project, given name ${projectName} exists already")
+        case sqlstate.class23.UNIQUE_VIOLATION => ProjectNotCreated
       }
 }

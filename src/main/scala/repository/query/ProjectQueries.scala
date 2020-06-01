@@ -1,17 +1,12 @@
 package repository.query
 
-import java.time.{ZoneOffset, ZonedDateTime}
+import java.time._
 
-import cats.implicits._
-import doobie.free.connection.ConnectionIO
-import doobie.util.log.LogHandler
-import doobie.implicits.javatime._
-import doobie.{Fragment, Update0}
+import doobie.Update0
 import doobie.implicits._
 import doobie.util.query.Query0
 import models.model._
-import models.request._
-import models.responses.ReportFromDb
+import doobie.implicits.javatime._
 
 object ProjectQueries {
 
@@ -48,11 +43,20 @@ object ProjectQueries {
            """
       .query[Long]
 
-  def getProject(projectName: String)= {
+  def getActiveProjectById(projectName: String)= {
     fr"""SELECT * FROM tb_project
-           WHERE project_name = ${projectName}"""
+           WHERE project_name = ${projectName}
+           AND active = true"""
       .query[Project]
   }
+
+  def getInactiveProjectById(projectName: String)= {
+    fr"""SELECT * FROM tb_project
+           WHERE project_name = ${projectName}
+           AND active = false"""
+      .query[Project]
+  }
+
 
   def projectExists(projectName: String): Query0[Boolean] = {
     fr"""SELECT EXISTS (
@@ -60,6 +64,12 @@ object ProjectQueries {
            WHERE project_name = ${projectName})
            """
       .query[Boolean]
+  }
+
+  def checkIfIsOwner(userId: Int, projectName: String) = {
+    fr"""
+        SELECT EXISTS ( select (id) FROM tb_project WHERE project_name = ${projectName} AND user_id = ${userId} and active = true)
+        """.query[Boolean]
   }
 
 }

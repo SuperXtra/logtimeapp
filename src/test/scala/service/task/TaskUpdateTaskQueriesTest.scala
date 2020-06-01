@@ -9,7 +9,7 @@ import models.request.{LogTaskRequest, UpdateTaskRequest}
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.FindProjectById
+import repository.project.FindActiveProjectById
 import repository.task.{GetTask, GetUserTask, InsertTask, DeleteTask, TaskInsertUpdate}
 import repository.user.GetExistingUserId
 import cats.implicits._

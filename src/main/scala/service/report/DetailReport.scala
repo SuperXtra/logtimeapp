@@ -7,7 +7,7 @@ import cats.effect.Sync
 import error.{AppError, ReportCouldNotBeGenerated}
 import models.request.ReportBodyWithParamsRequest
 import models.responses._
-import repository.project.FindProjectById
+import repository.project.FindActiveProjectById
 import repository.report.Report
 import repository.task.GetProjectTasks
 

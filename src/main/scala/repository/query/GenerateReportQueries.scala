@@ -1,14 +1,11 @@
 package repository.query
 
-import java.time.format.DateTimeFormatter
 
 import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending}
 import models.request.ReportBodyWithParamsRequest
 import cats.implicits._
-import doobie.util.log.LogHandler
 import doobie.implicits.javatime._
 import doobie._
-import doobie.util.query.Query0
 import models.responses.ReportFromDb
 import doobie.implicits._
 

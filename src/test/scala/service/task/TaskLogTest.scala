@@ -10,7 +10,7 @@ import models.request.LogTaskRequest
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.FindProjectById
+import repository.project.FindActiveProjectById
 import repository.task.{GetTask, InsertTask}
 import repository.user.GetExistingUserId
 
@@ -84,7 +84,7 @@ class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
     val result = logWork(workDone, "test string").unsafeRunSync
 
     Then("returns error message: project not found")
-    result shouldBe Left(ProjectNotFound())
+    result shouldBe Left(ProjectNotFound)
   }
 
   // not allow to log work if user id does not exist
@@ -102,7 +102,7 @@ class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
                          task: Option[Task],
                          insertTaskResult: Either[AppError, Int]): TaskLog[IO] = {
 
-      val getProjectId = new FindProjectById[IO](null) {
+      val getProjectId = new FindActiveProjectById[IO](null) {
         override def apply(projectName: String): IO[Option[Project]] = project.pure[IO]
       }
 

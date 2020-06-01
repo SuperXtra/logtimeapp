@@ -5,12 +5,12 @@ import cats.effect.{IO, Sync}
 import models.responses.{GeneralReport, Tasks}
 import error._
 import models.model.{Project, Task}
-import repository.project.FindProjectById
+import repository.project.FindActiveProjectById
 import repository.task.GetProjectTasks
 
 class OverviewReport[F[+_] : Sync](
-                                                findProject: FindProjectById[F],
-                                                tasks: GetProjectTasks[F]
+                                    findProject: FindActiveProjectById[F],
+                                    tasks: GetProjectTasks[F]
                                               ) {
 
   def apply(projectName: String): F[Either[AppError, GeneralReport]] =
@@ -24,7 +24,7 @@ class OverviewReport[F[+_] : Sync](
 
 
   private def findProjectById(projectName: String): EitherT[F, AppError, Project] = {
-    EitherT.fromOptionF(findProject(projectName), ProjectNotCreated())
+    EitherT.fromOptionF(findProject(projectName), ProjectNotFound)
   }
 
   private def fetchTasksForProject(id: Int): EitherT[F, AppError, List[Task]] = {

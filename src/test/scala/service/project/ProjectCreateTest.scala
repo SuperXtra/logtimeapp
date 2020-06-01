@@ -61,7 +61,7 @@ class ProjectCreateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
   it should "not create new project due to problem with insert" in new Context {
     Given("project error and userId")
     val userId  = Some(1)
-    val insertedProjectId = ProjectNotCreated().asLeft
+    val insertedProjectId = ProjectNotCreated.asLeft
 
     val request = CreateProjectRequest("Test project name")
 
@@ -77,7 +77,7 @@ class ProjectCreateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     val result = createProject(request, "dsaddas32ndsjkn").unsafeRunSync()
 
     Then("returns project not created")
-    result shouldBe Left(ProjectNotCreated())
+    result shouldBe Left(ProjectNotCreated)
   }
 
 

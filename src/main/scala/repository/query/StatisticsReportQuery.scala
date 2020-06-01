@@ -6,7 +6,6 @@ import akka.http.javadsl.model.DateTime
 import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending}
 import models.request.{MainReport, ReportBodyWithParamsRequest}
 import cats.implicits._
-import doobie.util.log.LogHandler
 import doobie.implicits.javatime._
 import doobie._
 import doobie.util.query.Query0

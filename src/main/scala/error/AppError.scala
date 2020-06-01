@@ -3,11 +3,11 @@ package error
 sealed trait AppError
 
 //Project
-case class ProjectUpdateUnsuccessful(errorMessage: String = "Could not update project", detailErrorMessage:String ="") extends AppError
-case class ProjectDeleteUnsuccessful(errorMessage: String = "Could not delete project", detailErrorMessage:String ="") extends AppError
-case class ProjectNameExists(errorMessage: String = "Project with provided name exists already", detailErrorMessage:String ="") extends AppError
-case class ProjectNotCreated(errorMessage: String = "Could not create project", detailErrorMessage:String ="") extends AppError
-case class ProjectNotFound(errorMessage: String = "Could not find project, given project title does not exist", detailErrorMessage:String ="") extends AppError
+case object ProjectUpdateUnsuccessful extends AppError
+case object ProjectDeleteUnsuccessful extends AppError
+case object ProjectNameExists extends AppError
+case object ProjectNotCreated extends AppError
+case object ProjectNotFound extends AppError
 
 //Task
 case class TaskNotCreated(errorMessage: String = "Could not create new task", detailErrorMessage:String ="") extends AppError

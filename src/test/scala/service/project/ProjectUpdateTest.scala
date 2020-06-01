@@ -7,7 +7,7 @@ import models.model.{Project, User}
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.{FindProjectById, UpdateProjectName}
+import repository.project.{FindActiveProjectById, UpdateProjectName}
 import repository.user.{CreateUser, GetExistingUserId, UserById}
 import service.user.UserCreate
 import cats.implicits._
@@ -56,7 +56,7 @@ class ProjectUpdateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     val result: Either[AppError, Project] = updateProject(changeProjectName, "uudissdsa2321hjd8fs").unsafeRunSync()
 
     Then("returns project")
-    result shouldBe Left(ProjectNotCreated())
+    result shouldBe Left(ProjectNotCreated)
   }
 
 
@@ -75,7 +75,7 @@ class ProjectUpdateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
       val updateProjectName = new UpdateProjectName[IO](null) {
         override def apply(oldName: String, newName: String, userId: Long): IO[Int] = updatedProjectResult.pure[IO]
       }
-      val findProject = new FindProjectById[IO](null) {
+      val findProject = new FindActiveProjectById[IO](null) {
         override def apply(projectName: String): IO[Option[Project]] = project.pure[IO]
       }
 

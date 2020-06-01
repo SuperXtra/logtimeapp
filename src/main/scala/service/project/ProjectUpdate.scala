@@ -7,14 +7,14 @@ import doobie.implicits._
 import doobie.postgres.sqlstate
 import error.{AppError, ProjectNameExists, ProjectNotCreated, UserNotFound}
 import models.model.Project
-import repository.project.{FindProjectById, UpdateProjectName}
+import repository.project.{FindActiveProjectById, UpdateProjectName}
 import repository.user.GetExistingUserId
 
 
 class ProjectUpdate[F[+_]: Sync](
                                 userId: GetExistingUserId[F],
                                 updateProjectName: UpdateProjectName[F],
-                                findProject: FindProjectById[F]) {
+                                findProject: FindActiveProjectById[F]) {
 
 
   def apply(project: ChangeProjectNameRequest, uuid: String): F[Either[AppError, Project]] = (for {
@@ -29,11 +29,11 @@ class ProjectUpdate[F[+_]: Sync](
   }
 
   private def findProjectById(projectName: String): EitherT[F, AppError, Project] =
-    EitherT.fromOptionF(findProject(projectName), ProjectNotCreated())
+    EitherT.fromOptionF(findProject(projectName), ProjectNotCreated)
 
   private def changeProjectName(oldProjectName: String, projectName: String, userId: Long): EitherT[F, AppError, Int] =
     EitherT(updateProjectName(oldProjectName, projectName, userId).attemptSomeSqlState {
-      case sqlstate.class23.UNIQUE_VIOLATION => ProjectNameExists()
+      case sqlstate.class23.UNIQUE_VIOLATION => ProjectNameExists
     })
 
 }

@@ -10,7 +10,7 @@ import models.request._
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.FindProjectById
+import repository.project.FindActiveProjectById
 import repository.task._
 import repository.user.GetExistingUserId
 
@@ -63,7 +63,7 @@ class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhen
     val result: Either[AppError, Int] = deleteTask(deleteTaskRequest, "dsaadsij12312").unsafeRunSync()
 
     Then("returns number of rows updated")
-    result shouldBe Left(ProjectNotCreated())
+    result shouldBe Left(ProjectNotCreated)
   }
 
 
@@ -75,7 +75,7 @@ class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhen
                         ): TaskDelete[IO] = {
 
 
-      val getProjectId = new FindProjectById[IO](null) {
+      val getProjectId = new FindActiveProjectById[IO](null) {
         override def apply(projectName: String): IO[Option[Project]] = project.pure[IO]
       }
       val getUserId = new GetExistingUserId[IO](null) {
