@@ -43,7 +43,6 @@ object WebApp extends App {
   val tx = DatabaseContext.transactor(databaseConfig)
 
   val deleteProjectR = new DeleteProjectWithTasks[IO](tx)
-  val findProjectById = new FindActiveProjectById[IO](tx)
   val getExistingUserId = new GetExistingUserId[IO](tx)
   val insertProject = new InsertProject[IO](tx)
   val updateProjectName = new UpdateProjectName[IO](tx)
@@ -60,21 +59,19 @@ object WebApp extends App {
   val userExists = new UserExists[IO](tx)
   val detailedReport = new DetailedReport[IO](tx)
   val checkIfIsProjectOwner = new CheckIfIsProjectOwner[IO](tx)
-  val findInactiveProjectById = new FindProjectById[IO](tx)
-
+  val findProjectByName = new FindProjectByName[IO](tx)
 
   val createNewProjectService = new ProjectCreate[IO](getExistingUserId, insertProject)
-  val deactivateProjectService = new ProjectDeactivate[IO](getExistingUserId,deleteProject, findInactiveProjectById, checkIfIsProjectOwner)
-  val updateProjectService = new ProjectUpdate[IO](getExistingUserId, updateProjectName, findProjectById)
+  val deactivateProjectService = new ProjectDeactivate[IO](getExistingUserId,deleteProject, findProjectByName, checkIfIsProjectOwner)
+  val updateProjectService = new ProjectUpdate[IO](getExistingUserId, updateProjectName, findProjectByName)
   val createNewUserService = new UserCreate[IO](userById, createNewUser)
-  val updateTaskService = new TaskUpdate[IO](getExistingUserId, getUserTask, deleteTask,taskInsertUpdate)
-  val logTaskService = new TaskLog[IO](findProjectById, getExistingUserId, insertTask, getTask)
-  val projectTaskDurationReport = new OverviewReport[IO](findProjectById, getProjectTasks)
-  val deleteTaskService = new TaskDelete[IO](findProjectById, getExistingUserId, deleteTask)
+  val updateTaskService = new TaskUpdate[IO](getExistingUserId, getUserTask,taskInsertUpdate)
+  val logTaskService = new TaskLog[IO](findProjectByName, getExistingUserId, insertTask, getTask)
+  val projectTaskDurationReport = new OverviewReport[IO](findProjectByName, getProjectTasks)
+  val deleteTaskService = new TaskDelete[IO](findProjectByName, getExistingUserId, deleteTask)
   val projectWithTaskFilter = new DetailReport[IO](report)
   val authenticateUser = new UserAuthenticate[IO](userExists)
   val detailReport = new AdditionalReport[IO](detailedReport)
-
 
   implicit val authentication: Auth = Auth(authConfig)
 

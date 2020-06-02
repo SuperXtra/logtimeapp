@@ -43,17 +43,10 @@ object ProjectQueries {
            """
       .query[Long]
 
-  def getActiveProjectById(projectName: String)= {
+  def getActiveProjectByName(projectName: String)= {
     fr"""SELECT * FROM tb_project
            WHERE project_name = ${projectName}
            AND active = true"""
-      .query[Project]
-  }
-
-  def getInactiveProjectById(projectName: String)= {
-    fr"""SELECT * FROM tb_project
-           WHERE project_name = ${projectName}
-           AND active = false"""
       .query[Project]
   }
 

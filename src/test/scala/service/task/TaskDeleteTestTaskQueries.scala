@@ -10,7 +10,7 @@ import models.request._
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.FindActiveProjectById
+import repository.project.FindProjectByName
 import repository.task._
 import repository.user.GetExistingUserId
 
@@ -25,7 +25,7 @@ class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhen
 
     And("a service will find project id, user, delete(update) task for that data and return 1")
     val deleteTask = serviceUnderTest(
-      project = Some(project),
+      project = Right(project),
       userId = userId.some,
       taskDeleteResult = taskDeleteResult.asRight
     )
@@ -44,12 +44,12 @@ class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhen
 
   it should "not allow to delete task if project dose not exist" in new Context {
     Given("user wants to delete task")
-    val project = None
+    val project = ProjectNotFound()
 
 
     And("a service that cannot find specified project and task")
     val deleteTask = serviceUnderTest(
-      project = project,
+      project = project.asLeft,
       userId = None,
       taskDeleteResult = 0.asRight
     )
@@ -69,14 +69,14 @@ class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhen
 
   private trait Context {
 
-    def serviceUnderTest(project: Option[Project],
+    def serviceUnderTest(project: Either[AppBusinessError, Project],
                          userId: Option[Int],
                          taskDeleteResult: Either[AppBusinessError, Int]
                         ): TaskDelete[IO] = {
 
 
-      val getProjectId = new FindActiveProjectById[IO](null) {
-        override def apply(projectName: String): IO[Option[Project]] = project.pure[IO]
+      val getProjectId = new FindProjectByName[IO](null) {
+        override def apply(projectName: String): IO[Either[AppBusinessError, Project]] = project.pure[IO]
       }
       val getUserId = new GetExistingUserId[IO](null) {
         override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]

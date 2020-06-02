@@ -7,7 +7,6 @@ import cats.effect.Sync
 import errorMessages.{AppBusinessError, ReportCouldNotBeGenerated}
 import models.request.ReportBodyWithParamsRequest
 import models.responses._
-import repository.project.FindActiveProjectById
 import repository.report.Report
 import repository.task.GetProjectTasks
 
@@ -42,11 +41,4 @@ class DetailReport[F[+_] : Sync](getReport: Report[F]) {
     }
     m.toSeq
   }
-
 }
-
-
-
-
-
-

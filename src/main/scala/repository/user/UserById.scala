@@ -13,5 +13,4 @@ class UserById[F[_]: Sync](tx: Transactor[F]) {
       .option
       .transact(tx)
   }
-
 }

@@ -3,31 +3,39 @@ package service.task
 import java.time.{ZoneOffset, ZonedDateTime}
 
 import cats.data.EitherT
-import cats.effect.{IO, Sync}
-import models.{model, _}
-import models.model.{Task, TaskToUpdate}
+import cats.effect._
+import models._
+import models.model._
 import models.request.UpdateTaskRequest
 import errorMessages._
-import repository.task.{GetUserTask, DeleteTask, TaskInsertUpdate}
+import repository.task._
 import repository.user.GetExistingUserId
 
 class TaskUpdate[F[+_] : Sync](getUserId: GetExistingUserId[F],
                                getUserTask: GetUserTask[F],
-                               taskDelete: DeleteTask[F],
                                taskUpdate: TaskInsertUpdate[F]) {
 
   def apply(updateTask: UpdateTaskRequest, uuid: String): F[Either[AppBusinessError, Unit]] = (
     for {
       userId <- getExistingUserId(uuid)
       oldTask <- fetchTask(updateTask.oldTaskDescription, userId)
-      _ <- deleteTask(oldTask.taskDescription, oldTask.projectId, oldTask.userId)
-      updated <- updateExistingTask(newTask(oldTask, updateTask))
+      updated <- updateExistingTask(newTask(oldTask, updateTask), oldTask.taskDescription, oldTask.projectId, userId)
     } yield updated
     ).value
 
-  private def newTask(oldTask: Task, updateTask: UpdateTaskRequest): TaskToUpdate = {
+  private def updateExistingTask(toUpdate: TaskToUpdate, taskDescription: String, projectId: Long, userId: Long): EitherT[F, AppBusinessError, Unit] = {
+    EitherT(taskUpdate(toUpdate, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime, taskDescription, projectId, userId))
+  }
 
-    // TODO beautify
+  private def fetchTask(taskDescription: String, userId: Long): EitherT[F, AppBusinessError, Task] = {
+    EitherT.fromOptionF(getUserTask(taskDescription, userId), TaskNotFound())
+  }
+
+  private def getExistingUserId(uuid: String): EitherT[F, AppBusinessError, Int] =
+    EitherT.fromOptionF(getUserId(uuid), UserNotFound())
+
+
+  private def newTask(oldTask: Task, updateTask: UpdateTaskRequest): TaskToUpdate = {
 
     val newStartTime = updateTask.startTime match {
       case Some(value) => value
@@ -51,25 +59,4 @@ class TaskUpdate[F[+_] : Sync](getUserId: GetExistingUserId[F],
     }
     model.TaskToUpdate(oldTask.projectId, oldTask.userId, updateTask.newTaskDescription, newStartTime, updateTask.durationTime, newVolume, comment)
   }
-
-
-
-  private def updateExistingTask(toUpdate: TaskToUpdate): EitherT[F, AppBusinessError, Unit] = {
-    EitherT(taskUpdate(toUpdate, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime))
-  }
-
-  private def deleteTask(taskDescription: String, projectId: Long, userId: Long): EitherT[F, AppBusinessError, Int] = {
-    EitherT(taskDelete(taskDescription, projectId,userId, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime))
-  }
-
-  private def fetchTask(taskDescription: String, userId: Long): EitherT[F, AppBusinessError, Task] = {
-    EitherT.fromOptionF(getUserTask(taskDescription, userId), TaskNotFound())
-  }
-
-  private def getExistingUserId(uuid: String): EitherT[F, AppBusinessError, Int] =
-    EitherT.fromOptionF(getUserId(uuid), UserNotFound())
-
 }
-
-
-

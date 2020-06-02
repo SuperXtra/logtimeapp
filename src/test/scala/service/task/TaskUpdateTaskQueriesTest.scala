@@ -9,7 +9,6 @@ import models.request.{LogTaskRequest, UpdateTaskRequest}
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.FindActiveProjectById
 import repository.task.{DeleteTask, GetTask, GetUserTask, InsertTask, TaskInsertUpdate}
 import repository.user.GetExistingUserId
 import cats.implicits._
@@ -171,14 +170,12 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
       val getUserTask = new GetUserTask[IO](null) {
         override def apply(taskDescription: String, userId: Long): IO[Option[Task]] = userTask.pure[IO]
       }
-      val taskDelete = new DeleteTask[IO](null) {
-        override def apply(taskDescription: String, projectId: Long, userId: Long, deleteTime: LocalDateTime): IO[Either[AppBusinessError, Int]] = taskDeleteResult.pure[IO]
-      }
+
       val taskUpdate = new TaskInsertUpdate[IO](null) {
-        override def apply(toUpdate: TaskToUpdate, created: LocalDateTime): IO[Either[ProjectUpdateUnsuccessful, Unit]] = taskUpdateResult.pure[IO]
+        override def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: Long, userId: Long): IO[Either[ProjectUpdateUnsuccessful, Unit]] = taskUpdateResult.pure[IO]
       }
 
-      new TaskUpdate(getUserId, getUserTask, taskDelete, taskUpdate)
+      new TaskUpdate(getUserId, getUserTask, taskUpdate)
     }
   }
 

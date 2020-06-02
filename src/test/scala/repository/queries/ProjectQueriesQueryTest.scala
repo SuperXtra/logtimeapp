@@ -7,7 +7,7 @@ import repository.query.ProjectQueries
 class ProjectQueriesQueryTest extends QueryTest {
 
   test("Project select should check") {
-    check(ProjectQueries.getActiveProjectById("test"))
+    check(ProjectQueries.getActiveProjectByName("test"))
   }
 
   test("Project change name should check") {

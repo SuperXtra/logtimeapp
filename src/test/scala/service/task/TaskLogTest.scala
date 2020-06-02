@@ -10,7 +10,7 @@ import models.request.LogTaskRequest
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.FindActiveProjectById
+import repository.project.FindProjectByName
 import repository.task.{GetTask, InsertTask}
 import repository.user.GetExistingUserId
 
@@ -46,7 +46,7 @@ class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
 
     And("a service will find project id, user id, insert and return created task task")
     val logWork = serviceUnderTest(
-      project = Some(project),
+      project = Right(project),
       userId = userId.some,
       task = task.some,
       insertTaskResult = task.id.asRight
@@ -57,7 +57,6 @@ class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
 
     Then("returns created task")
     result shouldBe Right(task)
-
   }
 
   it should "not allow to log work if project does not exist" in new Context {
@@ -74,7 +73,7 @@ class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
     )
     And("a service that can't find specified project")
     val logWork = serviceUnderTest(
-      project = None,
+      project = ProjectNotFound().asLeft,
       userId = None,
       task = None,
       insertTaskResult = 0.asRight
@@ -97,13 +96,13 @@ class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   private trait Context {
 
-    def serviceUnderTest(project: Option[Project],
+    def serviceUnderTest(project: Either[AppBusinessError, Project],
                          userId: Option[Int],
                          task: Option[Task],
                          insertTaskResult: Either[AppBusinessError, Int]): TaskLog[IO] = {
 
-      val getProjectId = new FindActiveProjectById[IO](null) {
-        override def apply(projectName: String): IO[Option[Project]] = project.pure[IO]
+      val getProjectId = new FindProjectByName[IO](null) {
+        override def apply(projectName: String): IO[Either[AppBusinessError, Project]] = project.pure[IO]
       }
 
       val getUserId = new GetExistingUserId[IO](null) {

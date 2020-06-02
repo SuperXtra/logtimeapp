@@ -8,7 +8,7 @@ import models.model.{Project, User}
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.{CheckIfIsProjectOwner, DeleteProjectWithTasks, FindActiveProjectById, FindProjectById}
+import repository.project.{CheckIfIsProjectOwner, DeleteProjectWithTasks, FindProjectByName}
 import repository.task.DeleteTasks
 import repository.user.{CreateUser, GetExistingUserId, UserById}
 import service.user.UserCreate
@@ -77,7 +77,7 @@ class ProjectDeactivateTest extends AnyFlatSpec with Matchers with GivenWhenThen
       val deactivateProject = new DeleteProjectWithTasks[IO](null) {
         override def apply(userId: Int, projectName: String, projectId: Int, deleteTime: LocalDateTime): IO[Either[AppBusinessError, Unit]] = deactivatedProjectResult.pure[IO]
       }
-      val findProject = new FindProjectById[IO](null) {
+      val findProject = new FindProjectByName[IO](null) {
         override def apply(projectName: String): IO[Either[AppBusinessError, Project]] = project.pure[IO]
       }
 

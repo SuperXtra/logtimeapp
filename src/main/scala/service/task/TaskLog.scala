@@ -7,13 +7,13 @@ import cats.effect.Sync
 import models.request.LogTaskRequest
 import errorMessages.{AppBusinessError, ProjectNotFound, TaskNotCreated, UserNotFound}
 import models.model.{Project, Task}
-import repository.project.FindActiveProjectById
+import repository.project.FindProjectByName
 import repository.task.{GetTask, InsertTask}
 import repository.user.GetExistingUserId
 
 
 class TaskLog[F[+_]: Sync](
-                            getProjectId: FindActiveProjectById[F],
+                            getProjectId: FindProjectByName[F],
                             getUserId: GetExistingUserId[F],
                             insertTask: InsertTask[F],
                             getTask: GetTask[F]) {
@@ -28,7 +28,7 @@ class TaskLog[F[+_]: Sync](
   }
 
   private def getExistingProjectId(projectName: String): EitherT[F, AppBusinessError, Project] =
-    EitherT.fromOptionF(getProjectId(projectName), ProjectNotFound())
+    EitherT(getProjectId(projectName))
 
   private def getExistingUserId(userIdentification: String): EitherT[F, AppBusinessError, Int] =
     EitherT.fromOptionF(getUserId(userIdentification), UserNotFound())

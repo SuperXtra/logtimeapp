@@ -7,7 +7,7 @@ import models.model.{Project, User}
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.{FindActiveProjectById, UpdateProjectName}
+import repository.project.{FindProjectByName, UpdateProjectName}
 import repository.user.{CreateUser, GetExistingUserId, UserById}
 import service.user.UserCreate
 import cats.implicits._
@@ -24,7 +24,7 @@ class ProjectUpdateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     val project = Project(1,1,"TEst project name", LocalDateTime.now(), Some(LocalDateTime.now().plusHours(2)), Some(true))
 
     And("a service will update project")
-    val updateProject = serviceUnderTest(userId, updatedProjectResult,Some(project))
+    val updateProject = serviceUnderTest(userId, updatedProjectResult,Right(project))
 
     val changeProjectName = ChangeProjectNameRequest(
       oldProjectName = "Test project name",
@@ -42,10 +42,10 @@ class ProjectUpdateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     Given("user id, result of updating project, updated project")
     val userId = Some(1)
     val updatedProjectResult = ().asRight
-    val project = None
+    val project = ProjectNotCreated()
 
     And("a service will update project")
-    val updateProject = serviceUnderTest(userId, updatedProjectResult,project)
+    val updateProject = serviceUnderTest(userId, updatedProjectResult,Left(project))
 
     val changeProjectName = ChangeProjectNameRequest(
       oldProjectName = "Test project name",
@@ -66,7 +66,7 @@ class ProjectUpdateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     def serviceUnderTest(
                         userId: Option[Int],
                         updatedProjectResult: Either[AppBusinessError, Unit],
-                        project: Option[Project]
+                        project: Either[AppBusinessError, Project]
                         ): ProjectUpdate[IO] = {
 
       val user = new GetExistingUserId[IO](null) {
@@ -75,8 +75,8 @@ class ProjectUpdateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
       val updateProjectName = new UpdateProjectName[IO](null) {
         override def apply(oldName: String, newName: String, userId: Long): IO[Either[AppBusinessError, Unit]] = updatedProjectResult.pure[IO]
       }
-      val findProject = new FindActiveProjectById[IO](null) {
-        override def apply(projectName: String): IO[Option[Project]] = project.pure[IO]
+      val findProject = new FindProjectByName[IO](null) {
+        override def apply(projectName: String): IO[Either[AppBusinessError, Project]] = project.pure[IO]
       }
 
       new ProjectUpdate[IO](user, updateProjectName, findProject)

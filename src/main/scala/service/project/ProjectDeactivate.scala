@@ -14,7 +14,7 @@ import repository.user.GetExistingUserId
 class ProjectDeactivate[F[+_] : Sync](
                                        userId: GetExistingUserId[F],
                                        deactivateProject: DeleteProjectWithTasks[F],
-                                       findProject: FindProjectById[F],
+                                       findProject: FindProjectByName[F],
                                        checkIfOwner: CheckIfIsProjectOwner[F]
                                      ) {
 
