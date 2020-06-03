@@ -19,7 +19,7 @@ import models.responses.AuthResponse
 object UserRoutes {
 
   def createUser(user: => IO[Either[AppBusinessError, User]]) =
-    path("user") {
+    pathPrefix("user" / "register") {
       post {
         complete(
           user
@@ -32,12 +32,12 @@ object UserRoutes {
 
   def authorizeUser(userId: String => IO[Boolean])
                    (implicit auth: Auth): Route =
-    path("login") {
+    pathPrefix("user" / "login") {
       post {
         entity(as[AuthorizationRequest]) { req => {
           complete(
-            userId(req.userUUID).map[ToResponseMarshallable] {
-              case true => AuthResponse(auth.token(req.userUUID))
+            userId(req.userUUID.toString).map[ToResponseMarshallable] {
+              case true => AuthResponse(auth.token(req.userUUID.toString))
               case false => LeftResponse.apply(AuthenticationNotSuccessful())
             }.unsafeToFuture
           )
