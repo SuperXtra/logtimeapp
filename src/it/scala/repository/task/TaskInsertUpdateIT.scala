@@ -1,5 +1,6 @@
-package repository.project
+package repository.task
 
+import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 import java.util.UUID
 
 import cats.effect.{ContextShift, IO}
@@ -7,37 +8,40 @@ import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
 import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
-import errorMessages.{ProjectNotCreated, ProjectUpdateUnsuccessful}
+import models.model.TaskToUpdate
+import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import repository.project.InsertProject
 import repository.user.CreateUser
 
-class UpdateProjectNameIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
+class TaskInsertUpdateIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
 
   override val container = new PostgreSQLContainer()
 
-  it should "update existing project id" in new Context {
+  it should "update task" in new Context {
 
     Given("existing user")
     val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().get
 
     And("existing project")
     val projectName = "test_project"
-    insertProject(projectName, userId).unsafeRunSync()
+    val projectId = insertProject(projectName, userId).unsafeRunSync()
 
-    And("a data access function able of finding active projects")
-    val findActiveProjectByName = new FindProjectByName[IO](tx)
+    And("existing task")
+    val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), 50, None, None)
+    val task1 = insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
-    And("updating existing project")
-    val newName = projectName + "test"
-    update(projectName, newName, userId).unsafeRunSync()
 
-    When("fetching active project by name")
-    val result = findActiveProjectByName(newName).unsafeRunSync.right.get.projectName
+    When("updating task")
+    val request = TaskToUpdate(projectId.right.get, userId, "test description 2", ZonedDateTime.now(ZoneOffset.UTC), 29L, None, None)
+    val result = updateTask(request, LocalDateTime.now(), "test description 1", projectId.right.get, userId).unsafeRunSync()
 
-    Then("it should return existing project")
-    result shouldBe newName
+
+    Then("it should return count of updated records")
+    result shouldBe Right(())
+
   }
 
   private trait Context {
@@ -51,11 +55,13 @@ class UpdateProjectNameIT extends AnyFlatSpec with Matchers with GivenWhenThen w
       container.password
     )
 
-    val insertProject = new InsertProject(tx)
+    val insertProject = new InsertProject[IO](tx)
     val createUser = new CreateUser[IO](tx)
-    val update = new UpdateProjectName[IO](tx)
+    val insertTask = new InsertTask[IO](tx)
+    val updateTask = new TaskInsertUpdate[IO](tx)
 
     import doobie.implicits._
+
     sql"DELETE from tb_project".update.run.transact(tx).unsafeRunSync()
     sql"DELETE from tb_user".update.run.transact(tx).unsafeRunSync()
     sql"DELETE from tb_task".update.run.transact(tx).unsafeRunSync()
@@ -68,5 +74,7 @@ class UpdateProjectNameIT extends AnyFlatSpec with Matchers with GivenWhenThen w
       container.username,
       container.password
     ).unsafeRunSync()
+
+
   }
 }

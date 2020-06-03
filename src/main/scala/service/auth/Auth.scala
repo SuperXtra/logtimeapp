@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.Directives.{complete, optionalHeaderValueByName
 import authentikat.jwt.{JsonWebToken, JwtClaimsSet, JwtHeader}
 import com.typesafe.config.ConfigFactory
 import config.AuthConfig
-import errorMessages.{AppErrorResponse, AuthenticationNotSuccessful}
+import errorMessages.{AppErrorResponse, AuthenticationNotSuccessful, AuthenticationNotSuccessfulWithoutBearer}
 import pureconfig.ConfigSource
 import pureconfig._
 import pureconfig.generic.auto._
@@ -34,11 +34,14 @@ object Auth {
     override def apply: Directive1[Map[String, Any]] = {
         optionalHeaderValueByName("Authorization").flatMap {
           case Some(token) =>
-            token.split(" ")(0) match {
-              case token if isTokenExpired(token) => complete(LeftResponse.apply(AuthenticationNotSuccessful()))
-
-              case token if JsonWebToken.validate(token, secretKey) => provide(getClaims(token))
-              case _ => complete(LeftResponse.apply(AuthenticationNotSuccessful()))
+            val arrayFromToken = token.split(" ")
+            arrayFromToken.length match {
+              case 2 => arrayFromToken(1) match {
+                case token if isTokenExpired(token) => complete(LeftResponse.apply(AuthenticationNotSuccessful()))
+                case token if JsonWebToken.validate(token, secretKey) => provide(getClaims(token))
+                case _ => complete(LeftResponse.apply(AuthenticationNotSuccessful()))
+              }
+              case _ => complete(LeftResponse.apply(AuthenticationNotSuccessfulWithoutBearer()))
             }
           case None => complete(LeftResponse.apply(AuthenticationNotSuccessful()))
         }

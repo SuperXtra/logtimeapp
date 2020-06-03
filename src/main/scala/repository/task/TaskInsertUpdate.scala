@@ -13,7 +13,7 @@ import doobie.postgres.sqlstate
 
 class TaskInsertUpdate[F[_] : Sync](tx: Transactor[F]) {
 
-  def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: Long, userId: Long) =
+  def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: Long, userId: Long): F[Either[ProjectUpdateUnsuccessful, Unit]] =
 
     (for {
       _ <- TaskQueries.deleteTask(taskDescription, projectId, userId, timestamp).run

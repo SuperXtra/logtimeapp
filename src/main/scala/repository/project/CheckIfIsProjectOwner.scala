@@ -18,5 +18,4 @@ class CheckIfIsProjectOwner[F[+_] : Sync](tx: Transactor[F]) {
         case false => ProjectDeleteUnsuccessfulUserIsNotTheOwner().asLeft
       }
       .transact(tx)
-
 }

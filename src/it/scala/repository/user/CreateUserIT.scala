@@ -51,6 +51,8 @@ class CreateUserIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
 
     import doobie.implicits._
     sql"DELETE from tb_project".update.run.transact(tx).unsafeRunSync()
+    sql"DELETE from tb_user".update.run.transact(tx).unsafeRunSync()
+    sql"DELETE from tb_task".update.run.transact(tx).unsafeRunSync()
   }
 
   override def beforeEach(): Unit = {

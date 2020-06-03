@@ -27,3 +27,4 @@ case class ReportCouldNotBeGenerated() extends AppBusinessError
 
 //Authentication
 case class AuthenticationNotSuccessful() extends AppBusinessError
+case class AuthenticationNotSuccessfulWithoutBearer() extends AppBusinessError

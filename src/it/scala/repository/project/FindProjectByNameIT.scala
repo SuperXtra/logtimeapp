@@ -34,7 +34,7 @@ class FindProjectByNameIT extends AnyFlatSpec with Matchers with GivenWhenThen w
     val result = findProjectById(projectName).unsafeRunSync.right.get.id
 
     Then("it should return true")
-    result shouldBe projectId
+    result shouldBe 1
   }
 
   it should "check if provided user is not the owner of the project" in new Context {
@@ -79,6 +79,8 @@ class FindProjectByNameIT extends AnyFlatSpec with Matchers with GivenWhenThen w
 
     import doobie.implicits._
     sql"DELETE from tb_project".update.run.transact(tx).unsafeRunSync()
+    sql"DELETE from tb_user".update.run.transact(tx).unsafeRunSync()
+    sql"DELETE from tb_task".update.run.transact(tx).unsafeRunSync()
   }
 
   override def beforeEach(): Unit = {
