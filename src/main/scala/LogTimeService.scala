@@ -1,16 +1,8 @@
-import java.time.ZonedDateTime
-
-import WebApp.authConfig
-import akka.actor.{ActorLogging, ActorSystem}
-import akka.event.{Logging, LoggingAdapter, MarkerLoggingAdapter}
-import akka.http.scaladsl.Http
+import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import cats.effect.{ContextShift, IO}
-import com.typesafe.config.ConfigFactory
-import config.{AuthConfig, DatabaseConfig}
-
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import com.typesafe.config.Config
 import db.DatabaseContext
 import doobie.util.ExecutionContexts
 import pureconfig.ConfigSource
@@ -26,18 +18,18 @@ import pureconfig._
 import pureconfig.generic.auto._
 import repository.report.{DetailedReport, Report}
 import service.auth.Auth
+import com.typesafe.config.ConfigFactory
+import config.{AuthConfig, DatabaseConfig}
+import scala.concurrent.ExecutionContextExecutor
 
-object WebApp extends App {
-
-  val databaseConfiguration = ConfigFactory.load("database-configuration.conf")
-  val databaseConfig = ConfigSource.fromConfig(databaseConfiguration).loadOrThrow[DatabaseConfig]
-  val authConfiguration = ConfigFactory.load("auth-configuration.conf")
+trait LogTimeService {
+  val databaseConfiguration: Config = ConfigFactory.load("database-configuration.conf")
+  val databaseConfig: DatabaseConfig = ConfigSource.fromConfig(databaseConfiguration).loadOrThrow[DatabaseConfig]
+  val authConfiguration: Config = ConfigFactory.load("auth-configuration.conf")
   val authConfig: AuthConfig = ConfigSource.fromConfig(authConfiguration).loadOrThrow[AuthConfig]
 
-
-  implicit val system: ActorSystem = ActorSystem("projectAppSystem")
-  implicit val logger: MarkerLoggingAdapter = Logging.withMarker(system, "test")
-  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+  implicit val system: ActorSystem
+  implicit val executionContext: ExecutionContextExecutor
 
   implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
   val tx = DatabaseContext.transactor(databaseConfig)
@@ -89,6 +81,4 @@ object WebApp extends App {
     ReportRoutes.detailedReport(detailReport.apply)
   )
 
-
-  val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(routes, "localhost", 8080)
 }
