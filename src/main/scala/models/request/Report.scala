@@ -4,7 +4,6 @@ import java.time.ZonedDateTime
 
 import models.model.{Ascending, ByCreatedTime, ProjectSort, SortDirection}
 
-// TODO do odzielnych plików
 case class ReportBodyWithParamsRequest(
                                         params: ReportRequest,
                                         pathParams: ReportParams

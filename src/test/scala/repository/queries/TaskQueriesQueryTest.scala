@@ -6,8 +6,6 @@ import models.request.LogTaskRequest
 import repository.query.{TaskQueries, UserQueries}
 
 class TaskQueriesQueryTest extends QueryTest {
-  //TODO
-
   test("User create should check") {
     check(TaskQueries.insert(LogTaskRequest(
       "test name",

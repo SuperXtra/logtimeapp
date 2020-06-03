@@ -19,7 +19,6 @@ class ProjectDeactivate[F[+_] : Sync](
                                      ) {
 
   def apply(projectRequest: DeleteProjectRequest, uuid: String): F[Either[AppBusinessError, Unit]] = {
-    //TODO try to move delete time to for-comp
     (for {
       userId <- getUserId(uuid)
       deleteTime = ZonedDateTime.now(ZoneOffset.UTC)

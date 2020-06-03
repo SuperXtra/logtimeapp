@@ -12,7 +12,6 @@ import repository.task.GetProjectTasks
 
 class DetailReport[F[+_] : Sync](getReport: Report[F]) {
 
-  //TODO add page and limit
   def apply(projectQuery: ReportBodyWithParamsRequest): F[Either[AppBusinessError, Seq[DetailReportResponse]]] =
     generateReport(projectQuery)
 

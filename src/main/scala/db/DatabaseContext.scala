@@ -11,7 +11,6 @@ object DatabaseContext {
         databaseConfig.driver,
         databaseConfig.url,
         databaseConfig.userName,
-        databaseConfig.password,
-        Blocker.liftExecutionContext(ExecutionContexts.synchronous) // TODO: just for testing
+        databaseConfig.password
       )
 }
