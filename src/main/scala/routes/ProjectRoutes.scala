@@ -26,7 +26,7 @@ object ProjectRoutes {
           entity(as[CreateProjectRequest]) { project =>
             complete(
               req(project, tokenClaims("uuid").toString)
-                .map(_.leftMap(LeftResponse.project))
+                .map(_.leftMap(RouteErrorMsg.project))
                 .unsafeToFuture
             )
           }
@@ -43,7 +43,7 @@ object ProjectRoutes {
           entity(as[ChangeProjectNameRequest]) { project =>
             complete(
               req(project, tokenClaims("uuid").toString)
-                .map(_.leftMap(LeftResponse.project))
+                .map(_.leftMap(RouteErrorMsg.project))
                 .unsafeToFuture
             )
 
@@ -60,7 +60,7 @@ object ProjectRoutes {
           entity(as[DeleteProjectRequest]) { project =>
             complete(
               req(project, tokenClaims("uuid").toString)
-                .map(_.leftMap(LeftResponse.project))
+                .map(_.leftMap(RouteErrorMsg.project))
                 .unsafeToFuture
             )
           }

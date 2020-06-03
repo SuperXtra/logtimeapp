@@ -6,7 +6,7 @@ import akka.http.scaladsl.model.DateTime
 import models.request.{ReportBodyWithParamsRequest, ReportParams, ReportRequest}
 import repository.query.GenerateReportQueries
 
-class GenerateDetailReportQueryTest extends QueryTest {
+class GenerateFinalParametrizedReportQueryTest extends QueryTest {
 
   test("Report test") {
     GenerateReportQueries(ReportBodyWithParamsRequest(ReportRequest(Some(List("1", "test")), None,None), ReportParams(None,None,None,page=1, quantity = 20)))

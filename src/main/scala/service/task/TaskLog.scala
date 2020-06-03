@@ -8,14 +8,14 @@ import models.request.LogTaskRequest
 import errorMessages.{AppBusinessError, ProjectNotFound, TaskNotCreated, UserNotFound}
 import models.model.{Project, Task}
 import repository.project.FindProjectByName
-import repository.task.{GetTask, InsertTask}
-import repository.user.GetExistingUserId
+import repository.task.{GetTask, CreateTask}
+import repository.user.GetUserId
 
 
 class TaskLog[F[+_]: Sync](
                             getProjectId: FindProjectByName[F],
-                            getUserId: GetExistingUserId[F],
-                            insertTask: InsertTask[F],
+                            getUserId: GetUserId[F],
+                            insertTask: CreateTask[F],
                             getTask: GetTask[F]) {
 
   def apply(work: LogTaskRequest, uuid: String): F[Either[AppBusinessError, Task]] = {

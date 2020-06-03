@@ -1,64 +1,54 @@
-package repository.project
+package repository.user
 
 import java.util.UUID
 
+import cats.effect.{ContextShift, IO}
 import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
 import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
-import models.model.Project
+import errorMessages.UserNotFound
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
-import pureconfig.ConfigSource
-import repository.user.CreateUser
-import java.time._
-
-import pureconfig._
-import cats.effect._
-import cats.implicits._
-import errorMessages.{AppBusinessError, ProjectNotCreated}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-class InsertProjectIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
+class GetUserIdIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
 
   override val container = new PostgreSQLContainer()
 
-  it should "insert project" in new Context {
+  it should "return existing user id" in new Context {
 
     Given("existing user")
-    val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().get
+    val uuid =  UUID.randomUUID().toString
+    val userId = createUser(uuid).unsafeRunSync().get
 
-    And("existing project")
-    val projectName = "test_project"
-    val projectId = insertProject(projectName, userId).unsafeRunSync()
 
     And("a data access function able of finding active projects")
-    val findActiveProjectByName = new FindProjectByName[IO](tx)
+    val findCreatedUser = new GetUserId[IO](tx)
 
     When("fetching active project by name")
-    val result = findActiveProjectByName(projectName).unsafeRunSync.right.get.id
+    val result = findCreatedUser(uuid).unsafeRunSync
 
     Then("it should return existing project")
-    result shouldBe projectId.right.get
+    result shouldBe Some(userId)
   }
 
-
-  it should "not allow to insert project with existing name" in new Context {
+  it should "return error when trying to return not existing user id" in new Context {
 
     Given("existing user")
-    val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().get
+    val uuid =  UUID.randomUUID().toString
 
-    And("existing project")
-    val projectName = "test_project"
-    val projectId = insertProject(projectName, userId).unsafeRunSync()
+    And("a data access function able of finding active projects")
+    val findCreatedUser = new GetUserId[IO](tx)
 
+    When("fetching active project by name")
+    val result: Option[Int] = findCreatedUser(uuid).unsafeRunSync
 
-    val result = insertProject(projectName, userId).unsafeRunSync()
-
-
-    Then("it should return ProjectNotCreated")
-    result shouldBe Left(ProjectNotCreated())
+    Then("it should return existing project")
+    result shouldBe None
   }
+
+
 
   private trait Context {
 
@@ -71,7 +61,6 @@ class InsertProjectIT extends AnyFlatSpec with Matchers with GivenWhenThen with 
       container.password
     )
 
-    val insertProject = new InsertProject(tx)
     val createUser = new CreateUser[IO](tx)
 
     import doobie.implicits._

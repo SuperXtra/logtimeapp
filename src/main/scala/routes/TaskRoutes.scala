@@ -21,7 +21,7 @@ object TaskRoutes {
           entity(as[LogTaskRequest]) { task =>
             complete(
               logWorkDone(task, tokenClaims("uuid").toString)
-                .map(_.leftMap(LeftResponse.task))
+                .map(_.leftMap(RouteErrorMsg.task))
                 .unsafeToFuture
             )
           }
@@ -37,7 +37,7 @@ object TaskRoutes {
           entity(as[UpdateTaskRequest]) { update =>
             complete(
               updateTask(update, tokenClaims("uuid").toString)
-                .map(_.leftMap(LeftResponse.task))
+                .map(_.leftMap(RouteErrorMsg.task))
                 .unsafeToFuture
             )
           }
@@ -53,7 +53,7 @@ object TaskRoutes {
         auth.apply { tokenClaims =>
           entity(as[DeleteTaskRequest]) { delete =>
             complete(deleteTask(delete, tokenClaims("uuid").toString)
-              .map(_.leftMap(LeftResponse.task))
+              .map(_.leftMap(RouteErrorMsg.task))
               .unsafeToFuture
             )
           }

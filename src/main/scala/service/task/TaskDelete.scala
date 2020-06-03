@@ -9,11 +9,11 @@ import errorMessages._
 import models.model.Project
 import repository.project.FindProjectByName
 import repository.task.DeleteTask
-import repository.user.GetExistingUserId
+import repository.user.GetUserId
 
 class TaskDelete[F[+_] : Sync](
                                 getProjectId: FindProjectByName[F],
-                                getUserId: GetExistingUserId[F],
+                                getUserId: GetUserId[F],
                                 delete: DeleteTask[F]) {
 
 

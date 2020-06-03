@@ -9,8 +9,8 @@ import models.request.{LogTaskRequest, UpdateTaskRequest}
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.task.{DeleteTask, GetTask, GetUserTask, InsertTask, TaskInsertUpdate}
-import repository.user.GetExistingUserId
+import repository.task.{DeleteTask, GetTask, GetUserTask, CreateTask, UpdateTask}
+import repository.user.GetUserId
 import cats.implicits._
 
 class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhenThen {
@@ -164,14 +164,14 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
                           taskUpdateResult: Either[TaskUpdateUnsuccessful, Unit]
                         ): TaskUpdate[IO] = {
 
-      val getUserId = new GetExistingUserId[IO](null) {
+      val getUserId = new GetUserId[IO](null) {
         override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
       }
       val getUserTask = new GetUserTask[IO](null) {
         override def apply(taskDescription: String, userId: Long): IO[Option[Task]] = userTask.pure[IO]
       }
 
-      val taskUpdate = new TaskInsertUpdate[IO](null) {
+      val taskUpdate = new UpdateTask[IO](null) {
         override def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: Long, userId: Long): IO[Either[TaskUpdateUnsuccessful, Unit]] = taskUpdateResult.pure[IO]
       }
 

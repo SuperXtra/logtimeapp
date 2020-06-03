@@ -51,7 +51,7 @@ class FindProjectByNameIT extends AnyFlatSpec with Matchers with GivenWhenThen w
     val projectId = insertProject(projectName, userId).unsafeRunSync()
 
     And("a data access function able of checking if user is the owner")
-    val checkIfIsOwner = new CheckIfIsProjectOwner[IO](tx)
+    val checkIfIsOwner = new IsProjectOwner[IO](tx)
 
     When("fetching active project by name")
     val result: Either[AppBusinessError, Boolean] = checkIfIsOwner(OtherUserId, projectName).unsafeRunSync
@@ -74,7 +74,7 @@ class FindProjectByNameIT extends AnyFlatSpec with Matchers with GivenWhenThen w
       container.password
     )
 
-    val insertProject = new InsertProject(tx)
+    val insertProject = new CreateProject(tx)
     val createUser = new CreateUser[IO](tx)
 
     import doobie.implicits._

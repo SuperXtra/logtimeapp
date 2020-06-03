@@ -8,7 +8,7 @@ import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import repository.project.{FindProjectByName, UpdateProjectName}
-import repository.user.{CreateUser, GetExistingUserId, UserById}
+import repository.user.{CreateUser, GetUserId, UserById}
 import service.user.UserCreate
 import cats.implicits._
 import errorMessages.{AppBusinessError, ProjectNameExists, ProjectNotCreated}
@@ -69,7 +69,7 @@ class ProjectUpdateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
                         project: Either[AppBusinessError, Project]
                         ): ProjectUpdate[IO] = {
 
-      val user = new GetExistingUserId[IO](null) {
+      val user = new GetUserId[IO](null) {
         override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
       }
       val updateProjectName = new UpdateProjectName[IO](null) {

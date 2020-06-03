@@ -14,7 +14,7 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.collection.mutable.ArrayBuffer
 
-class DetailReportTest extends AnyFlatSpec with Matchers with GivenWhenThen {
+class FinalParametrizedReportTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "delete task" in new Context {
     Given("user wants to delete task")
@@ -43,7 +43,7 @@ class DetailReportTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     val result = report(query).unsafeRunSync()
 
     val taskList = List(ReportTask(reportFromDb.task_create_time, reportFromDb.task_description, reportFromDb.start_time, reportFromDb.end_time, reportFromDb.duration, reportFromDb.volume, reportFromDb.comment))
-    val response = DetailReportResponse(reportFromDb.project_name, reportFromDb.project_create_time, taskList)
+    val response = FinalParametrizedReport(reportFromDb.project_name, reportFromDb.project_create_time, taskList)
 
     Then("returns number of rows updated")
     result shouldBe Right(ArrayBuffer(response))
@@ -53,14 +53,14 @@ class DetailReportTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
 
   private trait Context {
-    def serviceUnderTest(report: Either[AppBusinessError, List[ReportFromDb]]): DetailReport[IO] = {
+    def serviceUnderTest(report: Either[AppBusinessError, List[ReportFromDb]]): ParametrizedReport[IO] = {
 
 
       val getReport = new Report[IO](null){
         override def apply(projectQuery: ReportBodyWithParamsRequest): IO[Either[AppBusinessError, List[ReportFromDb]]] = report.pure[IO]
       }
 
-      new DetailReport[IO](getReport)
+      new ParametrizedReport[IO](getReport)
     }
   }
 }

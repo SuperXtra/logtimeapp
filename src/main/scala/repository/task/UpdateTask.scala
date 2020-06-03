@@ -11,7 +11,7 @@ import repository.query.TaskQueries
 import cats.implicits._
 import doobie.postgres.sqlstate
 
-class TaskInsertUpdate[F[_] : Sync](tx: Transactor[F]) {
+class UpdateTask[F[_] : Sync](tx: Transactor[F]) {
 
   def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: Long, userId: Long): F[Either[TaskUpdateUnsuccessful, Unit]] =
 

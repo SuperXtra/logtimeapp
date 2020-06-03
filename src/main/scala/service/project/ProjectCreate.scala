@@ -5,12 +5,12 @@ import cats.effect.Sync
 import models._
 import models.request.CreateProjectRequest
 import errorMessages._
-import repository.project.InsertProject
-import repository.user.GetExistingUserId
+import repository.project.CreateProject
+import repository.user.GetUserId
 
 class ProjectCreate[F[+_] : Sync](
-                                      getUserId: GetExistingUserId[F],
-                                      createProject: InsertProject[F]
+                                   getUserId: GetUserId[F],
+                                   createProject: CreateProject[F]
                                     ) {
 
   def apply(project: CreateProjectRequest, uuid: String): F[Either[AppBusinessError, Int]] = {

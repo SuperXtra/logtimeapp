@@ -51,7 +51,7 @@ class UpdateProjectNameIT extends AnyFlatSpec with Matchers with GivenWhenThen w
       container.password
     )
 
-    val insertProject = new InsertProject(tx)
+    val insertProject = new CreateProject(tx)
     val createUser = new CreateUser[IO](tx)
     val update = new UpdateProjectName[IO](tx)
 

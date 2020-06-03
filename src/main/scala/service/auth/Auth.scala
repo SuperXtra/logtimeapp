@@ -9,14 +9,12 @@ import akka.http.scaladsl.server.Directives.{complete, optionalHeaderValueByName
 import authentikat.jwt.{JsonWebToken, JwtClaimsSet, JwtHeader}
 import com.typesafe.config.ConfigFactory
 import config.AuthConfig
-import errorMessages.{AppErrorResponse, AuthenticationNotSuccessful, AuthenticationNotSuccessfulWithoutBearer}
+import errorMessages.{AppErrorResponse, AuthenticationNotSuccessful, AuthenticationNotSuccessfulWithoutBearer, RouteErrorMsg}
 import pureconfig.ConfigSource
 import pureconfig._
 import pureconfig.generic.auto._
 import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
-import routes.LeftResponse
-
 
 
 trait Auth {
@@ -37,13 +35,13 @@ object Auth {
             val arrayFromToken = token.split(" ")
             arrayFromToken.length match {
               case 2 => arrayFromToken(1) match {
-                case token if isTokenExpired(token) => complete(LeftResponse.auth(AuthenticationNotSuccessful()))
+                case token if isTokenExpired(token) => complete(RouteErrorMsg.auth(AuthenticationNotSuccessful()))
                 case token if JsonWebToken.validate(token, secretKey) => provide(getClaims(token))
-                case _ => complete(LeftResponse.auth(AuthenticationNotSuccessful()))
+                case _ => complete(RouteErrorMsg.auth(AuthenticationNotSuccessful()))
               }
-              case _ => complete(LeftResponse.auth(AuthenticationNotSuccessfulWithoutBearer()))
+              case _ => complete(RouteErrorMsg.auth(AuthenticationNotSuccessfulWithoutBearer()))
             }
-          case None => complete(LeftResponse.auth(AuthenticationNotSuccessful()))
+          case None => complete(RouteErrorMsg.auth(AuthenticationNotSuccessful()))
         }
     }
 

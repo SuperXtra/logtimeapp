@@ -8,7 +8,7 @@ import errorMessages._
 import repository.query.ProjectQueries
 
 
-class InsertProject[F[+_] : Sync](tx: Transactor[F]) {
+class CreateProject[F[+_] : Sync](tx: Transactor[F]) {
   def apply(projectName: String, userId: Long): F[Either[AppBusinessError, Int]] =
     ProjectQueries
       .insert(projectName, userId)

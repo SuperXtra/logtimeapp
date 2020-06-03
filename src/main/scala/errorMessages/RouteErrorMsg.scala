@@ -1,10 +1,8 @@
-package routes
+package errorMessages
 
-import akka.http.scaladsl.model._
-import errorMessages._
-import cats.implicits._
+import akka.http.scaladsl.model.StatusCodes
 
-object LeftResponse {
+object RouteErrorMsg {
 
   def project(error: AppBusinessError) = error match {
     case ProjectNotCreated() => StatusCodes.OK -> AppErrorResponse("error.project.update.unsuccessful.given.name.exists")

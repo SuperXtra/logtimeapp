@@ -14,7 +14,7 @@ import doobie.implicits.javasql._
 import doobie.implicits.javatime._
 import repository.query.TaskQueries
 
-class InsertTask[F[_] : Sync](tx: Transactor[F]) {
+class CreateTask[F[_] : Sync](tx: Transactor[F]) {
 
   def apply(create: LogTaskRequest, projectId: Long, userId: Long, startTime: LocalDateTime): F[Either[AppBusinessError, Int]] =
     TaskQueries

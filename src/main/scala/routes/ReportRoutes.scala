@@ -6,22 +6,23 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.ParameterDirectives
 import cats.effect.IO
-import errorMessages.AppBusinessError
+import errorMessages.{AppBusinessError, RouteErrorMsg}
 import models.request.{MainReport, ReportBodyWithParamsRequest, ReportParams, ReportRequest}
-import models.responses.{DetailReportResponse, GeneralReport, ReportFromDb, ReportTask, UserStatisticsReport}
+import models.responses.{FinalParametrizedReport, FinalProjectReport, ReportFromDb, ReportTask, OverallStatisticsReport}
 import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import cats.implicits._
 import akka.http.scaladsl.model.{HttpEntity, StatusCodes}
+import io.circe.Printer
 import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending, ProjectSort, SortDirection}
 import models.responses
 import service.auth.Auth
 
 object ReportRoutes {
 
+  val printer = Printer.noSpaces.copy(dropNullValues = true)
 
-
-  def projectTasksReport(req: String => IO[Either[AppBusinessError, GeneralReport]])
+  def projectTasksReport(req: String => IO[Either[AppBusinessError, FinalProjectReport]])
                         (implicit auth: Auth): Route =
     pathPrefix("report" / "project") {
       parameter("name") { projectName =>
@@ -29,7 +30,7 @@ object ReportRoutes {
           auth.apply { _ =>
             complete(
               req(projectName)
-                .map(_.leftMap(LeftResponse.report))
+                .map(_.leftMap(RouteErrorMsg.report))
                 .unsafeToFuture
             )
           }
@@ -37,7 +38,7 @@ object ReportRoutes {
       }
     }
 
-  def detailedReport(req: MainReport => IO[Either[AppBusinessError, List[UserStatisticsReport]]])
+  def detailedReport(req: MainReport => IO[Either[AppBusinessError, OverallStatisticsReport]])
                     (implicit auth: Auth) =
     pathPrefix("report" / "users") {
       get {
@@ -45,7 +46,7 @@ object ReportRoutes {
           entity(as[MainReport]) { request =>
             complete(
               req(request)
-                .map(_.leftMap(LeftResponse.report))
+                .map(_.leftMap(RouteErrorMsg.report))
                 .unsafeToFuture
             )
           }
@@ -54,7 +55,7 @@ object ReportRoutes {
     }
 
 
-  def mainReport(req: ReportBodyWithParamsRequest => IO[Either[AppBusinessError, Seq[responses.DetailReportResponse]]])
+  def mainReport(req: ReportBodyWithParamsRequest => IO[Either[AppBusinessError, Seq[responses.FinalParametrizedReport]]])
                 (implicit auth: Auth): Route =
     pathPrefix("report" / "detail") {
     parameters(
@@ -69,7 +70,7 @@ object ReportRoutes {
           entity(as[ReportRequest]) { request: ReportRequest =>
             complete(
               req(ReportBodyWithParamsRequest(request, pathParams))
-                .map(_.leftMap(LeftResponse.report))
+                .map(_.leftMap(RouteErrorMsg.report))
                 .unsafeToFuture
             )
           }
@@ -89,7 +90,7 @@ object ReportRoutes {
     sortBy.map(resolveSort),
     direction.map(resolveDirection),
     if (page < 1) 1 else page,
-    if (quantity <= 0) 20 else 20
+    if (quantity <= 0) 20 else quantity
   )
 
   private def resolveSort(sort: String) = {

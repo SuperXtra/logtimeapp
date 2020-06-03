@@ -11,7 +11,7 @@ import errorMessages.ProjectNotCreated
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.{FindProjectByName, InsertProject}
+import repository.project.{FindProjectByName, CreateProject}
 
 class CreateUserIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
 
@@ -25,7 +25,7 @@ class CreateUserIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
 
 
     And("a data access function able of finding active projects")
-    val findCreatedUser = new GetExistingUserId[IO](tx)
+    val findCreatedUser = new GetUserId[IO](tx)
 
     When("fetching active project by name")
     val result = findCreatedUser(uuid).unsafeRunSync

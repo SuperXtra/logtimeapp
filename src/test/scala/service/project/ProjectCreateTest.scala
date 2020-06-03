@@ -6,8 +6,8 @@ import models.model.User
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.InsertProject
-import repository.user.{CreateUser, GetExistingUserId, UserById}
+import repository.project.CreateProject
+import repository.user.{CreateUser, GetUserId, UserById}
 import service.user.UserCreate
 import cats.implicits._
 import models.request.{CreateProjectRequest, DeleteTaskRequest}
@@ -89,10 +89,10 @@ class ProjectCreateTest extends AnyFlatSpec with Matchers with GivenWhenThen {
                           insertedProjectId: Either[AppBusinessError, Int]
                         ): ProjectCreate[IO] = {
 
-      val getUserId =  new GetExistingUserId[IO](null) {
+      val getUserId =  new GetUserId[IO](null) {
         override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
       }
-      val createProject = new InsertProject[IO](null) {
+      val createProject = new CreateProject[IO](null) {
         override def apply(projectName: String, userId: Long): IO[Either[AppBusinessError, Int]] = insertedProjectId.pure[IO]
 
       }

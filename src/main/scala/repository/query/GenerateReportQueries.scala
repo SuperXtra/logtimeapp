@@ -10,6 +10,7 @@ import models.responses.ReportFromDb
 import doobie.implicits._
 
 object GenerateReportQueries {
+  implicit val han = LogHandler.jdkLogHandler
 
   def apply(projectQuery: ReportBodyWithParamsRequest): doobie.Query0[ReportFromDb] = {
 
@@ -88,7 +89,7 @@ object GenerateReportQueries {
     }
 
     val paginationFilter = {
-      val offset = ((projectQuery.pathParams.page - 1) * projectQuery.pathParams.quantity).toLong
+      val offset = ((projectQuery.pathParams.page -1 ) * projectQuery.pathParams.quantity).toLong
       val limitation = projectQuery.pathParams.quantity.toLong
       fr"""
         LIMIT ${limitation} OFFSET ${offset}

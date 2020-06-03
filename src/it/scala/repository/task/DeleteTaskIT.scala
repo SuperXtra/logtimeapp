@@ -13,7 +13,7 @@ import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.{CheckIfIsProjectOwner, InsertProject}
+import repository.project.{IsProjectOwner, CreateProject}
 import repository.user.CreateUser
 
 class DeleteTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
@@ -57,9 +57,9 @@ class DeleteTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
     )
 
     val getTask = new GetTask[IO](tx)
-    val insertProject = new InsertProject[IO](tx)
+    val insertProject = new CreateProject[IO](tx)
     val createUser = new CreateUser[IO](tx)
-    val insertTask = new InsertTask[IO](tx)
+    val insertTask = new CreateTask[IO](tx)
     val deleteTask = new DeleteTask[IO](tx)
 
     import doobie.implicits._

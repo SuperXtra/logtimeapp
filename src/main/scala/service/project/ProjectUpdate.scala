@@ -8,13 +8,13 @@ import doobie.postgres.sqlstate
 import errorMessages.{AppBusinessError, ProjectNameExists, ProjectNotCreated, UserNotFound}
 import models.model.Project
 import repository.project.{FindProjectByName, UpdateProjectName}
-import repository.user.GetExistingUserId
+import repository.user.GetUserId
 
 
 class ProjectUpdate[F[+_]: Sync](
-                                userId: GetExistingUserId[F],
-                                updateProjectName: UpdateProjectName[F],
-                                findProject: FindProjectByName[F]) {
+                                  userId: GetUserId[F],
+                                  updateProjectName: UpdateProjectName[F],
+                                  findProject: FindProjectByName[F]) {
 
 
   def apply(project: ChangeProjectNameRequest, uuid: String): F[Either[AppBusinessError, Project]] = (for {

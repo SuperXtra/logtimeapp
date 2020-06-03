@@ -8,18 +8,19 @@ import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
 import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
+import models.model.TaskToUpdate
 import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.InsertProject
+import repository.project.CreateProject
 import repository.user.CreateUser
 
-class InsertTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
+class UpdateTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
 
   override val container = new PostgreSQLContainer()
 
-  it should "insert task" in new Context {
+  it should "update task" in new Context {
 
     Given("existing user")
     val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().get
@@ -33,12 +34,13 @@ class InsertTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
     val task1 = insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
 
-    When("fetching  task")
-    val result = getTask(task1.right.get).unsafeRunSync()
+    When("updating task")
+    val request = TaskToUpdate(projectId.right.get, userId, "test description 2", ZonedDateTime.now(ZoneOffset.UTC), 29L, None, None)
+    val result = updateTask(request, LocalDateTime.now(), "test description 1", projectId.right.get, userId).unsafeRunSync()
 
 
-    Then("it should return task with correct id")
-    result.get.id shouldBe task1.right.get
+    Then("it should return count of updated records")
+    result shouldBe Right(())
 
   }
 
@@ -53,10 +55,10 @@ class InsertTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
       container.password
     )
 
-    val getTask = new GetTask[IO](tx)
-    val insertProject = new InsertProject[IO](tx)
+    val insertProject = new CreateProject[IO](tx)
     val createUser = new CreateUser[IO](tx)
-    val insertTask = new InsertTask[IO](tx)
+    val insertTask = new CreateTask[IO](tx)
+    val updateTask = new UpdateTask[IO](tx)
 
     import doobie.implicits._
 

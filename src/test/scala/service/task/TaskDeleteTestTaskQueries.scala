@@ -12,7 +12,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import repository.project.FindProjectByName
 import repository.task._
-import repository.user.GetExistingUserId
+import repository.user.GetUserId
 
 class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhenThen {
 
@@ -78,7 +78,7 @@ class TaskDeleteTestTaskQueries extends AnyFlatSpec with Matchers with GivenWhen
       val getProjectId = new FindProjectByName[IO](null) {
         override def apply(projectName: String): IO[Either[AppBusinessError, Project]] = project.pure[IO]
       }
-      val getUserId = new GetExistingUserId[IO](null) {
+      val getUserId = new GetUserId[IO](null) {
         override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
       }
       val delete = new DeleteTask[IO](null) {

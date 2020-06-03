@@ -9,13 +9,13 @@ import errorMessages._
 import models.model.Project
 import repository.project._
 import repository.task.DeleteTasks
-import repository.user.GetExistingUserId
+import repository.user.GetUserId
 
 class ProjectDeactivate[F[+_] : Sync](
-                                       userId: GetExistingUserId[F],
+                                       userId: GetUserId[F],
                                        deactivateProject: DeleteProjectWithTasks[F],
                                        findProject: FindProjectByName[F],
-                                       checkIfOwner: CheckIfIsProjectOwner[F]
+                                       checkIfOwner: IsProjectOwner[F]
                                      ) {
 
   def apply(projectRequest: DeleteProjectRequest, uuid: String): F[Either[AppBusinessError, Unit]] = {

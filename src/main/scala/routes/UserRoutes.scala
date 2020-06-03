@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.server.Directives._
 import cats.effect.IO
-import errorMessages.{AppBusinessError, AuthenticationNotSuccessful}
+import errorMessages.{AppBusinessError, AuthenticationNotSuccessful, RouteErrorMsg}
 import models.model.User
 import io.circe.generic.auto._
 import cats.implicits._
@@ -23,7 +23,7 @@ object UserRoutes {
       post {
         complete(
           user
-            .map(_.leftMap(LeftResponse.user))
+            .map(_.leftMap(RouteErrorMsg.user))
             .unsafeToFuture
         )
       }
@@ -38,7 +38,7 @@ object UserRoutes {
           complete(
             userId(req.userUUID.toString).map[ToResponseMarshallable] {
               case true => AuthResponse(auth.token(req.userUUID.toString))
-              case false => LeftResponse.auth(AuthenticationNotSuccessful())
+              case false => RouteErrorMsg.auth(AuthenticationNotSuccessful())
             }.unsafeToFuture
           )
         }

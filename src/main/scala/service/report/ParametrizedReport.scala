@@ -10,13 +10,13 @@ import models.responses._
 import repository.report.Report
 import repository.task.GetProjectTasks
 
-class DetailReport[F[+_] : Sync](getReport: Report[F]) {
+class ParametrizedReport[F[+_] : Sync](getReport: Report[F]) {
 
-  def apply(projectQuery: ReportBodyWithParamsRequest): F[Either[AppBusinessError, Seq[DetailReportResponse]]] =
+  def apply(projectQuery: ReportBodyWithParamsRequest): F[Either[AppBusinessError, Seq[FinalParametrizedReport]]] =
     generateReport(projectQuery)
 
 
-  private def generateReport(projectQuery: ReportBodyWithParamsRequest): F[Either[AppBusinessError, Seq[DetailReportResponse]]] = {
+  private def generateReport(projectQuery: ReportBodyWithParamsRequest): F[Either[AppBusinessError, Seq[FinalParametrizedReport]]] = {
     EitherT(getReport(projectQuery)).map(x => groupByOrdered(x)(x => (x.project_name, x.project_create_time)).map {
       case ((projectName, projectCreatedTime), list) => {
 
@@ -26,7 +26,7 @@ class DetailReport[F[+_] : Sync](getReport: Report[F]) {
             task.start_time, task.end_time, task.duration,
             task.volume, task.comment))
 
-        DetailReportResponse(projectName, projectCreatedTime, reportTasks.toList)
+        FinalParametrizedReport(projectName, projectCreatedTime, reportTasks.toList)
       }
     }).value
   }

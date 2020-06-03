@@ -9,11 +9,11 @@ import models.model._
 import models.request.UpdateTaskRequest
 import errorMessages._
 import repository.task._
-import repository.user.GetExistingUserId
+import repository.user.GetUserId
 
-class TaskUpdate[F[+_] : Sync](getUserId: GetExistingUserId[F],
+class TaskUpdate[F[+_] : Sync](getUserId: GetUserId[F],
                                getUserTask: GetUserTask[F],
-                               taskUpdate: TaskInsertUpdate[F]) {
+                               taskUpdate: UpdateTask[F]) {
 
   def apply(updateTask: UpdateTaskRequest, uuid: String): F[Either[AppBusinessError, Unit]] = (
     for {

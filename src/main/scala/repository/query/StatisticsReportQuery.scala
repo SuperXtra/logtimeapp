@@ -12,7 +12,6 @@ import doobie.implicits._
 object StatisticsReportQuery {
 
   def apply(request: MainReport) = {
-// TODO
     val projectNamesFilter: Fragment = request.userUUIDs match {
       case Some(uuids) => uuids match {
         case ::(_, _) =>
@@ -36,23 +35,17 @@ object StatisticsReportQuery {
 
     (
       fr"""
-         SELECT u.user_identification,
-         COUNT (t.id) AS total_count,
-         CAST(AVG(duration) AS INTEGER) AS average_duration,
-         CAST(AVG(volume) AS INTEGER) AS average_volume,
-         SUM(duration*volume)/SUM(volume) as weighted_average
-         FROM tb_project p
-         LEFT JOIN tb_task t
-         ON t.project_id = p.id
-         INNER JOIN tb_user u
-         ON u.id = t.user_id
-         WHERE p.active = true
-         AND t.active = true""" ++
+        select count(t.id) as total_count,
+  	   cast(avg(duration) as decimal(5,2)) as average_duration,
+	     cast(AVG(cast(volume as decimal(5,2)))as decimal(5,2)) as average_volume,
+	     cast(sum(duration*volume)/sum(volume)as decimal(5,2)) as weighted_average
+      from tb_project p
+      left join tb_task t on t.project_id = p.id
+      inner join tb_user u on u.id = t.user_id
+      where p.active = true
+      and t.active = true""" ++
           projectNamesFilter ++
-        dateRangeFilter ++
-    fr"""
-          GROUP BY u.user_identification
-          """
-      ).query[UserStatisticsReport]
+        dateRangeFilter
+      ).query[OverallStatisticsReport]
   }
 }

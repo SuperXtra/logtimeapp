@@ -11,7 +11,7 @@ import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import repository.task._
-import repository.user.{CreateUser, GetExistingUserId, UserById}
+import repository.user.{CreateUser, GetUserId, UserById}
 import service.task.TaskDelete
 
 class UserCreateTest extends AnyFlatSpec with Matchers with GivenWhenThen {

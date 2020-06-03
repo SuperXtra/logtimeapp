@@ -8,9 +8,9 @@ import models.model.{Project, User}
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.{CheckIfIsProjectOwner, DeleteProjectWithTasks, FindProjectByName}
+import repository.project.{IsProjectOwner, DeleteProjectWithTasks, FindProjectByName}
 import repository.task.DeleteTasks
-import repository.user.{CreateUser, GetExistingUserId, UserById}
+import repository.user.{CreateUser, GetUserId, UserById}
 import service.user.UserCreate
 import cats.implicits._
 import models.request.{CreateProjectRequest, DeleteProjectRequest, DeleteTaskRequest}
@@ -71,7 +71,7 @@ class ProjectDeactivateTest extends AnyFlatSpec with Matchers with GivenWhenThen
                           isProjectOwner: Either[AppBusinessError, Boolean]
                         ): ProjectDeactivate[IO] = {
 
-      val getUserId = new GetExistingUserId[IO](null) {
+      val getUserId = new GetUserId[IO](null) {
         override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
       }
       val deactivateProject = new DeleteProjectWithTasks[IO](null) {
@@ -81,7 +81,7 @@ class ProjectDeactivateTest extends AnyFlatSpec with Matchers with GivenWhenThen
         override def apply(projectName: String): IO[Either[AppBusinessError, Project]] = project.pure[IO]
       }
 
-      val checkIfIsProjectOwner = new CheckIfIsProjectOwner[IO](null){
+      val checkIfIsProjectOwner = new IsProjectOwner[IO](null){
         override def apply(userId: Int, projectName: String): IO[Either[AppBusinessError, Boolean]] = isProjectOwner.pure[IO]
       }
 

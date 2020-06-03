@@ -13,7 +13,7 @@ import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.task.{GetTask, InsertTask}
+import repository.task.{GetTask, CreateTask}
 import repository.user.CreateUser
 
 class DeleteProjectWithTasksIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach  {
@@ -65,9 +65,9 @@ class DeleteProjectWithTasksIT extends AnyFlatSpec with Matchers with GivenWhenT
       container.password
     )
 
-    val insertProject = new InsertProject(tx)
+    val insertProject = new CreateProject(tx)
     val createUser = new CreateUser[IO](tx)
-    val createTask = new InsertTask[IO](tx)
+    val createTask = new CreateTask[IO](tx)
     val delete = new DeleteProjectWithTasks[IO](tx)
     val findProject = new FindProjectByName[IO](tx)
     val getTask = new GetTask[IO](tx)

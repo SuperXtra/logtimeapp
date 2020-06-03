@@ -11,8 +11,8 @@ import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import repository.project.FindProjectByName
-import repository.task.{GetTask, InsertTask}
-import repository.user.GetExistingUserId
+import repository.task.{GetTask, CreateTask}
+import repository.user.GetUserId
 
 class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
 
@@ -105,11 +105,11 @@ class TaskLogTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
         override def apply(projectName: String): IO[Either[AppBusinessError, Project]] = project.pure[IO]
       }
 
-      val getUserId = new GetExistingUserId[IO](null) {
+      val getUserId = new GetUserId[IO](null) {
         override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
       }
 
-      val insertTask = new InsertTask[IO](null) {
+      val insertTask = new CreateTask[IO](null) {
         override def apply(create: LogTaskRequest, projectId: Long, userId: Long, startTime: LocalDateTime): IO[Either[AppBusinessError, Int]] = insertTaskResult.pure[IO]
       }
 
