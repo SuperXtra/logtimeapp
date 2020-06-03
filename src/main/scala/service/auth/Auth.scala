@@ -37,13 +37,13 @@ object Auth {
             val arrayFromToken = token.split(" ")
             arrayFromToken.length match {
               case 2 => arrayFromToken(1) match {
-                case token if isTokenExpired(token) => complete(LeftResponse.apply(AuthenticationNotSuccessful()))
+                case token if isTokenExpired(token) => complete(LeftResponse.auth(AuthenticationNotSuccessful()))
                 case token if JsonWebToken.validate(token, secretKey) => provide(getClaims(token))
-                case _ => complete(LeftResponse.apply(AuthenticationNotSuccessful()))
+                case _ => complete(LeftResponse.auth(AuthenticationNotSuccessful()))
               }
-              case _ => complete(LeftResponse.apply(AuthenticationNotSuccessfulWithoutBearer()))
+              case _ => complete(LeftResponse.auth(AuthenticationNotSuccessfulWithoutBearer()))
             }
-          case None => complete(LeftResponse.apply(AuthenticationNotSuccessful()))
+          case None => complete(LeftResponse.auth(AuthenticationNotSuccessful()))
         }
     }
 

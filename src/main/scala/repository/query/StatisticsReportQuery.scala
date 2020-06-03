@@ -12,7 +12,7 @@ import doobie.implicits._
 object StatisticsReportQuery {
 
   def apply(request: MainReport) = {
-
+// TODO
     val projectNamesFilter: Fragment = request.userUUIDs match {
       case Some(uuids) => uuids match {
         case ::(_, _) =>

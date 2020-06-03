@@ -22,14 +22,14 @@ class ProjectDeactivate[F[+_] : Sync](
     (for {
       userId <- getUserId(uuid)
       deleteTime = ZonedDateTime.now(ZoneOffset.UTC)
-      _ <- verifyIfUserIsTheOwnerOfTheProject(userId, projectRequest.projectName)
       project <- findProjectById(projectRequest.projectName)
+      _ <- verifyIfUserIsTheOwnerOfTheProject(userId, projectRequest.projectName)
       _ <- deleteProjectWithTasks(userId, projectRequest.projectName, project.id, deleteTime)
     } yield ()).value
   }
 
   private def getUserId(userIdentification: String): EitherT[F, AppBusinessError, Int] =
-    EitherT.fromOptionF(userId(userIdentification), ProjectDeleteUnsuccessful())
+    EitherT.fromOptionF(userId(userIdentification), UserNotFound())
 
 
   private def findProjectById(projectName: String): EitherT[F, AppBusinessError, Project] = {

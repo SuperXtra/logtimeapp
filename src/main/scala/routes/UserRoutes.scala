@@ -23,7 +23,7 @@ object UserRoutes {
       post {
         complete(
           user
-            .map(_.leftMap(LeftResponse(_)))
+            .map(_.leftMap(LeftResponse.user))
             .unsafeToFuture
         )
       }
@@ -38,7 +38,7 @@ object UserRoutes {
           complete(
             userId(req.userUUID.toString).map[ToResponseMarshallable] {
               case true => AuthResponse(auth.token(req.userUUID.toString))
-              case false => LeftResponse.apply(AuthenticationNotSuccessful())
+              case false => LeftResponse.auth(AuthenticationNotSuccessful())
             }.unsafeToFuture
           )
         }

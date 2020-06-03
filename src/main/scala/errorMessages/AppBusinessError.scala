@@ -16,6 +16,7 @@ case class TaskNotFound() extends AppBusinessError
 case class TaskNameExists() extends AppBusinessError
 case class TaskUpdateUnsuccessful() extends AppBusinessError
 case class TaskDeleteUnsuccessful() extends AppBusinessError
+case class TaskNotCreatedExclusionViolation() extends AppBusinessError
 
 
 //User

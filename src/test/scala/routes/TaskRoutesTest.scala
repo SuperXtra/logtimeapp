@@ -19,11 +19,11 @@ import service.auth.Auth
 
 import scala.concurrent.duration._
 
-class TaskQueriesRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
+class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
 
   it should "return error project not found" in new Context {
     val result = ProjectNotFound().asLeft
-    val route = Route.seal(TaskRoutes.logTask((_,_) => IO(result)))
+    val route = Route.seal(TaskRoutes.logTask((_, _) => IO(result)))
     Post("/task",
       HttpEntity(
         `application/json`,
@@ -39,10 +39,11 @@ class TaskQueriesRoutesTest extends AnyFlatSpec with Matchers with ScalatestRout
            |""".stripMargin
       )
     ) ~> route ~> check {
-      response.status shouldBe StatusCodes.NotFound
-      json(response.raw) shouldBe json("""
+      response.status shouldBe StatusCodes.OK
+      json(response.raw) shouldBe json(
+        """
         {
-            "error" : "error.project.name.not.found"
+            "error" : "error.task.not.created.project.not.found"
         }
         """
       )
@@ -57,9 +58,9 @@ class TaskQueriesRoutesTest extends AnyFlatSpec with Matchers with ScalatestRout
       projectId = 213,
       userId = 123,
       taskDescription = "this is description",
-      startTime = LocalDateTime.now().minusSeconds(3.days.toSeconds),
-      endTime = LocalDateTime.now,
+      startTime = LocalDateTime.parse("2020-05-31T12:23:02"),
       duration = 3.days.toSeconds.toInt,
+      endTime = LocalDateTime.parse("2020-05-31T12:23:02").plusDays(3),
       createTime = ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime,
       volume = 2.some,
       comment = "this is comment".some,
@@ -105,17 +106,127 @@ class TaskQueriesRoutesTest extends AnyFlatSpec with Matchers with ScalatestRout
     }
   }
 
+  it should "update task" in new Context {
+    val result = ().asRight
+    val route = Route.seal(TaskRoutes.updateTask((_, _) => IO(result)))
+    Put("/task",
+      HttpEntity(
+        `application/json`,
+        s"""
+           |{
+           |	"oldTaskDescription": "old task description",
+           |    "newTaskDescription": "new task description",
+           |    "startTime": "2020-03-10T14:00:00+02:00",
+           |    "durationTime": 500,
+           |    "volume": 3,
+           |    "comment": "some interesting comment2"
+           |}
+           |""".stripMargin
+      )
+    ) ~> route ~> check {
+      response.status shouldBe StatusCodes.OK
+      json(response.raw) shouldBe json(
+        """
+        {}
+        """
+      )
+    }
+  }
+
+  it should "not update task" in new Context {
+    val result = TaskUpdateUnsuccessful().asLeft
+    val route = Route.seal(TaskRoutes.updateTask((_, _) => IO(result)))
+    Put("/task",
+      HttpEntity(
+        `application/json`,
+        s"""
+           |{
+           |	"oldTaskDescription": "old task description",
+           |    "newTaskDescription": "new task description",
+           |    "startTime": "2020-03-10T14:00:00+02:00",
+           |    "durationTime": 500,
+           |    "volume": 3,
+           |    "comment": "some interesting comment2"
+           |}
+           |""".stripMargin
+      )
+    ) ~> route ~> check {
+      response.status shouldBe StatusCodes.OK
+      json(response.raw) shouldBe json(
+        """
+        {
+           "error" : "error.task.not.updated"
+        }
+        """
+      )
+    }
+  }
+
+
+  it should "delete task" in new Context {
+    val result = 1.asRight
+    val route = Route.seal(TaskRoutes.deleteTask((_, _) => IO(result)))
+    Delete("/task",
+      HttpEntity(
+        `application/json`,
+        s"""
+           |{
+           |	"taskDescription": "test 12345",
+           |	"projectName": "test 5"
+           |}
+           |""".stripMargin
+      )
+    ) ~> route ~> check {
+      response.status shouldBe StatusCodes.OK
+      json(response.raw) shouldBe json(
+        """
+        1
+        """
+      )
+    }
+  }
+
+  it should "not delete task" in new Context {
+    val result = TaskDeleteUnsuccessful().asLeft
+    val route = Route.seal(TaskRoutes.deleteTask((_, _) => IO(result)))
+    Delete("/task",
+      HttpEntity(
+        `application/json`,
+        s"""
+           |{
+           |	"taskDescription": "test 12345",
+           |	"projectName": "test 5"
+           |}
+           |""".stripMargin
+      )
+    ) ~> route ~> check {
+      response.status shouldBe StatusCodes.OK
+      json(response.raw) shouldBe json(
+        """
+        {
+             "error" : "error.task.not.resolved"
+        }
+        """
+      )
+    }
+  }
+
   private trait Context {
+
     implicit class RawResponseOps(response: HttpResponse) {
+
       import org.scalatest.concurrent.ScalaFutures._
+
       def raw: String = Unmarshal(response.entity).to[String].futureValue
     }
 
     import akka.http.scaladsl.server.directives.BasicDirectives._
+
     implicit val auth: Auth = new Auth {
       def apply: Directive1[Map[String, Any]] = provide(Map("uuid" -> "test_token"))
 
       override def token(uuid: String): String = "test_token"
     }
   }
+
 }

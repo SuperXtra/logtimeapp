@@ -24,12 +24,12 @@ object ReportRoutes {
   def projectTasksReport(req: String => IO[Either[AppBusinessError, GeneralReport]])
                         (implicit auth: Auth): Route =
     pathPrefix("report" / "project") {
-      parameter("name") { name =>
+      parameter("name") { projectName =>
         get {
           auth.apply { _ =>
             complete(
-              req(name)
-                .map(_.leftMap(LeftResponse(_)))
+              req(projectName)
+                .map(_.leftMap(LeftResponse.report))
                 .unsafeToFuture
             )
           }
@@ -45,7 +45,7 @@ object ReportRoutes {
           entity(as[MainReport]) { request =>
             complete(
               req(request)
-                .map(_.leftMap(LeftResponse(_)))
+                .map(_.leftMap(LeftResponse.report))
                 .unsafeToFuture
             )
           }
@@ -69,7 +69,7 @@ object ReportRoutes {
           entity(as[ReportRequest]) { request: ReportRequest =>
             complete(
               req(ReportBodyWithParamsRequest(request, pathParams))
-                .map(_.leftMap(LeftResponse(_)))
+                .map(_.leftMap(LeftResponse.report))
                 .unsafeToFuture
             )
           }

@@ -22,7 +22,7 @@ class InsertTask[F[_] : Sync](tx: Transactor[F]) {
       .unique
       .transact(tx)
       .attemptSomeSqlState {
-        case sqlstate.class23.EXCLUSION_VIOLATION => TaskNotCreated()
+        case sqlstate.class23.EXCLUSION_VIOLATION => TaskNotCreatedExclusionViolation()
         case sqlstate.class23.UNIQUE_VIOLATION => TaskNameExists()
       }
 }

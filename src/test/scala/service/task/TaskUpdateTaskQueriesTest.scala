@@ -3,7 +3,7 @@ package service.task
 import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
 import cats.effect.IO
-import errorMessages.{AppBusinessError, ProjectNotFound, ProjectUpdateUnsuccessful, TaskDeleteUnsuccessful, TaskNotFound, UserNotFound}
+import errorMessages.{AppBusinessError, ProjectNotFound, ProjectUpdateUnsuccessful, TaskDeleteUnsuccessful, TaskNotFound, TaskUpdateUnsuccessful, UserNotFound}
 import models.model.{Project, Task, TaskToUpdate}
 import models.request.{LogTaskRequest, UpdateTaskRequest}
 import org.scalatest.GivenWhenThen
@@ -76,7 +76,7 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
       userId = None,
       userTask = None,
       taskDeleteResult = TaskDeleteUnsuccessful().asLeft,
-      taskUpdateResult = ProjectUpdateUnsuccessful().asLeft
+      taskUpdateResult = TaskUpdateUnsuccessful().asLeft
     )
 
     When("updating work")
@@ -144,14 +144,14 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
       userId = Some(1),
       userTask = Some(task),
       taskDeleteResult = TaskDeleteUnsuccessful().asLeft,
-      taskUpdateResult = ProjectUpdateUnsuccessful().asLeft
+      taskUpdateResult = TaskUpdateUnsuccessful().asLeft
     )
 
     When("updating work")
     val result = updateTask(updateTaskRequest, "test string").unsafeRunSync
 
     Then("returns error message: project not found")
-    result shouldBe Left(TaskDeleteUnsuccessful())
+    result shouldBe Left(TaskUpdateUnsuccessful())
   }
 
 
@@ -161,7 +161,7 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
                           userId: Option[Int],
                           userTask: Option[Task],
                           taskDeleteResult: Either[AppBusinessError, Int],
-                          taskUpdateResult: Either[ProjectUpdateUnsuccessful, Unit]
+                          taskUpdateResult: Either[TaskUpdateUnsuccessful, Unit]
                         ): TaskUpdate[IO] = {
 
       val getUserId = new GetExistingUserId[IO](null) {
@@ -172,7 +172,7 @@ class TaskUpdateTaskQueriesTest extends AnyFlatSpec with Matchers with GivenWhen
       }
 
       val taskUpdate = new TaskInsertUpdate[IO](null) {
-        override def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: Long, userId: Long): IO[Either[ProjectUpdateUnsuccessful, Unit]] = taskUpdateResult.pure[IO]
+        override def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: Long, userId: Long): IO[Either[TaskUpdateUnsuccessful, Unit]] = taskUpdateResult.pure[IO]
       }
 
       new TaskUpdate(getUserId, getUserTask, taskUpdate)
