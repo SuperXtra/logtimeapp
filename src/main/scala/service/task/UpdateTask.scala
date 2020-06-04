@@ -19,9 +19,8 @@ class UpdateTask[F[+_] : Sync](getUserId: GetUserByUUID[F],
     for {
       userId <- getExistingUserId(uuid)
       oldTask <- fetchTask(updateTask.oldTaskDescription, userId)
-      updated <- updateExistingTask(newTask(oldTask, updateTask), oldTask.taskDescription, oldTask.projectId, userId)
-    } yield updated
-    ).value
+      _ <- updateExistingTask(newTask(oldTask, updateTask), oldTask.taskDescription, oldTask.projectId, userId)
+    } yield ()).value
 
   private def updateExistingTask(toUpdate: TaskToUpdate, taskDescription: String, projectId: Long, userId: Long): EitherT[F, LogTimeAppError, Unit] = {
     EitherT(taskUpdate(toUpdate, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime, taskDescription, projectId, userId))

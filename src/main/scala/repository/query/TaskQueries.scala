@@ -33,8 +33,8 @@ object TaskQueries {
         ${update.duration},
         ${update.volume},
         ${update.comment}
-        ) RETURNING id"""
-      .query[Long]
+        ) returning id"""
+      .query[Int]
   }
 
   def insert(create: LogTaskRequest, projectId: Long, userId: Long, startTime: LocalDateTime) = {

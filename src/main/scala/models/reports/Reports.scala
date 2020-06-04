@@ -44,7 +44,7 @@ case class ReportFromDb(
 
 case class OverallStatisticsReport(
                              total_count: Long,
-                             average_duration: BigDecimal,
+                             average_duration: Option[BigDecimal],
                              average_volume: Option[BigDecimal],
                              weighted_average: Option[BigDecimal]
                            )

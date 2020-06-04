@@ -13,9 +13,9 @@ class IsProjectOwner[F[+_] : Sync](tx: Transactor[F]) {
     ProjectQueries
       .checkIfUserIsOwner(userId, projectName)
       .unique
+      .transact(tx)
       .map {
         case true => true.asRight
         case false => ProjectDeleteUnsuccessfulUserIsNotTheOwner.asLeft
       }
-      .transact(tx)
 }

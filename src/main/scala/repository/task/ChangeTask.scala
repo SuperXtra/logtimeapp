@@ -13,14 +13,20 @@ import doobie.postgres.sqlstate
 
 class ChangeTask[F[_] : Sync](tx: Transactor[F]) {
 
-  def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: Long, userId: Long): F[Either[TaskUpdateUnsuccessful.type , Unit]] =
+  def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: Long, userId: Long): F[Either[LogTimeAppError, Unit]] =
     (for {
       _ <- TaskQueries.deleteTask(taskDescription, projectId, userId, timestamp).run
       update <- TaskQueries.updateByInsert(toUpdate, timestamp).option
-    } yield update).map {
-      case Some(updateCount) if updateCount > 0 => ().asRight
-//      case None  => TaskUpdateUnsuccessful.asLeft //todo remove
-      case _  => TaskUpdateUnsuccessful.asLeft
-    }
+    } yield update)
       .transact(tx)
+      .attemptSomeSqlState {
+        case sqlstate.class23.UNIQUE_VIOLATION => TaskNameExists
+        case sqlstate.class23.EXCLUSION_VIOLATION => TaskNotCreatedExclusionViolation
+      }.map {
+      case Left(error) => error.asLeft
+      case Right(updateCount) => updateCount match {
+        case None => TaskUpdateUnsuccessful.asLeft
+        case Some(id) => ().asRight
+      }
+    }
 }

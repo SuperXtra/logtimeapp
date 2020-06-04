@@ -16,7 +16,7 @@ class OverallGetStatisticsReportTest extends AnyFlatSpec with Matchers with Give
     Given("user wants to delete task")
     val userStatisticsReport = OverallStatisticsReport(
       23L,
-      23,
+      BigDecimal(23).some,
       None,
       None
     )
