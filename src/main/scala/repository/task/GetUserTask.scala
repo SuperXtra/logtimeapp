@@ -5,7 +5,7 @@ import doobie.Transactor
 import doobie.implicits._
 import repository.query.TaskQueries
 import cats.implicits._
-import errorMessages._
+import error._
 import models.model._
 
 class GetUserTask[F[_] : Sync](tx: Transactor[F]) {

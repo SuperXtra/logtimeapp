@@ -9,17 +9,33 @@ import doobie.implicits._
 import models.model._
 import doobie.implicits.javatime._
 
-
 object TaskQueries {
 
-  def insertUpdate(update: TaskToUpdate, created: LocalDateTime) = {
+  def updateByInsert(update: TaskToUpdate, created: LocalDateTime) = {
     val start = update.startTime
     val end = start.plusMinutes(update.duration)
-    sql"INSERT INTO tb_task (project_id, user_id, create_time, task_description, start_time, end_time, duration, volume, comment) VALUES (${update.projectId}, ${update.userId}, ${created}, ${update.taskDescription}, ${start.toLocalDateTime}, ${end.toLocalDateTime}, ${update.duration}, ${update.volume}, ${update.comment}) RETURNING id".query[Long]
-
+    fr"""INSERT INTO tb_task (
+        project_id,
+        user_id,
+        create_time,
+        task_description,
+        start_time,
+        end_time,
+        duration,
+        volume,
+        comment) VALUES (
+        ${update.projectId},
+        ${update.userId},
+        ${created},
+        ${update.taskDescription},
+        ${start.toLocalDateTime},
+        ${end.toLocalDateTime},
+        ${update.duration},
+        ${update.volume},
+        ${update.comment}
+        ) RETURNING id"""
+      .query[Long]
   }
-
-
 
   def insert(create: LogTaskRequest, projectId: Long, userId: Long, startTime: LocalDateTime) = {
     val start = create.startTime.withZoneSameInstant(ZoneOffset.UTC)
@@ -82,5 +98,4 @@ object TaskQueries {
         WHERE project_id = ${projectId}
         """.update
   }
-
 }

@@ -7,6 +7,7 @@ import doobie.implicits._
 import doobie.util.query.Query0
 import models.model._
 import doobie.implicits.javatime._
+import doobie.util.log.LogHandler
 
 object ProjectQueries {
 
@@ -19,7 +20,6 @@ object ProjectQueries {
            """
       .query[Int]
   }
-
   def changeName(oldName: String, newName: String, userId: Long): Update0 = {
     fr"""
         UPDATE tb_project SET project_name = ${newName}
@@ -28,7 +28,7 @@ object ProjectQueries {
         """.update
   }
 
-  def deleteProject(requestingUserId: Long, projectName: String, deleteTime: LocalDateTime): Update0 = {
+  def deactivate(requestingUserId: Long, projectName: String, deleteTime: LocalDateTime): Update0 = {
     fr"""UPDATE tb_project
            SET delete_time = ${deleteTime}, active = false
            WHERE project_name = $projectName
@@ -37,7 +37,7 @@ object ProjectQueries {
       .update
   }
 
-  def getProjectId(projectName: String): Query0[Long] =
+  def getIdByProjectName(projectName: String): Query0[Long] =
     fr"""SELECT id FROM tb_project
            WHERE project_name = ${projectName}
            """
@@ -59,10 +59,9 @@ object ProjectQueries {
       .query[Boolean]
   }
 
-  def checkIfIsOwner(userId: Int, projectName: String): doobie.Query0[Boolean] = {
+  def checkIfUserIsOwner(userId: Int, projectName: String): doobie.Query0[Boolean] = {
     fr"""
         SELECT EXISTS ( select (id) FROM tb_project WHERE project_name = ${projectName} AND user_id = ${userId} and active = true)
         """.query[Boolean]
   }
-
 }

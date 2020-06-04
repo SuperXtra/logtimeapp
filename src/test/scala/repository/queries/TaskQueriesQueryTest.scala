@@ -1,11 +1,11 @@
 package repository.queries
 
-import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
-
+import java.time._
 import models.request.LogTaskRequest
 import repository.query.{TaskQueries, UserQueries}
 
 class TaskQueriesQueryTest extends QueryTest {
+
   test("User create should check") {
     check(TaskQueries.insert(LogTaskRequest(
       "test name",
@@ -25,15 +25,14 @@ class TaskQueriesQueryTest extends QueryTest {
   }
 
   test("Get user id by user uuid") {
-    check(UserQueries.getUserId("asddadsa"))
+    check(UserQueries.getUserIdByUUID("asddadsa"))
   }
-
 
   test("Insert user with given uuid") {
     check(UserQueries.insertUser("asdkjasklkdjasj"))
   }
 
   test("Select by user id") {
-    check(UserQueries.selectByUserIdentity(1))
+    check(UserQueries.getUserById(1))
   }
 }

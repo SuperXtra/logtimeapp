@@ -2,7 +2,13 @@
 
 ### Environment
 
-// TODO
+// TODO describe environment -> here database set up
+// TODO info about db on heroku
+// TODO add titles to endpoints
+// TODO what port
+//TODO config 
+application.conf
+
 
 ### Running
 
@@ -16,11 +22,11 @@ With service running you can send HTTP requests:
 
 ######User
 ```
-curl --location --request POST 'localhost:8080/user/register'
+curl --location --request POST 'localhost:9000/user/register'
 ```
 
 ```
-curl --location --request POST 'localhost:8080/user/login' \
+curl --location --request POST 'localhost:9000/user/login' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "userUUID": "???"
@@ -29,7 +35,7 @@ curl --location --request POST 'localhost:8080/user/login' \
 
 ######Project
 ```
-curl --location --request POST 'localhost:8080/project' \
+curl --location --request POST 'localhost:9000/project' \
 --header 'Authorization: Bearer ???' \
 --header 'Content-Type: application/json' \
 --data-raw '{
@@ -38,7 +44,7 @@ curl --location --request POST 'localhost:8080/project' \
 ```
 
 ```
-curl --location --request PUT 'localhost:8080/project' \
+curl --location --request PUT 'localhost:9000/project' \
 --header 'Authorization: Bearer ???' \
 --header 'Content-Type: application/json' \
 --data-raw '{
@@ -48,7 +54,7 @@ curl --location --request PUT 'localhost:8080/project' \
 ```
 
 ```
-curl --location --request DELETE 'localhost:8080/project' \
+curl --location --request DELETE 'localhost:9000/project' \
 --header 'Authorization: Bearer ???' \
 --header 'Content-Type: application/json' \
 --data-raw '{
@@ -60,7 +66,7 @@ curl --location --request DELETE 'localhost:8080/project' \
 #####Task
 
 ```
-curl --location --request POST 'localhost:8080/task' \
+curl --location --request POST 'localhost:9000/task' \
 --header 'Authorization: Bearer ???' \
 --header 'Content-Type: application/json' \
 --data-raw '{
@@ -73,7 +79,7 @@ curl --location --request POST 'localhost:8080/task' \
 ```
 
 ```
-curl --location --request PUT 'localhost:8080/task' \
+curl --location --request PUT 'localhost:9000/task' \
 --header 'Authorization: Bearer ???' \
 --header 'Content-Type: application/json' \
 --data-raw '{
@@ -88,7 +94,7 @@ curl --location --request PUT 'localhost:8080/task' \
 
 
 ```
-curl --location --request DELETE 'localhost:8080/task' \
+curl --location --request DELETE 'localhost:9000/task' \
 --header 'Authorization: ???' \
 --header 'Content-Type: application/json' \
 --data-raw '{
@@ -110,3 +116,7 @@ To run integration tests:
 ```
 sbt it:test
 ```
+
+//TODO
+
+![schema](dbSchema.jpg)

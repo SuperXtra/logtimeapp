@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.ContentTypes.`application/json`
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.{Directive1, Route}
 import cats.effect.IO
-import errorMessages.{ProjectNotFound, ReportCouldNotBeGenerated}
+import error.{ProjectNotFound, ReportCouldNotBeGenerated}
 import java.time.{LocalDateTime, ZonedDateTime}
 
 import akka.http.scaladsl.testkit.ScalatestRouteTest
@@ -12,7 +12,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import cats.implicits._
 import io.circe.parser.{parse => json}
 import models.model.{Project, Task}
-import models.responses.{FinalProjectReport, Tasks}
+import models.reports.{FinalProjectReport, Tasks}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import service.auth.Auth
@@ -24,11 +24,10 @@ class ReportRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest
 
   it should "return project report" in new Context {
     val time = LocalDateTime.parse("2020-01-15T04:00:00")
-    val project = Project(1,1,"project", time, None, Some(true))
-    val result = FinalProjectReport(project, Tasks(List(Task(1,1,1, time,"task", time, time, 20,None,None, None,Some(true)))), 40)
+    val project = Project(1, 1, "project", time, None, Some(true))
+    val result = FinalProjectReport(project, Tasks(List(Task(1, 1, 1, time, "task", time, time, 20, None, None, None, Some(true)))), 40)
     val route = Route.seal(ReportRoutes.projectTasksReport((_) => IO(result.asRight)))
-    Get("/report/project?name=project"
-    ) ~> route ~> check {
+    Get("/report/project?name=project") ~> route ~> check {
       response.status shouldBe StatusCodes.OK
       json(response.raw) shouldBe json(
         """
@@ -68,9 +67,8 @@ class ReportRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest
 
   it should "not return project report" in new Context {
 
-    val route = Route.seal(ReportRoutes.projectTasksReport((_) => IO(ReportCouldNotBeGenerated().asLeft)))
-    Get("/report/project?name=project"
-    ) ~> route ~> check {
+    val route = Route.seal(ReportRoutes.projectTasksReport((_) => IO(ReportCouldNotBeGenerated.asLeft)))
+    Get("/report/project?name=project") ~> route ~> check {
       response.status shouldBe StatusCodes.OK
       json(response.raw) shouldBe json(
         """
@@ -81,9 +79,6 @@ class ReportRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest
       )
     }
   }
-
-
-
 
   private trait Context {
 
@@ -102,4 +97,5 @@ class ReportRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest
       override def token(uuid: String): String = "test_token"
     }
   }
+
 }

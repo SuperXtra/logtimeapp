@@ -6,7 +6,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import repository.user.UserExists
 import cats.implicits._
-import errorMessages.AppBusinessError
+import error.LogTimeAppError
 import models.model.User
 import models.request.DeleteTaskRequest
 
@@ -17,16 +17,13 @@ class UserAuthResponseTest extends AnyFlatSpec with Matchers with GivenWhenThen 
     val exists = true
     val userUUID = "dsadas324hdsfjks"
 
-
-    And("a service will check if user exists and return true")
+    And("a service will check if user exists")
     val checkIfUserExists = serviceUnderTest(exists)
-
-
 
     When("checking if user exists")
     val result: Boolean = checkIfUserExists(userUUID).unsafeRunSync()
 
-    Then("returns number of rows updated")
+    Then("returns information that user exists")
     result shouldBe true
   }
 
@@ -35,16 +32,13 @@ class UserAuthResponseTest extends AnyFlatSpec with Matchers with GivenWhenThen 
     val exists = false
     val userUUID = "dsadas324hdsfjks"
 
-
-    And("a service will check if user exists and return false")
+    And("a service will check if user exists")
     val checkIfUserExists = serviceUnderTest(exists)
-
-
 
     When("checking if user exists")
     val result: Boolean = checkIfUserExists(userUUID).unsafeRunSync()
 
-    Then("returns number of rows updated")
+    Then("returns information that user does not exist")
     result shouldBe false
   }
 
@@ -52,13 +46,13 @@ class UserAuthResponseTest extends AnyFlatSpec with Matchers with GivenWhenThen 
 
   private trait Context {
 
-    def serviceUnderTest(userExists: Boolean): UserAuthenticate[IO] = {
+    def serviceUnderTest(userExists: Boolean): AuthenticateUser[IO] = {
 
       val exists = new UserExists[IO](null) {
         override def apply(uuid: String): IO[Boolean] = userExists.pure[IO]
       }
 
-      new UserAuthenticate[IO](exists)
+      new AuthenticateUser[IO](exists)
     }
   }
 

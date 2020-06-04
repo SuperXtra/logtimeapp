@@ -9,7 +9,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import cats.effect._
 import cats.implicits._
-import errorMessages._
+import error._
 import io.circe.parser.{parse => json}
 import models.model.Task
 import org.scalatest.flatspec.AnyFlatSpec
@@ -22,7 +22,8 @@ import scala.concurrent.duration._
 class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
 
   it should "return error project not found" in new Context {
-    val result = ProjectNotFound().asLeft
+
+    val result = ProjectNotFound.asLeft
     val route = Route.seal(TaskRoutes.logTask((_, _) => IO(result)))
     Post("/task",
       HttpEntity(
@@ -114,7 +115,7 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
         `application/json`,
         s"""
            |{
-           |	"oldTaskDescription": "old task description",
+           |	  "oldTaskDescription": "old task description",
            |    "newTaskDescription": "new task description",
            |    "startTime": "2020-03-10T14:00:00+02:00",
            |    "durationTime": 500,
@@ -134,14 +135,14 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
   }
 
   it should "not update task" in new Context {
-    val result = TaskUpdateUnsuccessful().asLeft
+    val result = TaskUpdateUnsuccessful.asLeft
     val route = Route.seal(TaskRoutes.updateTask((_, _) => IO(result)))
     Put("/task",
       HttpEntity(
         `application/json`,
         s"""
            |{
-           |	"oldTaskDescription": "old task description",
+           |	  "oldTaskDescription": "old task description",
            |    "newTaskDescription": "new task description",
            |    "startTime": "2020-03-10T14:00:00+02:00",
            |    "durationTime": 500,
@@ -165,7 +166,7 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
 
   it should "delete task" in new Context {
     val result = 1.asRight
-    val route = Route.seal(TaskRoutes.deleteTask((_, _) => IO(result)))
+    val route = Route.seal(TaskRoutes.deleteTask((_, _, _) => IO(result)))
     Delete("/task",
       HttpEntity(
         `application/json`,
@@ -187,8 +188,8 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
   }
 
   it should "not delete task" in new Context {
-    val result = TaskDeleteUnsuccessful().asLeft
-    val route = Route.seal(TaskRoutes.deleteTask((_, _) => IO(result)))
+    val result = TaskDeleteUnsuccessful.asLeft
+    val route = Route.seal(TaskRoutes.deleteTask((_, _, _) => IO(result)))
     Delete("/task",
       HttpEntity(
         `application/json`,

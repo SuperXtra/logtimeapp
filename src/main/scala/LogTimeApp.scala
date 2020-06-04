@@ -8,8 +8,8 @@ import com.typesafe.config.ConfigFactory
 
 object LogTimeApp extends App with LogTimeService {
 
-  override implicit val system: ActorSystem = ActorSystem("projectAppSystem")
-  override implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+  implicit val system: ActorSystem = ActorSystem("LogTimeSystem")
+  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   val appConfig = ConfigFactory.load("application.conf")
 

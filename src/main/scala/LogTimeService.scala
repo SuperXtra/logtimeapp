@@ -16,10 +16,12 @@ import service.task._
 import service.user._
 import pureconfig._
 import pureconfig.generic.auto._
-import repository.report.{DetailedReport, Report}
+import repository.report.{GetDetailedReport, GetReport}
 import service.auth.Auth
 import com.typesafe.config.ConfigFactory
 import config.{AuthConfig, DatabaseConfig}
+import doobie.util.transactor.Transactor
+
 import scala.concurrent.ExecutionContextExecutor
 
 trait LogTimeService {
@@ -28,57 +30,59 @@ trait LogTimeService {
   val authConfiguration: Config = ConfigFactory.load("auth-configuration.conf")
   val authConfig: AuthConfig = ConfigSource.fromConfig(authConfiguration).loadOrThrow[AuthConfig]
 
-  implicit val system: ActorSystem
-  implicit val executionContext: ExecutionContextExecutor
-
   implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
-  val tx = DatabaseContext.transactor(databaseConfig)
+  val transactor = DatabaseContext.transactor(databaseConfig)
 
-  val deleteProjectR = new DeleteProjectWithTasks[IO](tx)
-  val getExistingUserId = new GetUserId[IO](tx)
-  val insertProject = new CreateProject[IO](tx)
-  val updateProjectName = new UpdateProjectName[IO](tx)
-  val createNewUser = new CreateUser[IO](tx)
-  val userById = new UserById[IO](tx)
-  val deleteProject = new DeleteProjectWithTasks[IO](tx)
-  val getProjectTasks = new GetProjectTasks[IO](tx)
-  val getUserTask = new GetUserTask[IO](tx)
-  val deleteTask = new DeleteTask[IO](tx)
-  val taskInsertUpdate = new UpdateTask[IO](tx)
-  val insertTask = new CreateTask[IO](tx)
-  val getTask = new GetTask[IO](tx)
-  val report = new Report[IO](tx)
-  val userExists = new UserExists[IO](tx)
-  val detailedReport = new DetailedReport[IO](tx)
-  val checkIfIsProjectOwner = new IsProjectOwner[IO](tx)
-  val findProjectByName = new FindProjectByName[IO](tx)
+  val deleteProjectWithTasks = new DeleteProjectWithTasks[IO](transactor)
+  val insertProject = new InsertProject[IO](transactor)
+  val updateProjectName = new UpdateProjectName[IO](transactor)
+  val getProjectTasks = new GetProjectTasks[IO](transactor)
+  val checkIfIsProjectOwner = new IsProjectOwner[IO](transactor)
 
-  val createNewProjectService = new ProjectCreate[IO](getExistingUserId, insertProject)
-  val deactivateProjectService = new ProjectDeactivate[IO](getExistingUserId,deleteProject, findProjectByName, checkIfIsProjectOwner)
-  val updateProjectService = new ProjectUpdate[IO](getExistingUserId, updateProjectName, findProjectByName)
-  val createNewUserService = new UserCreate[IO](userById, createNewUser)
-  val updateTaskService = new TaskUpdate[IO](getExistingUserId, getUserTask,taskInsertUpdate)
-  val logTaskService = new TaskLog[IO](findProjectByName, getExistingUserId, insertTask, getTask)
-  val projectTaskDurationReport = new ProjectReport[IO](findProjectByName, getProjectTasks)
-  val deleteTaskService = new TaskDelete[IO](findProjectByName, getExistingUserId, deleteTask)
-  val projectWithTaskFilter = new ParametrizedReport[IO](report)
-  val authenticateUser = new UserAuthenticate[IO](userExists)
-  val detailReport = new StatisticsReport[IO](detailedReport)
+  val getUserByUUID = new GetUserByUUID[IO](transactor)
+  val createNewUser = new InsertUser[IO](transactor)
+  val getUserById = new GetUserById[IO](transactor)
+  val userExists = new UserExists[IO](transactor)
+
+  val getUserTask = new GetUserTask[IO](transactor)
+  val deleteTask = new DeleteTask[IO](transactor)
+  val taskInsertUpdate = new ChangeTask[IO](transactor)
+  val insertTask = new CreateTask[IO](transactor)
+  val getTask = new GetTask[IO](transactor)
+
+  val getReport = new GetReport[IO](transactor)
+  val getDetailedReport = new GetDetailedReport[IO](transactor)
+  val getProjectByName = new GetProjectByName[IO](transactor)
+
+
+  val createNewProject = new CreateProject[IO](getUserByUUID, insertProject)
+  val deactivateProject = new DeactivateProject[IO](getUserByUUID,deleteProjectWithTasks, getProjectByName, checkIfIsProjectOwner)
+  val updateProject = new UpdateProject[IO](getUserByUUID, updateProjectName)
+
+  val updateTask = new UpdateTask[IO](getUserByUUID, getUserTask,taskInsertUpdate)
+  val logTask = new LogTask[IO](getProjectByName, getUserByUUID, insertTask, getTask)
+  val deleteTaskService = new DeactivateTask[IO](getProjectByName, getUserByUUID, deleteTask)
+
+  val authenticateUser = new AuthenticateUser[IO](userExists)
+  val insertNewUser = new CreateUser[IO](getUserById, createNewUser)
+
+  val projectTaskDurationReport = new GetProjectReport[IO](getProjectByName, getProjectTasks)
+  val detailReport = new GetStatisticsReport[IO](getDetailedReport)
+  val projectWithTaskFilter = new GetParametrizedReport[IO](getReport)
 
   implicit val authentication: Auth = Auth(authConfig)
 
   val routes: Route = concat(
-    TaskRoutes.logTask(logTaskService.apply),
+    TaskRoutes.logTask(logTask.apply),
     TaskRoutes.deleteTask(deleteTaskService.apply),
-    TaskRoutes.updateTask(updateTaskService.apply),
-    UserRoutes.createUser(createNewUserService.apply()),
+    TaskRoutes.updateTask(updateTask.apply),
+    UserRoutes.createUser(insertNewUser.apply),
     UserRoutes.authorizeUser(authenticateUser.apply),
-    ProjectRoutes.createProject(createNewProjectService.apply),
-    ProjectRoutes.updateProject(updateProjectService.apply),
-    ProjectRoutes.deleteProject(deactivateProjectService.apply),
+    ProjectRoutes.createProject(createNewProject.apply),
+    ProjectRoutes.updateProject(updateProject.apply),
+    ProjectRoutes.deleteProject(deactivateProject.apply),
     ReportRoutes.projectTasksReport(projectTaskDurationReport.apply),
     ReportRoutes.mainReport(projectWithTaskFilter.apply),
     ReportRoutes.detailedReport(detailReport.apply)
   )
-
 }

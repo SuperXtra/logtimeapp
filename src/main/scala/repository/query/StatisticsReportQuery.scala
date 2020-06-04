@@ -6,45 +6,38 @@ import models.request._
 import cats.implicits._
 import doobie.implicits.javatime._
 import doobie._
-import models.responses._
+import models.reports._
 import doobie.implicits._
 
 object StatisticsReportQuery {
-
   def apply(request: MainReport) = {
     val projectNamesFilter: Fragment = request.userUUIDs match {
-      case Some(uuids) => uuids match {
-        case ::(_, _) =>
-          fr"AND u.user_identification  IN (" ++
-            uuids.map(x => fr"$x").intercalate(fr",") ++
-            fr")"
-        case Nil => fr""
-      }
       case None => fr""
-    }
+      case Some(Nil) => fr""
+      case Some(uuidList) =>  fr"AND u.user_identification  IN (" ++ uuidList.map(x => fr"$x").intercalate(fr",") ++ fr")"
+      }
 
     val dateRangeFilter: Fragment =
       (request.from, request.to) match {
         case (Some(from), Some(to)) =>
-          fr"""AND t.start_time >= ${LocalDateTime.of(from.year, from.month, 1,0,0,0,0)} AND t.start_time <= ${LocalDateTime.of(to.year, to.month, YearMonth.of(to.year, to.month).lengthOfMonth(), 0, 0, 0, 0)}"""
+          fr"""AND t.start_time >= ${LocalDateTime.of(from.year, from.month, 1,0,0,0,0)} AND t.end_time <= ${LocalDateTime.of(to.year, to.month, YearMonth.of(to.year, to.month).lengthOfMonth(), 0, 0, 0, 0)}"""
         case (Some(from), None) => fr"""AND t.start_time >= ${LocalDateTime.of(from.year, from.month, 1,0,0,0,0)}"""
-        case (None, Some(to)) => fr"""AND t.start_time <= ${LocalDateTime.of(to.year, to.month, YearMonth.of(to.year, to.month).lengthOfMonth(), 0, 0, 0, 0)}"""
+        case (None, Some(to)) => fr"""AND t.end_time <= ${LocalDateTime.of(to.year, to.month, YearMonth.of(to.year, to.month).lengthOfMonth(), 0, 0, 0, 0)}"""
         case (_, _) => fr""
       }
 
-
     (
       fr"""
-        select count(t.id) as total_count,
-  	   cast(avg(duration) as decimal(5,2)) as average_duration,
-	     cast(AVG(cast(volume as decimal(5,2)))as decimal(5,2)) as average_volume,
-	     cast(sum(duration*volume)/sum(volume)as decimal(5,2)) as weighted_average
-      from tb_project p
-      left join tb_task t on t.project_id = p.id
-      inner join tb_user u on u.id = t.user_id
-      where p.active = true
-      and t.active = true""" ++
-          projectNamesFilter ++
+        SELECT COUNT(t.id) AS total_count,
+  	    CAST(AVG(duration) AS decimal(5,2)) as average_duration,
+	      CAST(AVG(CAST(volume AS decimal(5,2)))AS decimal(5,2)) AS average_volume,
+	      CAST(SUM(duration*volume)/SUM(volume)AS decimal(5,2)) AS weighted_average
+        FROM tb_project p
+        LEFT join tb_task t ON t.project_id = p.id
+        INNER JOIN tb_user u ON u.id = t.user_id
+        WHERE p.active = true
+        AND t.active = true""" ++
+        projectNamesFilter ++
         dateRangeFilter
       ).query[OverallStatisticsReport]
   }

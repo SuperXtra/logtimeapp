@@ -1,6 +1,6 @@
 package config
 
-case class DatabaseConfig(
+final case class DatabaseConfig(
                           driver: String,
                           url: String,
                           userName: String,

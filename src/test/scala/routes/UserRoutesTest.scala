@@ -7,10 +7,9 @@ import cats.effect.IO
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import cats.implicits._
-import errorMessages.{AuthenticationNotSuccessful, CannotCreateUserWithGeneratedUUID}
+import error.{AuthenticationNotSuccessful, CannotCreateUserWithGeneratedUUID}
 import io.circe.parser.{parse => json}
 import models.model.User
-import models.responses.AuthResponse
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import service.auth.Auth
@@ -20,7 +19,6 @@ class UserRoutesTest  extends AnyFlatSpec with Matchers with ScalatestRouteTest 
   it should "should create user" in new Context {
 
     val user = User(21, "61a3a602-3797-41c2-8d69-764f762f1484")
-
     val route =
       Route.seal(UserRoutes.createUser(IO(user.asRight)))
     Post("/user/register") ~> route ~> check {
@@ -37,10 +35,8 @@ class UserRoutesTest  extends AnyFlatSpec with Matchers with ScalatestRouteTest 
   }
 
   it should "should not create user due to uuid conflict" in new Context {
-
-
     val route =
-      Route.seal(UserRoutes.createUser(IO(CannotCreateUserWithGeneratedUUID().asLeft)))
+      Route.seal(UserRoutes.createUser(IO(CannotCreateUserWithGeneratedUUID.asLeft)))
     Post("/user/register") ~> route ~> check {
       response.status shouldBe StatusCodes.OK
       json(response.raw) shouldBe json(
@@ -53,10 +49,7 @@ class UserRoutesTest  extends AnyFlatSpec with Matchers with ScalatestRouteTest 
     }
   }
 
-
   it should "should authenticate user" in new Context {
-
-
     val route =
       Route.seal(UserRoutes.authorizeUser(_ => IO(true)))
     Post("/user/login",
@@ -71,17 +64,15 @@ class UserRoutesTest  extends AnyFlatSpec with Matchers with ScalatestRouteTest 
       response.status shouldBe StatusCodes.OK
       json(response.raw) shouldBe json(
         s"""
-      {
-          "token" : "test_token"
-      }
+            {
+                "token" : "test_token"
+            }
         """
       )
     }
   }
 
-
   it should "should not authenticate user" in new Context {
-
 
     val route =
       Route.seal(UserRoutes.authorizeUser(_ => IO(false)))
@@ -100,7 +91,7 @@ class UserRoutesTest  extends AnyFlatSpec with Matchers with ScalatestRouteTest 
                 {
                   "error" : "error.authentication.not.successful"
                 }
-        """
+               """
       )
     }
   }

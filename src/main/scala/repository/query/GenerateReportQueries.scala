@@ -6,11 +6,10 @@ import models.request.ReportBodyWithParamsRequest
 import cats.implicits._
 import doobie.implicits.javatime._
 import doobie._
-import models.responses.ReportFromDb
+import models.reports.ReportFromDb
 import doobie.implicits._
 
 object GenerateReportQueries {
-  implicit val han = LogHandler.jdkLogHandler
 
   def apply(projectQuery: ReportBodyWithParamsRequest): doobie.Query0[ReportFromDb] = {
 
@@ -32,22 +31,17 @@ object GenerateReportQueries {
           """
 
     val projectNamesFilter: Fragment = projectQuery.params.ids match {
-      case Some(projects) => projects match {
-        case ::(_, _) =>
-          fr"AND p.project_name IN (" ++
-            projects.map(x => fr"$x").intercalate(fr",") ++
-            fr")"
-        case Nil => fr""
-      }
       case None => fr""
+      case Some(Nil) => fr""
+      case Some(projects) =>  fr"AND p.project_name IN (" ++
+                              projects.map(x => fr"$x").intercalate(fr",") ++
+                              fr")"
     }
-
 
     val dateRangeFilter: Fragment =
 
       (projectQuery.params.since, projectQuery.params.upTo) match {
-        case (Some(from), Some(to)) =>
-          fr"""AND p.create_time BETWEEN TO_TIMESTAMP(${from.toLocalDateTime.toString}, 'YYYY-MM-DDTHH:xx:ss') AND TO_TIMESTAMP(${to.toLocalDateTime.toString}, 'YYYY-MM-DDTHH:xx:ss')"""
+        case (Some(from), Some(to)) => fr"""AND p.create_time BETWEEN TO_TIMESTAMP(${from.toLocalDateTime.toString}, 'YYYY-MM-DDTHH:xx:ss') AND TO_TIMESTAMP(${to.toLocalDateTime.toString}, 'YYYY-MM-DDTHH:xx:ss')"""
         case (Some(from), None) => fr"""AND p.create_time BETWEEN TO_TIMESTAMP(${from.toLocalDateTime}, 'YYYY-MM-DDTHH:xx:ss') AND TO_TIMESTAMP('2100-01-01 00:00:00', 'YYYY-MM-DDTHH:xx:ss')"""
         case (None, Some(to)) => fr"""AND p.create_time BETWEEN TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DDTHH:xx:ss') AND TO_TIMESTAMP(${to.toLocalDateTime}, 'YYYY-MM-DDTHH:xx:ss')"""
         case (_, _) => fr""
@@ -70,23 +64,15 @@ object GenerateReportQueries {
       case None => fr""
     }
 
-    val sortingSelect: Fragment = projectQuery.pathParams.projectSort match {
-      case Some(value) => value match {
-        case ByCreatedTime => fr" ORDER BY p.create_time ${order}, t.create_time ${order}"
-        case ByUpdateTime => fr" ORDER BY COALESCE(t.create_time, p.create_time) ${order}"
-      }
-      case None => fr""
-    }
+    val sortingSelect: Fragment = projectQuery.pathParams.projectSort.map {
+      case ByCreatedTime => fr" ORDER BY p.create_time ${order}, t.create_time ${order}"
+      case ByUpdateTime => fr" ORDER BY COALESCE(t.create_time, p.create_time) ${order}"
+      }.getOrElse(fr"")
 
-
-
-    val isActiveFilter = projectQuery.pathParams.active match {
-      case Some(value) => value match {
+    val isActiveFilter = projectQuery.pathParams.active.map{
         case true => fr"AND COALESCE(t.active , true) = true"
         case false => fr"AND COALESCE(t.active , false) = false"
-      }
-      case None => fr""
-    }
+      }.getOrElse(fr"")
 
     val paginationFilter = {
       val offset = ((projectQuery.pathParams.page -1 ) * projectQuery.pathParams.quantity).toLong
@@ -96,7 +82,6 @@ object GenerateReportQueries {
        """
     }
 
-
     val reportQuery =
       fr"""
         WITH projects_page AS(
@@ -104,7 +89,7 @@ object GenerateReportQueries {
         FROM tb_project p
         LEFT JOIN tb_task t ON t.project_id = p.id
         WHERE 1 = 1
-    """ ++
+        """ ++
         projectNamesFilter ++
         isActiveFilter ++
         dateRangeFilter ++
@@ -115,7 +100,6 @@ object GenerateReportQueries {
         selectAllFromCTE ++
         isActiveFilter ++
         sortingSelect
-
 
     reportQuery.query[ReportFromDb]
   }

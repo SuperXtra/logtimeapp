@@ -14,7 +14,6 @@ case class UpdateTaskRequest(oldTaskDescription: String,
                              comment: Option[String]
                             )
 
-
 case class LogTaskRequest(
                            projectName: String,
                            taskDescription: String,

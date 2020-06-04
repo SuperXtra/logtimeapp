@@ -8,12 +8,13 @@ import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
 import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
+import error.CannotCreateUserWithGeneratedUUID
 import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.CreateProject
-import repository.user.CreateUser
+import repository.project.InsertProject
+import repository.user.InsertUser
 
 class GetTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
 
@@ -22,7 +23,7 @@ class GetTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAll
   it should "fetch task" in new Context {
 
     Given("existing user")
-    val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().get
+    val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().right.get
 
     And("existing project")
     val projectName = "test_project"
@@ -32,15 +33,12 @@ class GetTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAll
     val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), 50, None, None)
     val task1 = insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
-
     When("fetching task")
     val result = getTask(task1.right.get).unsafeRunSync().get.taskDescription
-
 
     Then("it should return task with correct description")
     result shouldBe "test description 1"
   }
-
 
   private trait Context {
 
@@ -54,15 +52,17 @@ class GetTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAll
     )
 
     val getTask = new GetTask[IO](tx)
-    val insertProject = new CreateProject[IO](tx)
-    val createUser = new CreateUser[IO](tx)
+    val insertProject = new InsertProject[IO](tx)
+    val createUser = new InsertUser[IO](tx)
     val insertTask = new CreateTask[IO](tx)
 
     import doobie.implicits._
 
-    sql"DELETE from tb_project".update.run.transact(tx).unsafeRunSync()
-    sql"DELETE from tb_user".update.run.transact(tx).unsafeRunSync()
-    sql"DELETE from tb_task".update.run.transact(tx).unsafeRunSync()
+    (for {
+      _ <- sql"DELETE from tb_project".update.run
+      _ <- sql"DELETE from tb_user".update.run
+      _ <- sql"DELETE from tb_task".update.run
+    } yield ()).transact(tx).unsafeRunSync()
   }
 
   override def beforeEach(): Unit = {

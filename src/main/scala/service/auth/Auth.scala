@@ -6,10 +6,10 @@ import cats.implicits._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives.{complete, optionalHeaderValueByName, provide}
-import authentikat.jwt.{JsonWebToken, JwtClaimsSet, JwtHeader}
+import authentikat.jwt.{JsonWebToken, JwtClaimsSet, JwtClaimsSetJValue, JwtHeader}
 import com.typesafe.config.ConfigFactory
 import config.AuthConfig
-import errorMessages.{AppErrorResponse, AuthenticationNotSuccessful, AuthenticationNotSuccessfulWithoutBearer, RouteErrorMsg}
+import error.{AuthenticationNotSuccessful, AuthenticationNotSuccessfulWithoutBearer, ErrorResponse, MapToErrorResponse}
 import pureconfig.ConfigSource
 import pureconfig._
 import pureconfig.generic.auto._
@@ -29,19 +29,21 @@ object Auth {
     private val header = JwtHeader(authConfig.algorithm)
     private val tokenExpiryPeriodInMinutes = authConfig.tokenExpiryPeriodInMinutes
 
+
+
     override def apply: Directive1[Map[String, Any]] = {
         optionalHeaderValueByName("Authorization").flatMap {
           case Some(token) =>
             val arrayFromToken = token.split(" ")
             arrayFromToken.length match {
-              case 2 => arrayFromToken(1) match {
-                case token if isTokenExpired(token) => complete(RouteErrorMsg.auth(AuthenticationNotSuccessful()))
+              case 2 => arrayFromToken(1) match {  // 2 represents length of an array with Bearer prefix
+                case token if isTokenExpired(token) => complete(MapToErrorResponse.auth(AuthenticationNotSuccessful ))
                 case token if JsonWebToken.validate(token, secretKey) => provide(getClaims(token))
-                case _ => complete(RouteErrorMsg.auth(AuthenticationNotSuccessful()))
+                case _ => complete(MapToErrorResponse.auth(AuthenticationNotSuccessful ))
               }
-              case _ => complete(RouteErrorMsg.auth(AuthenticationNotSuccessfulWithoutBearer()))
+              case _ => complete(MapToErrorResponse.auth(AuthenticationNotSuccessfulWithoutBearer ))
             }
-          case None => complete(RouteErrorMsg.auth(AuthenticationNotSuccessful()))
+          case None => complete(MapToErrorResponse.auth(AuthenticationNotSuccessful ))
         }
     }
 
@@ -55,14 +57,12 @@ object Auth {
       JsonWebToken(header, claims, secretKey)
     }
 
-
-
     private def isTokenExpired(jwt: String): Boolean =
       getClaims(jwt).get("expiredAt").exists(_.toLong < System.currentTimeMillis())
 
     private def getClaims(jwt: String): Map[String, String] =
       JsonWebToken.unapply(jwt) match {
-        case Some(value) => value._2.asSimpleMap.getOrElse(Map.empty[String, String])
+        case Some((_, jwtClaimsSetJValue, _)) => jwtClaimsSetJValue.asSimpleMap.getOrElse(Map.empty[String, String])
         case None => Map.empty[String, String]
 
       }

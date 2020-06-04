@@ -1,7 +1,6 @@
 package routes
 
 import java.time.LocalDateTime
-
 import akka.http.scaladsl.model.ContentTypes.`application/json`
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.{Directive1, Route}
@@ -9,7 +8,7 @@ import cats.effect.IO
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import cats.implicits._
-import errorMessages.{ProjectDeleteUnsuccessfulUserIsNotTheOwner, ProjectNotCreated, ProjectUpdateUnsuccessful}
+import error.{ProjectDeleteUnsuccessfulUserIsNotTheOwner, ProjectNotCreated, ProjectUpdateUnsuccessful}
 import io.circe.parser.{parse => json}
 import models.model.Project
 import org.scalatest.flatspec.AnyFlatSpec
@@ -27,7 +26,7 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
         `application/json`,
         s"""
            |{
-           |"projectName": "test create project"
+           |  "projectName": "test create project"
            |}
            |""".stripMargin
       )
@@ -44,13 +43,13 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
   it should "return return error message that project creation was unsuccessful - duplicate name" in new Context {
 
     val route =
-      Route.seal(ProjectRoutes.createProject((_, _) => IO(ProjectNotCreated().asLeft)))
+      Route.seal(ProjectRoutes.createProject((_, _) => IO(ProjectNotCreated.asLeft)))
     Post("/project",
       HttpEntity(
         `application/json`,
         s"""
            |{
-           |"projectName": "test create project"
+           |  "projectName": "test create project"
            |}
            |""".stripMargin
       )
@@ -68,18 +67,18 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
 
   it should "update project name and return updated one" in new Context {
 
-    val project = Project(1,1,"new test project name", LocalDateTime.parse("2020-06-03T13:18:38.01865"), None, Some(true))
+    val project = Project(1, 1, "new test project name", LocalDateTime.parse("2020-06-03T13:18:38.01865"), None, Some(true))
 
 
     val route =
-      Route.seal(ProjectRoutes.updateProject((_, _) => IO(project.asRight)))
+      Route.seal(ProjectRoutes.updateProject((_, _, _) => IO(().asRight)))
     Put("/project",
       HttpEntity(
         `application/json`,
         s"""
            |{
-           |"oldProjectName": "test project name",
-           |"projectName": "new test project name"
+           |  "oldProjectName": "test project name",
+           |  "projectName": "new test project name"
            |}
            |""".stripMargin
       )
@@ -87,14 +86,7 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
       response.status shouldBe StatusCodes.OK
       json(response.raw) shouldBe json(
         s"""
-         {
-            "id" : 1,
-            "userId" : 1,
-            "projectName" : "new test project name",
-            "createTime" : "2020-06-03T13:18:38.01865",
-            "deleteTime" : null,
-            "active" : true
-        }
+         {}
         """
       )
     }
@@ -103,14 +95,14 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
   it should "not update project name and return proper error message" in new Context {
 
     val route =
-      Route.seal(ProjectRoutes.updateProject((_, _) => IO(ProjectUpdateUnsuccessful().asLeft)))
+      Route.seal(ProjectRoutes.updateProject((_, _, _) => IO(ProjectUpdateUnsuccessful.asLeft)))
     Put("/project",
       HttpEntity(
         `application/json`,
         s"""
            |{
-           |"oldProjectName": "test project name",
-           |"projectName": "new test project name"
+           |  "oldProjectName": "test project name",
+           |  "projectName": "new test project name"
            |}
            |""".stripMargin
       )
@@ -135,7 +127,7 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
         `application/json`,
         s"""
            |{
-           |"projectName": "test delete project"
+           |  "projectName": "test delete project"
            |}
            |""".stripMargin
       )
@@ -152,13 +144,13 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
   it should "not delete project and return corresponding error information" in new Context {
 
     val route =
-      Route.seal(ProjectRoutes.deleteProject((_, _) => IO(ProjectDeleteUnsuccessfulUserIsNotTheOwner().asLeft)))
+      Route.seal(ProjectRoutes.deleteProject((_, _) => IO(ProjectDeleteUnsuccessfulUserIsNotTheOwner.asLeft)))
     Delete("/project",
       HttpEntity(
         `application/json`,
         s"""
            |{
-           |"projectName": "test delete project"
+           |  "projectName": "test delete project"
            |}
            |""".stripMargin
       )
@@ -173,8 +165,6 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
       )
     }
   }
-
-
 
   private trait Context {
 

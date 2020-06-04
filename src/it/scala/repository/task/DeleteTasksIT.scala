@@ -12,17 +12,17 @@ import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.CreateProject
-import repository.user.CreateUser
+import repository.project.InsertProject
+import repository.user.InsertUser
 
 class DeleteTasksIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
 
   override val container = new PostgreSQLContainer()
 
-  it should "delete task" in new Context {
+  it should "delete tasks" in new Context {
 
     Given("existing user")
-    val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().get
+    val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().right.get
 
     And("existing project")
     val projectName = "test_project"
@@ -34,18 +34,16 @@ class DeleteTasksIT extends AnyFlatSpec with Matchers with GivenWhenThen with Fo
     val task1 = insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
     val task2 = insertTask(req2,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
-
-    And("delete inserted task")
+    When("deleting inserted tasks")
     deleteTasks(projectId.right.get, LocalDateTime.now()).unsafeRunSync()
 
-    When("fetching information about deleted task")
+    And("fetching information about deleted tasks")
     val result = getTask(task1.right.get).unsafeRunSync().get.active
     val result2 = getTask(task2.right.get).unsafeRunSync().get.active
 
-    Then("it should return true")
+    Then("it should return both tasks are inactive")
     result shouldBe Some(false)
     result2 shouldBe Some(false)
-
   }
 
   private trait Context {
@@ -60,16 +58,18 @@ class DeleteTasksIT extends AnyFlatSpec with Matchers with GivenWhenThen with Fo
     )
 
     val getTask = new GetTask[IO](tx)
-    val insertProject = new CreateProject[IO](tx)
-    val createUser = new CreateUser[IO](tx)
+    val insertProject = new InsertProject[IO](tx)
+    val createUser = new InsertUser[IO](tx)
     val insertTask = new CreateTask[IO](tx)
     val deleteTasks = new DeleteTasks[IO](tx)
 
     import doobie.implicits._
 
-    sql"DELETE from tb_project".update.run.transact(tx).unsafeRunSync()
-    sql"DELETE from tb_user".update.run.transact(tx).unsafeRunSync()
-    sql"DELETE from tb_task".update.run.transact(tx).unsafeRunSync()
+    (for {
+      _ <- sql"DELETE from tb_project".update.run
+      _ <- sql"DELETE from tb_user".update.run
+      _ <- sql"DELETE from tb_task".update.run
+    } yield ()).transact(tx).unsafeRunSync()
   }
 
   override def beforeEach(): Unit = {

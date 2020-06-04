@@ -11,7 +11,7 @@ import pureconfig.ConfigSource
 import pureconfig._
 import pureconfig.generic.auto._
 
-abstract class QueryTest extends AnyFunSuite with Matchers with doobie.scalatest.IOChecker {
+trait QueryTest extends AnyFunSuite with Matchers with doobie.scalatest.IOChecker {
 
   val config = ConfigFactory.load("database-configuration.conf")
   val databaseConfig = ConfigSource.fromConfig(config).loadOrThrow[DatabaseConfig]

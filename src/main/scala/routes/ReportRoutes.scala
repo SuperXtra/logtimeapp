@@ -1,28 +1,22 @@
 package routes
 
-import java.time.ZonedDateTime
-
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.ParameterDirectives
 import cats.effect.IO
-import errorMessages.{AppBusinessError, RouteErrorMsg}
+import error.{LogTimeAppError, MapToErrorResponse}
 import models.request.{MainReport, ReportBodyWithParamsRequest, ReportParams, ReportRequest}
-import models.responses.{FinalParametrizedReport, FinalProjectReport, ReportFromDb, ReportTask, OverallStatisticsReport}
+import models.reports._
 import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import cats.implicits._
-import akka.http.scaladsl.model.{HttpEntity, StatusCodes}
-import io.circe.Printer
 import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending, ProjectSort, SortDirection}
-import models.responses
+import models.reports
 import service.auth.Auth
 
 object ReportRoutes {
 
-  val printer = Printer.noSpaces.copy(dropNullValues = true)
-
-  def projectTasksReport(req: String => IO[Either[AppBusinessError, FinalProjectReport]])
+  def projectTasksReport(req: String => IO[Either[LogTimeAppError, FinalProjectReport]])
                         (implicit auth: Auth): Route =
     pathPrefix("report" / "project") {
       parameter("name") { projectName =>
@@ -30,7 +24,7 @@ object ReportRoutes {
           auth.apply { _ =>
             complete(
               req(projectName)
-                .map(_.leftMap(RouteErrorMsg.report))
+                .map(_.leftMap(MapToErrorResponse.report))
                 .unsafeToFuture
             )
           }
@@ -38,7 +32,7 @@ object ReportRoutes {
       }
     }
 
-  def detailedReport(req: MainReport => IO[Either[AppBusinessError, OverallStatisticsReport]])
+  def detailedReport(req: MainReport => IO[Either[LogTimeAppError, OverallStatisticsReport]])
                     (implicit auth: Auth) =
     pathPrefix("report" / "users") {
       get {
@@ -46,7 +40,7 @@ object ReportRoutes {
           entity(as[MainReport]) { request =>
             complete(
               req(request)
-                .map(_.leftMap(RouteErrorMsg.report))
+                .map(_.leftMap(MapToErrorResponse.report))
                 .unsafeToFuture
             )
           }
@@ -55,7 +49,7 @@ object ReportRoutes {
     }
 
 
-  def mainReport(req: ReportBodyWithParamsRequest => IO[Either[AppBusinessError, Seq[responses.FinalParametrizedReport]]])
+  def mainReport(req: ReportBodyWithParamsRequest => IO[Either[LogTimeAppError, Seq[reports.FinalParametrizedReport]]])
                 (implicit auth: Auth): Route =
     pathPrefix("report" / "detail") {
     parameters(
@@ -70,7 +64,7 @@ object ReportRoutes {
           entity(as[ReportRequest]) { request: ReportRequest =>
             complete(
               req(ReportBodyWithParamsRequest(request, pathParams))
-                .map(_.leftMap(RouteErrorMsg.report))
+                .map(_.leftMap(MapToErrorResponse.report))
                 .unsafeToFuture
             )
           }

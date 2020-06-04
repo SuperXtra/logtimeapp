@@ -8,13 +8,13 @@ import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
 import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
-import errorMessages.{AppBusinessError, ProjectDeleteUnsuccessfulUserIsNotTheOwner}
+import error.{LogTimeAppError, ProjectDeleteUnsuccessfulUserIsNotTheOwner}
 import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.{IsProjectOwner, CreateProject}
-import repository.user.CreateUser
+import repository.project.{IsProjectOwner, InsertProject}
+import repository.user.InsertUser
 
 class DeleteTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
 
@@ -23,7 +23,7 @@ class DeleteTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
   it should "delete task" in new Context {
 
     Given("existing user")
-    val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().get
+    val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().right.get
 
     And("existing project")
     val projectName = "test_project"
@@ -33,16 +33,14 @@ class DeleteTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
     val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), 50, None, None)
     val task = insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
-
-    And("delete inserted task")
+    When("deleting inserted task")
     deleteTask("test description 1", projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
-    When("fetching information about deleted task")
-    val result = getTask(task.right.get).unsafeRunSync().get.active
+    And("fetching information about deleted task")
+    val result: Option[Boolean] = getTask(task.right.get).unsafeRunSync().get.active
 
-    Then("it should return true")
+    Then("it should return that task is inactive")
     result shouldBe Some(false)
-
   }
 
   private trait Context {
@@ -57,16 +55,18 @@ class DeleteTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
     )
 
     val getTask = new GetTask[IO](tx)
-    val insertProject = new CreateProject[IO](tx)
-    val createUser = new CreateUser[IO](tx)
+    val insertProject = new InsertProject[IO](tx)
+    val createUser = new InsertUser[IO](tx)
     val insertTask = new CreateTask[IO](tx)
     val deleteTask = new DeleteTask[IO](tx)
 
     import doobie.implicits._
 
-    sql"DELETE from tb_project".update.run.transact(tx).unsafeRunSync()
-    sql"DELETE from tb_user".update.run.transact(tx).unsafeRunSync()
-    sql"DELETE from tb_task".update.run.transact(tx).unsafeRunSync()
+    (for {
+      _ <- sql"DELETE from tb_project".update.run
+      _ <- sql"DELETE from tb_user".update.run
+      _ <- sql"DELETE from tb_task".update.run
+    } yield ()).transact(tx).unsafeRunSync()
   }
 
   override def beforeEach(): Unit = {

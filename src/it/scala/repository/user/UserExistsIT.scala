@@ -19,9 +19,8 @@ class UserExistsIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
   it should "find existing user" in new Context {
 
     Given("existing user")
-    val uuid =  UUID.randomUUID().toString
-    val userId = createUser(uuid).unsafeRunSync().get
-
+    val uuid = UUID.randomUUID().toString
+    createUser(uuid).unsafeRunSync().right.get
 
     And("a data access function able of determining whether user exists or not")
     val exists = new UserExists[IO](tx)
@@ -29,14 +28,14 @@ class UserExistsIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
     When("checking whether uuid exists")
     val result = exists(uuid).unsafeRunSync
 
-    Then("it should return existing project")
+    Then("it should return that user exists")
     result shouldBe true
   }
 
   it should "not find existing user" in new Context {
 
     Given("not existing user uuid")
-    val uuid =  UUID.randomUUID().toString
+    val uuid = UUID.randomUUID().toString
 
 
     And("a data access function able of determining whether user exists or not")
@@ -45,12 +44,9 @@ class UserExistsIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
     When("checking whether uuid exists")
     val result = exists(uuid).unsafeRunSync
 
-    Then("it should return existing project")
+    Then("it should return that user does not exist")
     result shouldBe false
   }
-
-
-
 
   private trait Context {
 
@@ -63,12 +59,15 @@ class UserExistsIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
       container.password
     )
 
-    val createUser = new CreateUser[IO](tx)
+    val createUser = new InsertUser[IO](tx)
 
     import doobie.implicits._
-    sql"DELETE from tb_project".update.run.transact(tx).unsafeRunSync()
-    sql"DELETE from tb_user".update.run.transact(tx).unsafeRunSync()
-    sql"DELETE from tb_task".update.run.transact(tx).unsafeRunSync()
+
+    (for {
+      _ <- sql"DELETE from tb_project".update.run
+      _ <- sql"DELETE from tb_user".update.run
+      _ <- sql"DELETE from tb_task".update.run
+    } yield ()).transact(tx).unsafeRunSync()
   }
 
   override def beforeEach(): Unit = {

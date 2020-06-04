@@ -11,22 +11,22 @@ import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import cats.implicits._
 import service.auth.Auth
-import errorMessages._
+import error._
 
 
 object ProjectRoutes {
 
   val projectPath = "project"
 
-  def createProject(req: (CreateProjectRequest, String) => IO[Either[AppBusinessError, Int]])
+  def createProject(req: (String, String) => IO[Either[LogTimeAppError, Int]])
                    (implicit auth: Auth): Route =
     path(projectPath) {
       post {
         auth.apply { tokenClaims =>
           entity(as[CreateProjectRequest]) { project =>
             complete(
-              req(project, tokenClaims("uuid").toString)
-                .map(_.leftMap(RouteErrorMsg.project))
+              req(project.projectName, tokenClaims("uuid").toString)
+                .map(_.leftMap(MapToErrorResponse.project))
                 .unsafeToFuture
             )
           }
@@ -35,32 +35,31 @@ object ProjectRoutes {
     }
 
 
-  def updateProject(req: (ChangeProjectNameRequest, String) => IO[Either[AppBusinessError, Project]])
+  def updateProject(req: (String, String, String) => IO[Either[LogTimeAppError, Unit]])
                    (implicit auth: Auth): Route =
     path(projectPath) {
       put {
         auth.apply { tokenClaims =>
           entity(as[ChangeProjectNameRequest]) { project =>
             complete(
-              req(project, tokenClaims("uuid").toString)
-                .map(_.leftMap(RouteErrorMsg.project))
+              req(project.oldProjectName, project.projectName, tokenClaims("uuid").toString)
+                .map(_.leftMap(MapToErrorResponse.project))
                 .unsafeToFuture
             )
-
           }
         }
       }
     }
 
-  def deleteProject(req: (DeleteProjectRequest, String) => IO[Either[AppBusinessError, Unit]])
+  def deleteProject(req: (String, String) => IO[Either[LogTimeAppError, Unit]])
                    (implicit auth: Auth): Route =
     path(projectPath) {
       delete {
         auth.apply { tokenClaims =>
           entity(as[DeleteProjectRequest]) { project =>
             complete(
-              req(project, tokenClaims("uuid").toString)
-                .map(_.leftMap(RouteErrorMsg.project))
+              req(project.projectName, tokenClaims("uuid").toString)
+                .map(_.leftMap(MapToErrorResponse.project))
                 .unsafeToFuture
             )
           }
