@@ -116,6 +116,39 @@ curl --location --request DELETE 'localhost:9000/task' \
 	"projectName": "sample project name to update"
 }'
 ```
+###### genreating project report
+```
+curl --location --request GET 'localhost:9000/report/project?name=sample%20project%20name' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiMTQ4N2FmMjktNjE0OS00YjY2LWIxYWUtNzIwN2Q1ZDBkMzBmIiwiZXhwaXJlZEF0IjoxNTkxMjkzNzU0MzU1fQ.2dSak_uJTKTjmDlclW-JWwZZgvECsNw28ghpJctbxA4'
+```
+###### genreating parametrized report
+```
+curl --location --request GET 'localhost:9000/report/detail?active=true&sort=desc&by=update&page=1&quantity=60' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiMTQ4N2FmMjktNjE0OS00YjY2LWIxYWUtNzIwN2Q1ZDBkMzBmIiwiZXhwaXJlZEF0IjoxNTkxMjkzNzU0MzU1fQ.2dSak_uJTKTjmDlclW-JWwZZgvECsNw28ghpJctbxA4' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+					 "ids": ["sample project 3"],
+                     "since":"2020-01-25T14:00:00+02:00[Europe/Warsaw]",
+                     "upTo": "2020-08-25T14:00:00+02:00[Europe/Warsaw]"
+}     
+```
+###### genreating parametrized report
+```
+curl --location --request GET 'localhost:9000/report/users' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiMTQ4N2FmMjktNjE0OS00YjY2LWIxYWUtNzIwN2Q1ZDBkMzBmIiwiZXhwaXJlZEF0IjoxNTkxMjkzNzU0MzU1fQ.2dSak_uJTKTjmDlclW-JWwZZgvECsNw28ghpJctbxA4' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"userUUIDs": ["4d03c6e0-1741-45e7-ae2f-ae8d42b1f512"],
+	"from": {
+		"year": 2020,
+		"month": 3
+	},
+	"to": {
+		"year": 2020,
+		"month": 3
+	}
+}'
+```
 ### Testing
 
 To run unit/router tests:
