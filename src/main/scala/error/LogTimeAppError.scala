@@ -1,0 +1,31 @@
+package error
+
+sealed trait LogTimeAppError
+
+//Project
+case object ProjectUpdateUnsuccessful extends LogTimeAppError
+case object ProjectDeleteUnsuccessful extends LogTimeAppError
+case object ProjectNameExists extends LogTimeAppError
+case object ProjectNotCreated extends LogTimeAppError
+case object ProjectNotFound extends LogTimeAppError
+case object ProjectDeleteUnsuccessfulUserIsNotTheOwner extends LogTimeAppError
+
+//Task
+case object TaskNotCreated extends LogTimeAppError
+case object TaskNotFound extends LogTimeAppError
+case object TaskNameExists extends LogTimeAppError
+case object TaskUpdateUnsuccessful extends LogTimeAppError
+case object TaskDeleteUnsuccessful extends LogTimeAppError
+case object TaskNotCreatedExclusionViolation extends LogTimeAppError
+
+
+//User
+case object UserNotFound extends LogTimeAppError
+case object CannotCreateUserWithGeneratedUUID extends LogTimeAppError
+
+//Report
+case object ReportCouldNotBeGenerated extends LogTimeAppError
+
+//Authentication
+case object AuthenticationNotSuccessful extends LogTimeAppError
+case object AuthenticationNotSuccessfulWithoutBearer extends LogTimeAppError
