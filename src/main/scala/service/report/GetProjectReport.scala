@@ -4,6 +4,7 @@ import cats.data.EitherT
 import cats.effect.{IO, Sync}
 import models.reports.{FinalProjectReport, Tasks}
 import error._
+import models.{ProjectId, WorkedTime}
 import models.model.{Project, Task}
 import repository.project.GetProjectByName
 import repository.task.GetProjectTasks
@@ -18,8 +19,8 @@ class GetProjectReport[F[+_] : Sync](
       project <- findProjectById(projectName)
       projectTasks <- fetchTasksForProject(project.id)
     } yield {
-      val totalDuration = projectTasks.map(_.duration).sum
-      FinalProjectReport(project, Tasks(projectTasks), totalDuration)
+      val totalDuration = projectTasks.map(_.duration.value).sum
+      FinalProjectReport(project, Tasks(projectTasks), WorkedTime(totalDuration))
     }).value
 
 
@@ -27,7 +28,7 @@ class GetProjectReport[F[+_] : Sync](
     EitherT.fromOptionF(findProject(projectName), ProjectNotFound)
   }
 
-  private def fetchTasksForProject(id: Int): EitherT[F, LogTimeAppError, List[Task]] = {
-    EitherT(tasks(id))
+  private def fetchTasksForProject(projectId: ProjectId): EitherT[F, LogTimeAppError, List[Task]] = {
+    EitherT(tasks(projectId))
   }
 }

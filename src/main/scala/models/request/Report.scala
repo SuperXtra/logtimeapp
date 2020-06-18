@@ -2,6 +2,7 @@ package models.request
 
 import java.time.ZonedDateTime
 
+import models.{Active, Month, Page, Quantity, Year}
 import models.model.{Ascending, ByCreatedTime, ProjectSort, SortDirection}
 
 case class ReportBodyWithParamsRequest(
@@ -16,11 +17,11 @@ case class ReportRequest(
                         )
 
 case class ReportParams(
-                         active: Option[Boolean],
+                         active: Option[Active],
                          projectSort: Option[ProjectSort],
                          sortDirection: Option[SortDirection],
-                         page: Int = 1,
-                         quantity: Int = 20
+                         page: Page,
+                         quantity: Quantity
                        )
 
 case class MainReport(
@@ -30,6 +31,6 @@ case class MainReport(
                      )
 
 case class DateFilter(
-                     year: Int,
-                     month: Int
+                       year: Year,
+                       month: Month
                      )

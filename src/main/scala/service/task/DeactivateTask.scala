@@ -6,6 +6,7 @@ import cats.data.EitherT
 import cats.effect._
 import models.request.DeleteTaskRequest
 import error._
+import models.{DeleteCount, ProjectId, UserId}
 import models.model.Project
 import repository.project.GetProjectByName
 import repository.task.DeleteTask
@@ -17,7 +18,7 @@ class DeactivateTask[F[+_] : Sync](
                                 delete: DeleteTask[F]) {
 
 
-  def apply(taskDescription: String, projectName: String, uuid: String): F[Either[LogTimeAppError, Int]] = (for {
+  def apply(taskDescription: String, projectName: String, uuid: String): F[Either[LogTimeAppError, DeleteCount]] = (for {
     project <- findProjectById(projectName)
     userId <- getExistingUserId(uuid)
     updatedCount <- deleteTask(taskDescription, project.id, userId)
@@ -28,9 +29,9 @@ class DeactivateTask[F[+_] : Sync](
     EitherT.fromOptionF(getProjectId(projectName), ProjectNotFound)
   }
 
-  private def getExistingUserId(uuid: String): EitherT[F, LogTimeAppError, Int] =
+  private def getExistingUserId(uuid: String): EitherT[F, UserNotFound.type, UserId] =
     EitherT.fromOptionF(getUserId(uuid), UserNotFound )
 
-  private def deleteTask(taskDescription: String, projectId: Long, userId: Long): EitherT[F, LogTimeAppError, Int] =
+  private def deleteTask(taskDescription: String, projectId: ProjectId, userId: UserId): EitherT[F, LogTimeAppError, DeleteCount] =
     EitherT(delete(taskDescription, projectId, userId, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime))
 }

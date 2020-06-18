@@ -6,6 +6,7 @@ import models.request._
 import models.reports.OverallStatisticsReport
 import repository.report.GetDetailedReport
 import cats.implicits._
+import models.TotalCount
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -15,7 +16,7 @@ class OverallGetStatisticsReportTest extends AnyFlatSpec with Matchers with Give
   it should "generate overall statistics report" in new Context {
     Given("user wants to delete task")
     val userStatisticsReport = OverallStatisticsReport(
-      23L,
+      TotalCount(23),
       BigDecimal(23).some,
       None,
       None

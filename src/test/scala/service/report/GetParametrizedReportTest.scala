@@ -8,6 +8,7 @@ import models.request._
 import models.reports._
 import repository.report.GetReport
 import cats.implicits._
+import models.{Page, Quantity}
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -36,7 +37,7 @@ class GetParametrizedReportTest extends AnyFlatSpec with Matchers with GivenWhen
     And("parameters query")
     val query = ReportBodyWithParamsRequest(
       ReportRequest(None, None, None),
-      ReportParams(None, None, None)
+      ReportParams(None, None, None, Page(1), Quantity(10))
     )
 
     When("generating report")

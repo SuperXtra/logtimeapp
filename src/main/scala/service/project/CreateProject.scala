@@ -13,18 +13,18 @@ class CreateProject[F[+_] : Sync](
                                    createProject: InsertProject[F]
                                     ) {
 
-  def apply(projectName: String, uuid: String): F[Either[LogTimeAppError, Int]] = {
+  def apply(projectName: String, uuid: String): F[Either[LogTimeAppError, ProjectId]] = {
     (for {
       userId <- getExistingUserId(uuid)
       projectId <- insertProject(projectName, userId)
     } yield projectId).value
   }
 
-  private def getExistingUserId(userIdentification: String): EitherT[F, LogTimeAppError, Int] = {
+  private def getExistingUserId(userIdentification: String): EitherT[F, UserNotFound.type, UserId] = {
     EitherT.fromOptionF(getUserId(userIdentification), UserNotFound )
   }
 
-  private def insertProject(projectName: String, userId: Int): EitherT[F, LogTimeAppError, Int] = {
+  private def insertProject(projectName: String, userId: UserId): EitherT[F, LogTimeAppError, ProjectId] = {
     EitherT(createProject(projectName, userId))
   }
 }

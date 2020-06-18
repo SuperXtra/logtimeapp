@@ -6,16 +6,17 @@ import error._
 import repository.query.ProjectQueries
 import doobie.implicits._
 import cats.implicits._
+import models.{IsOwner, UserId}
 
 class IsProjectOwner[F[+_] : Sync](tx: Transactor[F]) {
 
-  def apply(userId: Int, projectName: String): F[Either[LogTimeAppError, Boolean]] =
+  def apply(userId: UserId, projectName: String): F[Either[LogTimeAppError, IsOwner]] =
     ProjectQueries
       .checkIfUserIsOwner(userId, projectName)
       .unique
       .transact(tx)
       .map {
-        case true => true.asRight
+        case true => IsOwner(true).asRight
         case false => ProjectDeleteUnsuccessfulUserIsNotTheOwner.asLeft
       }
 }

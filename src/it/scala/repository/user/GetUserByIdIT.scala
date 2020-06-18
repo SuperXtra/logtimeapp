@@ -7,6 +7,7 @@ import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
 import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
+import models.UserId
 import models.model.User
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -35,7 +36,7 @@ class GetUserByIdIT extends AnyFlatSpec with Matchers with GivenWhenThen with Fo
   it should "not find user by provided, non existing id" in new Context {
 
     Given("existing user")
-    val userId = 123
+    val userId = UserId(123)
 
     And("a data access function able of finding user by id")
     val findUserById = new GetUserById[IO](tx)

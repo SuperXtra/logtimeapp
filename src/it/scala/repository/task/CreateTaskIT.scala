@@ -8,6 +8,7 @@ import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
 import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
+import models.TaskDuration
 import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -29,7 +30,7 @@ class CreateTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
     val projectId = insertProject(projectName, userId).unsafeRunSync()
 
     When("inserting task")
-    val req = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), 50, None, None)
+    val req = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), TaskDuration(50), None, None)
     val task = insertTask(req, projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
     And("fetching information about deleted task")

@@ -7,11 +7,12 @@ import repository.query.ProjectQueries
 import cats.implicits._
 import doobie.postgres.sqlstate
 import error.{LogTimeAppError, ProjectNameExists, ProjectUpdateUnsuccessful}
+import models.UserId
 
 
 class UpdateProjectName[F[+_] : Sync](tx: Transactor[F]) {
 
-  def apply(oldName: String, newName: String, userId: Long): F[Either[LogTimeAppError, Unit]] =
+  def apply(oldName: String, newName: String, userId: UserId): F[Either[LogTimeAppError, Unit]] =
     ProjectQueries
       .changeName(oldName, newName, userId)
       .run

@@ -9,11 +9,12 @@ import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
 import error.{LogTimeAppError, ProjectDeleteUnsuccessfulUserIsNotTheOwner}
+import models.{Active, TaskDuration}
 import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.project.{IsProjectOwner, InsertProject}
+import repository.project.{InsertProject, IsProjectOwner}
 import repository.user.InsertUser
 
 class DeleteTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
@@ -30,17 +31,17 @@ class DeleteTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
     val projectId = insertProject(projectName, userId).unsafeRunSync()
 
     And("existing task")
-    val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), 50, None, None)
+    val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), TaskDuration(50), None, None)
     val task = insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
     When("deleting inserted task")
     deleteTask("test description 1", projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
     And("fetching information about deleted task")
-    val result: Option[Boolean] = getTask(task.right.get).unsafeRunSync().get.active
+    val result: Option[Active] = getTask(task.right.get).unsafeRunSync().get.active
 
     Then("it should return that task is inactive")
-    result shouldBe Some(false)
+    result shouldBe Some(Active(false))
   }
 
   private trait Context {

@@ -2,6 +2,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import cats.effect.{ContextShift, IO}
+import com.softwaremill.macwire.wire
 import com.typesafe.config.Config
 import db.DatabaseContext
 import doobie.util.ExecutionContexts
@@ -33,42 +34,42 @@ trait LogTimeService {
   implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
   val transactor = DatabaseContext.transactor(databaseConfig)
 
-  val deleteProjectWithTasks = new DeleteProjectWithTasks[IO](transactor)
-  val insertProject = new InsertProject[IO](transactor)
-  val updateProjectName = new UpdateProjectName[IO](transactor)
-  val getProjectTasks = new GetProjectTasks[IO](transactor)
-  val checkIfIsProjectOwner = new IsProjectOwner[IO](transactor)
+  lazy val deleteProjectWithTasks = wire[DeleteProjectWithTasks[IO]]
+  lazy val insertProject = wire[InsertProject[IO]]
+  lazy val updateProjectName = wire[UpdateProjectName[IO]]
+  lazy val getProjectTasks = wire[GetProjectTasks[IO]]
+  lazy val checkIfIsProjectOwner = wire[IsProjectOwner[IO]]
 
-  val getUserByUUID = new GetUserByUUID[IO](transactor)
-  val createNewUser = new InsertUser[IO](transactor)
-  val getUserById = new GetUserById[IO](transactor)
-  val userExists = new UserExists[IO](transactor)
+  lazy val getUserByUUID = wire[GetUserByUUID[IO]]
+  lazy val createNewUser = wire[InsertUser[IO]]
+  lazy val getUserById = wire[GetUserById[IO]]
+  lazy val userExists = wire[UserExists[IO]]
 
-  val getUserTask = new GetUserTask[IO](transactor)
-  val deleteTask = new DeleteTask[IO](transactor)
-  val taskInsertUpdate = new ChangeTask[IO](transactor)
-  val insertTask = new CreateTask[IO](transactor)
-  val getTask = new GetTask[IO](transactor)
+  lazy val getUserTask = wire[GetUserTask[IO]]
+  lazy val deleteTask = wire[DeleteTask[IO]]
+  lazy val taskInsertUpdate = wire[ChangeTask[IO]]
+  lazy val insertTask = wire[CreateTask[IO]]
+  lazy val getTask = wire[GetTask[IO]]
 
-  val getReport = new GetReport[IO](transactor)
-  val getDetailedReport = new GetDetailedReport[IO](transactor)
-  val getProjectByName = new GetProjectByName[IO](transactor)
+  lazy val getReport = wire[GetReport[IO]]
+  lazy val getDetailedReport = wire[GetDetailedReport[IO]]
+  lazy val getProjectByName = wire[GetProjectByName[IO]]
 
 
-  val createNewProject = new CreateProject[IO](getUserByUUID, insertProject)
-  val deactivateProject = new DeactivateProject[IO](getUserByUUID,deleteProjectWithTasks, getProjectByName, checkIfIsProjectOwner)
-  val updateProject = new UpdateProject[IO](getUserByUUID, updateProjectName)
+  lazy val createNewProject = wire[CreateProject[IO]]
+  lazy val deactivateProject = wire[DeactivateProject[IO]]
+  lazy val updateProject = wire[UpdateProject[IO]]
 
-  val updateTask = new UpdateTask[IO](getUserByUUID, getUserTask,taskInsertUpdate)
-  val logTask = new LogTask[IO](getProjectByName, getUserByUUID, insertTask, getTask)
-  val deleteTaskService = new DeactivateTask[IO](getProjectByName, getUserByUUID, deleteTask)
+  lazy val updateTask = wire[UpdateTask[IO]]
+  lazy val logTask = wire[LogTask[IO]]
+  lazy val deleteTaskService = wire[DeactivateTask[IO]]
 
-  val authenticateUser = new AuthenticateUser[IO](userExists)
-  val insertNewUser = new CreateUser[IO](getUserById, createNewUser)
+  lazy val authenticateUser = wire[AuthenticateUser[IO]]
+  lazy val insertNewUser = wire[CreateUser[IO]]
 
-  val projectTaskDurationReport = new GetProjectReport[IO](getProjectByName, getProjectTasks)
-  val detailReport = new GetStatisticsReport[IO](getDetailedReport)
-  val projectWithTaskFilter = new GetParametrizedReport[IO](getReport)
+  lazy val projectTaskDurationReport = wire[GetProjectReport[IO]]
+  lazy val detailReport = wire[GetStatisticsReport[IO]]
+  lazy val projectWithTaskFilter = wire[GetParametrizedReport[IO]]
 
   implicit val authentication: Auth = Auth(authConfig)
 

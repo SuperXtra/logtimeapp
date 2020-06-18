@@ -9,7 +9,7 @@ import error.{LogTimeAppError, ProjectNotFound}
 import cats.implicits._
 
 class GetProjectByName[F[+_] : Sync](tx: Transactor[F]) {
-  def apply(projectName: String): F[Option [Project]] =
+  def apply(projectName: String): F[Option[Project]] =
     ProjectQueries
       .getActiveProjectByName(projectName)
       .option

@@ -11,7 +11,7 @@ import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import cats.implicits._
 import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending, ProjectSort, SortDirection}
-import models.reports
+import models.{Active, Page, Quantity, reports}
 import service.auth.Auth
 
 object ReportRoutes {
@@ -55,9 +55,9 @@ object ReportRoutes {
     parameters(
       "by".as[String].?,
       "sort".as[String].?,
-      "active".as[Boolean].?,
-      "page".as[Int],
-      "quantity".as[Int]
+      "active".as[Active].?,
+      "page".as[Page],
+      "quantity".as[Quantity]
     ).as(extractQuery) { pathParams: ReportParams =>
       get {
         auth.apply { _ =>
@@ -76,15 +76,15 @@ object ReportRoutes {
   private def extractQuery(
                             sortBy: Option[String],
                             direction: Option[String],
-                            active: Option[Boolean],
-                            page: Int,
-                            quantity: Int
+                            active: Option[Active],
+                            page: Page,
+                            quantity: Quantity
                           ): ReportParams = ReportParams(
     active,
     sortBy.map(resolveSort),
     direction.map(resolveDirection),
-    if (page < 1) 1 else page,
-    if (quantity <= 0) 20 else quantity
+    if (page.value < 1) Page(1) else page,
+    if (quantity.value <= 0) Quantity(20) else quantity
   )
 
   private def resolveSort(sort: String) = {

@@ -10,6 +10,7 @@ import io.circe.generic.auto._
 import cats.implicits._
 import service.auth.Auth
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
+import models.DeleteCount
 
 object TaskRoutes {
 
@@ -46,7 +47,7 @@ object TaskRoutes {
     }
 
 
-  def deleteTask(deleteTask: (String, String, String) => IO[Either[LogTimeAppError, Int]])
+  def deleteTask(deleteTask: (String, String, String) => IO[Either[LogTimeAppError, DeleteCount]])
                 (implicit auth: Auth): Route =
     path("task") {
       delete {

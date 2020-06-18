@@ -22,21 +22,21 @@ class UpdateTask[F[+_] : Sync](getUserId: GetUserByUUID[F],
       _ <- updateExistingTask(newTask(oldTask, updateTask), oldTask.taskDescription, oldTask.projectId, userId)
     } yield ()).value
 
-  private def updateExistingTask(toUpdate: TaskToUpdate, taskDescription: String, projectId: Long, userId: Long): EitherT[F, LogTimeAppError, Unit] = {
+  private def updateExistingTask(toUpdate: TaskToUpdate, taskDescription: String, projectId: ProjectId, userId: UserId): EitherT[F, LogTimeAppError, Unit] = {
     EitherT(taskUpdate(toUpdate, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime, taskDescription, projectId, userId))
   }
 
-  private def fetchTask(taskDescription: String, userId: Long): EitherT[F, LogTimeAppError, Task] = {
+  private def fetchTask(taskDescription: String, userId: UserId): EitherT[F, LogTimeAppError, Task] = {
     EitherT.fromOptionF(getUserTask(taskDescription, userId), TaskNotFound )
   }
 
-  private def getExistingUserId(uuid: String): EitherT[F, LogTimeAppError, Int] =
-    EitherT.fromOptionF(getUserId(uuid), UserNotFound )
+  private def getExistingUserId(uuid: String): EitherT[F, UserNotFound.type, UserId] =
+    EitherT.fromOptionF(getUserId(uuid), UserNotFound)
 
   private def newTask(oldTask: Task, updateTask: UpdateTaskRequest): TaskToUpdate = {
 
     val newStartTime = updateTask.startTime.getOrElse(ZonedDateTime.of(oldTask.startTime, ZoneOffset.UTC))
-    val newVolume: Option[Int] = updateTask.volume.orElse(oldTask.volume)
+    val newVolume: Option[Volume] = updateTask.volume.orElse(oldTask.volume)
     val comment = updateTask.comment.orElse(oldTask.comment)
 
     model.TaskToUpdate(oldTask.projectId, oldTask.userId, updateTask.newTaskDescription, newStartTime, updateTask.durationTime, newVolume, comment)

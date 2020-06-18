@@ -5,6 +5,7 @@ import java.time._
 import cats.effect._
 import cats.implicits._
 import error._
+import models.{DeleteCount, ProjectId, UserId}
 import models.model._
 import models.request._
 import org.scalatest.GivenWhenThen
@@ -18,9 +19,9 @@ class TaskDeleteTestDeactivateTaskQueries extends AnyFlatSpec with Matchers with
 
   it should "delete task" in new Context {
     Given("user wants to delete task")
-    val project = Project(1, 123, "test", LocalDateTime.now(), None, None)
-    val userId = 232
-    val taskDeleteResult = 1
+    val project = Project(ProjectId(1), UserId(123), "test", LocalDateTime.now(), None, None)
+    val userId = UserId(232)
+    val taskDeleteResult = DeleteCount(1)
 
     And("a service will find project id, user, delete(update) task for that data and return 1")
     val deleteTask = serviceUnderTest(
@@ -38,7 +39,7 @@ class TaskDeleteTestDeactivateTaskQueries extends AnyFlatSpec with Matchers with
     val result = deleteTask(deleteTaskRequest.taskDescription, deleteTaskRequest.projectName, "dsaadsij12312").unsafeRunSync()
 
     Then("returns number of rows updated")
-    result shouldBe Right(1)
+    result shouldBe Right(DeleteCount(1))
   }
 
   it should "not allow to delete task if project dose not exist" in new Context {
@@ -50,7 +51,7 @@ class TaskDeleteTestDeactivateTaskQueries extends AnyFlatSpec with Matchers with
     val deleteTask = serviceUnderTest(
       project = None,
       userId = None,
-      taskDeleteResult = 0.asRight
+      taskDeleteResult = DeleteCount(0).asRight
     )
 
     val deleteTaskRequest = DeleteTaskRequest(
@@ -69,8 +70,8 @@ class TaskDeleteTestDeactivateTaskQueries extends AnyFlatSpec with Matchers with
   private trait Context {
 
     def serviceUnderTest(project: Option[Project],
-                         userId: Option[Int],
-                         taskDeleteResult: Either[LogTimeAppError, Int]
+                         userId: Option[UserId],
+                         taskDeleteResult: Either[LogTimeAppError, DeleteCount]
                         ): DeactivateTask[IO] = {
 
 
@@ -78,10 +79,11 @@ class TaskDeleteTestDeactivateTaskQueries extends AnyFlatSpec with Matchers with
         override def apply(projectName: String): IO[Option[Project]] = project.pure[IO]
       }
       val getUserId = new GetUserByUUID[IO](null) {
-        override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
+        override def apply(userIdentification: String): IO[Option[UserId]] = userId.pure[IO]
       }
       val delete = new DeleteTask[IO](null) {
-        override def apply(taskDescription: String, projectId: Long, userId: Long, deleteTime: LocalDateTime): IO[Either[LogTimeAppError, Int]] = taskDeleteResult.pure[IO]
+        override def apply(taskDescription: String, projectId: ProjectId, userId: UserId, deleteTime: LocalDateTime): IO[Either[LogTimeAppError, DeleteCount]] = taskDeleteResult.pure[IO]
+
       }
 
       new DeactivateTask(getProjectId, getUserId, delete)

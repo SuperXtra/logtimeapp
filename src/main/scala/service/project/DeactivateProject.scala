@@ -6,6 +6,7 @@ import cats.data.EitherT
 import cats.effect._
 import models.request.DeleteProjectRequest
 import error._
+import models.{IsOwner, ProjectId, UserId}
 import models.model.Project
 import repository.project._
 import repository.task.DeleteTasks
@@ -28,7 +29,7 @@ class DeactivateProject[F[+_] : Sync](
     } yield ()).value
   }
 
-  private def getUserId(userIdentification: String): EitherT[F, LogTimeAppError, Int] =
+  private def getUserId(userIdentification: String): EitherT[F, UserNotFound.type, UserId] =
     EitherT.fromOptionF(userId(userIdentification), UserNotFound )
 
 
@@ -36,11 +37,11 @@ class DeactivateProject[F[+_] : Sync](
     EitherT.fromOptionF(findProject(projectName), ProjectNotFound)
   }
 
-  private def verifyIfUserIsTheOwnerOfTheProject(userId: Int, projectName: String): EitherT[F, LogTimeAppError, Boolean] = {
+  private def verifyIfUserIsTheOwnerOfTheProject(userId: UserId, projectName: String): EitherT[F, LogTimeAppError, IsOwner] = {
     EitherT(checkIfOwner(userId, projectName))
   }
 
-  private def deleteProjectWithTasks(userId: Int, projectName: String, projectId: Int, deleteTime: ZonedDateTime): EitherT[F, LogTimeAppError, Unit] = {
+  private def deleteProjectWithTasks(userId: UserId, projectName: String, projectId: ProjectId, deleteTime: ZonedDateTime): EitherT[F, LogTimeAppError, Unit] = {
     EitherT(deactivateProject(userId, projectName, projectId, deleteTime.toLocalDateTime))
   }
 }

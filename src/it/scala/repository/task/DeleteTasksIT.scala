@@ -8,6 +8,7 @@ import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
 import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
+import models.{Active, TaskDuration}
 import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -29,8 +30,8 @@ class DeleteTasksIT extends AnyFlatSpec with Matchers with GivenWhenThen with Fo
     val projectId = insertProject(projectName, userId).unsafeRunSync()
 
     And("existing tasks")
-    val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), 50, None, None)
-    val req2 = LogTaskRequest(projectName, "test description 2", ZonedDateTime.now(ZoneOffset.UTC).minusDays(5), 50, None, None)
+    val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), TaskDuration(50), None, None)
+    val req2 = LogTaskRequest(projectName, "test description 2", ZonedDateTime.now(ZoneOffset.UTC).minusDays(5), TaskDuration(50), None, None)
     val task1 = insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
     val task2 = insertTask(req2,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
@@ -42,8 +43,8 @@ class DeleteTasksIT extends AnyFlatSpec with Matchers with GivenWhenThen with Fo
     val result2 = getTask(task2.right.get).unsafeRunSync().get.active
 
     Then("it should return both tasks are inactive")
-    result shouldBe Some(false)
-    result2 shouldBe Some(false)
+    result shouldBe Some(Active(false))
+    result2 shouldBe Some(Active(false))
   }
 
   private trait Context {

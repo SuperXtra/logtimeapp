@@ -8,6 +8,7 @@ import doobie.implicits.javatime._
 import doobie._
 import models.reports.ReportFromDb
 import doobie.implicits._
+import models.Active
 
 object GenerateReportQueries {
 
@@ -70,13 +71,13 @@ object GenerateReportQueries {
       }.getOrElse(fr"")
 
     val isActiveFilter = projectQuery.pathParams.active.map{
-        case true => fr"AND COALESCE(t.active , true) = true"
-        case false => fr"AND COALESCE(t.active , false) = false"
+        case Active(value) if value => fr"AND COALESCE(t.active , true) = true"
+        case Active(value) if !value => fr"AND COALESCE(t.active , false) = false"
       }.getOrElse(fr"")
 
     val paginationFilter = {
-      val offset = ((projectQuery.pathParams.page -1 ) * projectQuery.pathParams.quantity).toLong
-      val limitation = projectQuery.pathParams.quantity.toLong
+      val offset = ((projectQuery.pathParams.page.value -1 ) * projectQuery.pathParams.quantity.value).toLong
+      val limitation = projectQuery.pathParams.quantity.value.toLong
       fr"""
         LIMIT ${limitation} OFFSET ${offset}
        """

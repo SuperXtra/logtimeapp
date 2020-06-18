@@ -8,6 +8,7 @@ import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
 import error.{LogTimeAppError, ProjectDeleteUnsuccessfulUserIsNotTheOwner, ProjectNotFound}
+import models.IsOwner
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -34,7 +35,7 @@ class IsProjectOwnerIT extends AnyFlatSpec with Matchers with GivenWhenThen with
     val result = checkIfIsOwner(userId, projectName).unsafeRunSync
 
     Then("it should return true")
-    result shouldBe Right(true)
+    result shouldBe Right(IsOwner(true))
   }
 
   it should "check if provided user is not the owner of the project" in new Context {
