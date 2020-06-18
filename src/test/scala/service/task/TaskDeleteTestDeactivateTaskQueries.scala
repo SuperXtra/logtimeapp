@@ -2,6 +2,7 @@ package service.task
 
 import java.time._
 
+import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect._
 import cats.implicits._
 import error._
@@ -68,6 +69,8 @@ class TaskDeleteTestDeactivateTaskQueries extends AnyFlatSpec with Matchers with
 
 
   private trait Context {
+
+    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
 
     def serviceUnderTest(project: Option[Project],
                          userId: Option[UserId],

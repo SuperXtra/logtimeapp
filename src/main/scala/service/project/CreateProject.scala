@@ -1,5 +1,6 @@
 package service.project
 
+import akka.event.MarkerLoggingAdapter
 import cats.data.EitherT
 import cats.effect.Sync
 import models._
@@ -11,12 +12,14 @@ import repository.user.GetUserByUUID
 class CreateProject[F[+_] : Sync](
                                    getUserId: GetUserByUUID[F],
                                    createProject: InsertProject[F]
-                                    ) {
+                                    )(implicit val logger: MarkerLoggingAdapter) {
 
   def apply(projectName: String, uuid: String): F[Either[LogTimeAppError, ProjectId]] = {
-    (for {
+   (for {
       userId <- getExistingUserId(uuid)
+      _ = logging.foundUserWithId(userId, uuid)
       projectId <- insertProject(projectName, userId)
+      _ = logging.projectCreated(projectId, projectName, userId)
     } yield projectId).value
   }
 

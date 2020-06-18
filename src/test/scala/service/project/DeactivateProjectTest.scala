@@ -2,6 +2,7 @@ package service.project
 
 import java.time.{LocalDateTime, ZonedDateTime}
 
+import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect.IO
 import error.{LogTimeAppError, ProjectDeleteUnsuccessful}
 import models.model.{Project, User}
@@ -59,6 +60,7 @@ class DeactivateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen
   }
 
   private trait Context {
+    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
 
     def serviceUnderTest(
                           userId: Option[UserId],

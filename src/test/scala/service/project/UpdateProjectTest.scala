@@ -2,6 +2,7 @@ package service.project
 
 import java.time.LocalDateTime
 
+import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect.IO
 import models.model.{Project, User}
 import org.scalatest.GivenWhenThen
@@ -76,6 +77,7 @@ class UpdateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
   }
 
   private trait Context {
+    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
 
     def serviceUnderTest(
                           userId: Option[UserId],

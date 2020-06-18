@@ -2,6 +2,7 @@ package service.report
 
 import java.time.LocalDateTime
 
+import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect.IO
 import error.LogTimeAppError
 import models.request._
@@ -52,8 +53,9 @@ class GetParametrizedReportTest extends AnyFlatSpec with Matchers with GivenWhen
 
 
   private trait Context {
-    def serviceUnderTest(report: Either[LogTimeAppError, List[ReportFromDb]]): GetParametrizedReport[IO] = {
+    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
 
+    def serviceUnderTest(report: Either[LogTimeAppError, List[ReportFromDb]]): GetParametrizedReport[IO] = {
 
       val getReport = new GetReport[IO](null) {
         override def apply(projectQuery: ReportBodyWithParamsRequest): IO[Either[LogTimeAppError, List[ReportFromDb]]] = report.pure[IO]

@@ -1,5 +1,6 @@
 package service.user
 
+import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect.IO
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
@@ -44,6 +45,8 @@ class UserAuthResponseTest extends AnyFlatSpec with Matchers with GivenWhenThen 
   }
 
   private trait Context {
+
+    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
 
     def serviceUnderTest(userExists: Exists): AuthenticateUser[IO] = {
 

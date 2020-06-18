@@ -2,6 +2,7 @@ package service.task
 
 import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
+import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect.IO
 import error.{LogTimeAppError, ProjectNotFound, ProjectUpdateUnsuccessful, TaskDeleteUnsuccessful, TaskNotFound, TaskUpdateUnsuccessful, UserNotFound}
 import models.model.{Project, Task, TaskToUpdate}
@@ -157,6 +158,9 @@ class TaskUpdateQueriesTestTask extends AnyFlatSpec with Matchers with GivenWhen
 
 
   private trait Context {
+
+    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
+
     def serviceUnderTest(
                           userId: Option[UserId],
                           userTask: Option[Task],
