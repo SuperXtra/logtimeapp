@@ -2,6 +2,7 @@ package service.user
 
 import java.time._
 
+import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect._
 import cats.implicits._
 import error._
@@ -34,6 +35,8 @@ class CreateUserTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
 
   private trait Context {
+
+    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
 
     def serviceUnderTest(
                           userId: Either[CannotCreateUserWithGeneratedUUID.type, UserId],

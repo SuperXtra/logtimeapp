@@ -1,4 +1,6 @@
+import LogTimeApp.system
 import akka.actor.ActorSystem
+import akka.event.{Logging, MarkerLoggingAdapter}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import cats.effect.{ContextShift, IO}
@@ -30,6 +32,8 @@ trait LogTimeService {
   val databaseConfig: DatabaseConfig = ConfigSource.fromConfig(databaseConfiguration).loadOrThrow[DatabaseConfig]
   val authConfiguration: Config = ConfigFactory.load("auth-configuration.conf")
   val authConfig: AuthConfig = ConfigSource.fromConfig(authConfiguration).loadOrThrow[AuthConfig]
+
+  implicit lazy val logger: MarkerLoggingAdapter = Logging.withMarker(system, "log-time-app")
 
   implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
   val transactor = DatabaseContext.transactor(databaseConfig)

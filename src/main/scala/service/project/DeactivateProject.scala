@@ -2,6 +2,7 @@ package service.project
 
 import java.time.{ZonedDateTime, _}
 
+import akka.event.MarkerLoggingAdapter
 import cats.data.EitherT
 import cats.effect._
 import models.request.DeleteProjectRequest
@@ -17,15 +18,19 @@ class DeactivateProject[F[+_] : Sync](
                                        deactivateProject: DeleteProjectWithTasks[F],
                                        findProject: GetProjectByName[F],
                                        checkIfOwner: IsProjectOwner[F]
-                                     ) {
+                                     )(implicit val logger: MarkerLoggingAdapter) {
 
   def apply(projectName: String, uuid: String): F[Either[LogTimeAppError, Unit]] = {
     (for {
       userId <- getUserId(uuid)
+      _ = logging.foundUserWithId(userId, uuid)
       deleteTime = ZonedDateTime.now(ZoneOffset.UTC)
       project <- findProjectById(projectName)
-      _ <- verifyIfUserIsTheOwnerOfTheProject(userId, projectName)
+      _ = logging.foundProjectByName(projectName)
+      verification <- verifyIfUserIsTheOwnerOfTheProject(userId, projectName)
+      _ = logging.userIsOwner(verification, userId)
       _ <- deleteProjectWithTasks(userId, projectName, project.id, deleteTime)
+      _ = logging.projectDeactivationSuccessful(userId, projectName, project.id, deleteTime)
     } yield ()).value
   }
 

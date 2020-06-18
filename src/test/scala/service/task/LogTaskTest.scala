@@ -2,6 +2,7 @@ package service.task
 
 import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
+import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect._
 import cats.implicits._
 import error.{LogTimeAppError, ProjectNotFound}
@@ -88,6 +89,8 @@ class LogTaskTest  extends AnyFlatSpec with Matchers with GivenWhenThen {
   }
 
   private trait Context {
+
+    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
 
     def serviceUnderTest(project: Option[Project],
                          userId: Option[UserId],

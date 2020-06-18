@@ -1,5 +1,6 @@
 package service.project
 
+import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect.IO
 import error.{LogTimeAppError, ProjectNotCreated, UserNotFound}
 import models.model.User
@@ -66,6 +67,8 @@ class CreateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
   }
 
   private trait Context {
+
+    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
 
     def serviceUnderTest(
                           userId: Option[UserId],

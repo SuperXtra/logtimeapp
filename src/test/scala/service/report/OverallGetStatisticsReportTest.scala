@@ -1,5 +1,6 @@
 package service.report
 
+import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect.IO
 import error.LogTimeAppError
 import models.request._
@@ -35,6 +36,9 @@ class OverallGetStatisticsReportTest extends AnyFlatSpec with Matchers with Give
   }
 
   private trait Context {
+
+    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
+
     def serviceUnderTest(
                           taskUpdateResult: Either[LogTimeAppError, OverallStatisticsReport]
                         ): GetStatisticsReport[IO] = {

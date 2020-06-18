@@ -37,7 +37,7 @@ object Auth {
             val arrayFromToken = token.split(" ")
             arrayFromToken.length match {
               case 2 => arrayFromToken(1) match {  // 2 represents length of an array with Bearer prefix
-                case token if isTokenExpired(token) => complete(MapToErrorResponse.auth(AuthenticationNotSuccessful ))
+                case token if isTokenExpired(token) => complete(MapToErrorResponse.auth(AuthenticationNotSuccessful))
                 case token if JsonWebToken.validate(token, secretKey) => provide(getClaims(token))
                 case _ => complete(MapToErrorResponse.auth(AuthenticationNotSuccessful ))
               }
