@@ -10,6 +10,7 @@ import models.reports._
 import doobie.implicits._
 
 object StatisticsReportQuery {
+
   def apply(request: MainReport) = {
     val projectNamesFilter: Fragment = request.userUUIDs match {
       case None => fr""
@@ -20,9 +21,9 @@ object StatisticsReportQuery {
     val dateRangeFilter: Fragment =
       (request.from, request.to) match {
         case (Some(from), Some(to)) =>
-          fr"""AND t.start_time >= ${LocalDateTime.of(from.year, from.month, 1,0,0,0,0)} AND t.end_time <= ${LocalDateTime.of(to.year, to.month, YearMonth.of(to.year, to.month).lengthOfMonth(), 0, 0, 0, 0)}"""
-        case (Some(from), None) => fr"""AND t.start_time >= ${LocalDateTime.of(from.year, from.month, 1,0,0,0,0)}"""
-        case (None, Some(to)) => fr"""AND t.end_time <= ${LocalDateTime.of(to.year, to.month, YearMonth.of(to.year, to.month).lengthOfMonth(), 0, 0, 0, 0)}"""
+          fr"""AND t.start_time >= ${LocalDateTime.of(from.year.value, from.month.value, 1,0,0,0,0)} AND t.end_time <= ${LocalDateTime.of(to.year.value, to.month.value, YearMonth.of(to.year.value, to.month.value).lengthOfMonth(), 0, 0, 0, 0)}"""
+        case (Some(from), None) => fr"""AND t.start_time >= ${LocalDateTime.of(from.year.value, from.month.value, 1,0,0,0,0)}"""
+        case (None, Some(to)) => fr"""AND t.end_time <= ${LocalDateTime.of(to.year.value, to.month.value, YearMonth.of(to.year.value, to.month.value).lengthOfMonth(), 0, 0, 0, 0)}"""
         case (_, _) => fr""
       }
 

@@ -9,6 +9,7 @@ import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
 import error.CannotCreateUserWithGeneratedUUID
+import models.TaskDuration
 import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -30,7 +31,7 @@ class GetTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAll
     val projectId = insertProject(projectName, userId).unsafeRunSync()
 
     And("existing tasks")
-    val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), 50, None, None)
+    val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), TaskDuration(50), None, None)
     val task1 = insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
     When("fetching task")

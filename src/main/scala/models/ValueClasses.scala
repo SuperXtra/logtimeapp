@@ -10,4 +10,10 @@ case class Page(value: Int) extends AnyVal
 case class Quantity(value: Int) extends AnyVal
 case class Year(value: Int) extends AnyVal
 case class Month(value: Int) extends AnyVal
+case class WorkedTime(value: Int) extends AnyVal
+case class TotalCount(value: Long) extends AnyVal
+case class IsOwner(value: Boolean) extends AnyVal
+case class DeleteCount(value: Int) extends AnyVal
+case class Exists(value: Boolean) extends AnyVal
+
 

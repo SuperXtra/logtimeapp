@@ -7,6 +7,7 @@ import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
 import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
+import models.Exists
 import models.model.User
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -29,7 +30,7 @@ class UserExistsIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
     val result = exists(uuid).unsafeRunSync
 
     Then("it should return that user exists")
-    result shouldBe true
+    result shouldBe Exists(true)
   }
 
   it should "not find existing user" in new Context {
@@ -45,7 +46,7 @@ class UserExistsIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
     val result = exists(uuid).unsafeRunSync
 
     Then("it should return that user does not exist")
-    result shouldBe false
+    result shouldBe Exists(false)
   }
 
   private trait Context {

@@ -1,6 +1,7 @@
 package routes
 
 import java.time.LocalDateTime
+
 import akka.http.scaladsl.model.ContentTypes.`application/json`
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.{Directive1, Route}
@@ -10,6 +11,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import cats.implicits._
 import error.{ProjectDeleteUnsuccessfulUserIsNotTheOwner, ProjectNotCreated, ProjectUpdateUnsuccessful}
 import io.circe.parser.{parse => json}
+import models.{Active, ProjectId, UserId}
 import models.model.Project
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -20,7 +22,7 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
   it should "return created project id" in new Context {
 
     val route =
-      Route.seal(ProjectRoutes.createProject((_, _) => IO(1.asRight)))
+      Route.seal(ProjectRoutes.createProject((_, _) => IO(ProjectId(1).asRight)))
     Post("/project",
       HttpEntity(
         `application/json`,
@@ -34,7 +36,9 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
       response.status shouldBe StatusCodes.OK
       json(response.raw) shouldBe json(
         s"""
-          1
+          {
+             "value" : 1
+          }
         """
       )
     }
@@ -67,7 +71,7 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
 
   it should "update project name and return updated one" in new Context {
 
-    val project = Project(1, 1, "new test project name", LocalDateTime.parse("2020-06-03T13:18:38.01865"), None, Some(true))
+    val project = Project(ProjectId(1), UserId(1), "new test project name", LocalDateTime.parse("2020-06-03T13:18:38.01865"), None, Some(Active(true)))
 
 
     val route =

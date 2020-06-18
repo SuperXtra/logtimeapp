@@ -8,6 +8,7 @@ import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
 import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
+import models.TaskDuration
 import models.model.TaskToUpdate
 import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
@@ -30,11 +31,11 @@ class ChangeTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
     val projectId = insertProject(projectName, userId).unsafeRunSync()
 
     And("existing task")
-    val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), 50, None, None)
+    val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), TaskDuration(50), None, None)
     insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
     When("updating task")
-    val request = TaskToUpdate(projectId.right.get, userId, "test description 2", ZonedDateTime.now(ZoneOffset.UTC), 29L, None, None)
+    val request = TaskToUpdate(projectId.right.get, userId, "test description 2", ZonedDateTime.now(ZoneOffset.UTC), TaskDuration(29), None, None)
     val result = updateTask(request, LocalDateTime.now(), "test description 1", projectId.right.get, userId).unsafeRunSync()
 
     Then("it should return right")

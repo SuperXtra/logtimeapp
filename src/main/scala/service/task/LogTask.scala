@@ -6,9 +6,10 @@ import cats.data.EitherT
 import cats.effect.Sync
 import models.request.LogTaskRequest
 import error.{LogTimeAppError, ProjectNotFound, TaskNotCreated, UserNotFound}
+import models.{ProjectId, TaskId, UserId}
 import models.model.{Project, Task}
 import repository.project.GetProjectByName
-import repository.task.{GetTask, CreateTask}
+import repository.task.{CreateTask, GetTask}
 import repository.user.GetUserByUUID
 
 
@@ -30,12 +31,12 @@ class LogTask[F[+_]: Sync](
   private def getExistingProjectId(projectName: String): EitherT[F, LogTimeAppError, Project] =
     EitherT.fromOptionF(getProjectId(projectName), ProjectNotFound)
 
-  private def getExistingUserId(userIdentification: String): EitherT[F, LogTimeAppError, Int] =
+  private def getExistingUserId(userIdentification: String): EitherT[F, UserNotFound.type, UserId] =
     EitherT.fromOptionF(getUserId(userIdentification), UserNotFound )
 
-  private def insertNewTask(work: LogTaskRequest, projectId: Long, userId: Long): EitherT[F, LogTimeAppError, Int] =
+  private def insertNewTask(work: LogTaskRequest, projectId: ProjectId, userId: UserId): EitherT[F, LogTimeAppError, TaskId] =
     EitherT(insertTask(work, projectId, userId, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime))
 
-  private def getExistingTask(taskId: Long): EitherT[F, LogTimeAppError, Task] =
+  private def getExistingTask(taskId: TaskId): EitherT[F, LogTimeAppError, Task] =
     EitherT.fromOptionF(getTask(taskId), TaskNotCreated )
 }

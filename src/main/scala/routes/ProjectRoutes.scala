@@ -12,13 +12,14 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import cats.implicits._
 import service.auth.Auth
 import error._
+import models.ProjectId
 
 
 object ProjectRoutes {
 
   val projectPath = "project"
 
-  def createProject(req: (String, String) => IO[Either[LogTimeAppError, Int]])
+  def createProject(req: (String, String) => IO[Either[LogTimeAppError, ProjectId]])
                    (implicit auth: Auth): Route =
     path(projectPath) {
       post {

@@ -10,10 +10,11 @@ import error._
 import repository.query.TaskQueries
 import cats.implicits._
 import doobie.postgres.sqlstate
+import models.{ProjectId, UserId}
 
 class ChangeTask[F[_] : Sync](tx: Transactor[F]) {
 
-  def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: Long, userId: Long): F[Either[LogTimeAppError, Unit]] =
+  def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: ProjectId, userId: UserId): F[Either[LogTimeAppError, Unit]] =
     (for {
       _ <- TaskQueries.deleteTask(taskDescription, projectId, userId, timestamp).run
       update <- TaskQueries.updateByInsert(toUpdate, timestamp).option

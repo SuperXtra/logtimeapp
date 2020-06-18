@@ -15,7 +15,10 @@ import models.model.Task
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import io.circe.syntax._
+import models.{Active, DeleteCount, ProjectId, TaskDuration, TaskId, UserId, Volume}
 import service.auth.Auth
+import io.circe.generic.auto._
+import models.request.LogTaskRequest
 
 import scala.concurrent.duration._
 
@@ -33,8 +36,12 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
            |"projectName": "Project 23!",
            |"taskDescription": "this is task description",
            |"startTime": "${ZonedDateTime.now.minusDays(3)}",
-           |"durationTime": ${3.days.toSeconds},
-           |"volume": 8,
+           |"durationTime": {
+           |  "value": ${3.days.toSeconds}
+           |  },
+           |"volume": {
+           | "value": 8
+           | },
            |"comment": "this is comment"
            |}
            |""".stripMargin
@@ -53,55 +60,71 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
 
   it should "return created task" in new Context {
 
-    val duration = 3.days
+    val duration = 3.days.toSeconds.toInt
     val task = Task(
-      id = 283,
-      projectId = 213,
-      userId = 123,
+      id = TaskId(283),
+      projectId = ProjectId(213),
+      userId = UserId(123),
       taskDescription = "this is description",
       startTime = LocalDateTime.parse("2020-05-31T12:23:02"),
-      duration = 3.days.toSeconds.toInt,
+      duration = TaskDuration(3.days.toSeconds.toInt),
       endTime = LocalDateTime.parse("2020-05-31T12:23:02").plusDays(3),
       createTime = ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime,
-      volume = 2.some,
+      volume = Volume(2).some,
       comment = "this is comment".some,
       deleteTime = none,
-      active = Some(false)
+      active = Some(Active(false))
     )
     val route =
       Route.seal(TaskRoutes.logTask((_, _) => IO(task.asRight)))
     Post("/task",
       HttpEntity(
         `application/json`,
-        s"""
-           |{
-           |  "projectName": "Project 23!",
-           |  "taskDescription": "${task.taskDescription}",
-           |  "startTime": "${ZonedDateTime.of(task.startTime, ZoneOffset.UTC)}",
-           |  "durationTime": ${duration.toSeconds},
-           |  "volume": ${task.volume.get},
-           |  "comment": "${task.comment.get}"
-           |}
-           |""".stripMargin
+                s"""
+                   |{
+                   |  "projectName": "Project 23!",
+                   |  "taskDescription": "${task.taskDescription}",
+                   |  "startTime": "${ZonedDateTime.of(task.startTime, ZoneOffset.UTC)}",
+                   |  "durationTime": {
+                   |      "value": ${duration}
+                   |      },
+                   |  "volume": {
+                   |      "value": ${task.volume.get.value}
+                   |      },
+                   |  "comment": "${task.comment.get}"
+                   |}
+                   |""".stripMargin
       )
     ) ~> route ~> check {
       response.status shouldBe StatusCodes.OK
       json(response.raw) shouldBe json(
         s"""
-        {
-          "id" : 283,
-          "projectId" : 213,
-          "userId" : 123,
-          "createTime" : "${task.createTime}",
-          "taskDescription" : "this is description",
-          "startTime" : "${task.startTime}",
-          "endTime" : "${task.endTime}",
-          "duration" : ${task.duration},
-          "volume" : 2,
-          "comment" : "this is comment",
-          "deleteTime" : null,
-          "active" : false
-        }
+    {
+  "id" : {
+    "value" : 283
+  },
+  "projectId" : {
+    "value" : 213
+  },
+  "userId" : {
+    "value" : 123
+  },
+  "createTime" : "${task.createTime.toString}",
+  "taskDescription" : "this is description",
+  "startTime" : "2020-05-31T12:23:02",
+  "endTime" : "2020-06-03T12:23:02",
+  "duration" : {
+    "value" : 259200
+  },
+  "volume" : {
+    "value" : 2
+  },
+  "comment" : "this is comment",
+  "deleteTime" : null,
+  "active" : {
+    "value" : false
+  }
+}
         """
       )
     }
@@ -118,8 +141,12 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
            |	  "oldTaskDescription": "old task description",
            |    "newTaskDescription": "new task description",
            |    "startTime": "2020-03-10T14:00:00+02:00",
-           |    "durationTime": 500,
-           |    "volume": 3,
+           |    "durationTime": {
+           |      "value": 500
+           |      },
+           |    "volume": {
+           |      "value": 3
+           |      },
            |    "comment": "some interesting comment2"
            |}
            |""".stripMargin
@@ -145,8 +172,12 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
            |	  "oldTaskDescription": "old task description",
            |    "newTaskDescription": "new task description",
            |    "startTime": "2020-03-10T14:00:00+02:00",
-           |    "durationTime": 500,
-           |    "volume": 3,
+           |    "durationTime": {
+           |        "value": 500
+           |        },
+           |    "volume":  {
+           |        "value": 3
+           |        },
            |    "comment": "some interesting comment2"
            |}
            |""".stripMargin
@@ -165,7 +196,7 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
 
 
   it should "delete task" in new Context {
-    val result = 1.asRight
+    val result = DeleteCount(1).asRight
     val route = Route.seal(TaskRoutes.deleteTask((_, _, _) => IO(result)))
     Delete("/task",
       HttpEntity(
@@ -181,7 +212,9 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
       response.status shouldBe StatusCodes.OK
       json(response.raw) shouldBe json(
         """
-        1
+        {
+           "value" : 1
+        }
         """
       )
     }

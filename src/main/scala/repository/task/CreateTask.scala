@@ -12,14 +12,16 @@ import error._
 import doobie.implicits._
 import doobie.implicits.javasql._
 import doobie.implicits.javatime._
+import models.{ProjectId, TaskId, UserId}
 import repository.query.TaskQueries
 
 class CreateTask[F[_] : Sync](tx: Transactor[F]) {
 
-  def apply(create: LogTaskRequest, projectId: Long, userId: Long, startTime: LocalDateTime): F[Either[LogTimeAppError, Int]] =
+  def apply(create: LogTaskRequest, projectId: ProjectId, userId: UserId, startTime: LocalDateTime): F[Either[LogTimeAppError, TaskId]] =
     TaskQueries
       .insert(create, projectId, userId, startTime)
       .unique
+      .map(TaskId)
       .transact(tx)
       .attemptSomeSqlState {
         case sqlstate.class23.EXCLUSION_VIOLATION => TaskNotCreatedExclusionViolation

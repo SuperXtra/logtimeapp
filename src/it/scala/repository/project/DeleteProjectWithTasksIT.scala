@@ -9,11 +9,12 @@ import db.InitializeDatabase
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
 import error._
+import models.{Active, ProjectId, TaskDuration, TaskId, UserId}
 import models.request.LogTaskRequest
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.task.{GetTask, CreateTask}
+import repository.task.{CreateTask, GetTask}
 import repository.user.InsertUser
 
 class DeleteProjectWithTasksIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
@@ -30,8 +31,8 @@ class DeleteProjectWithTasksIT extends AnyFlatSpec with Matchers with GivenWhenT
     val projectId = insertProject(projectName, userId).unsafeRunSync()
 
     And("creating tasks")
-    val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), 50, None, None)
-    val req2 = LogTaskRequest(projectName, "test description 2", ZonedDateTime.now(ZoneOffset.UTC).minusDays(5), 50, None, None)
+    val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), TaskDuration(50), None, None)
+    val req2 = LogTaskRequest(projectName, "test description 2", ZonedDateTime.now(ZoneOffset.UTC).minusDays(5), TaskDuration(50), None, None)
     val task1 = createTask(req1, projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
     val task2 = createTask(req2, projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
 
@@ -47,8 +48,8 @@ class DeleteProjectWithTasksIT extends AnyFlatSpec with Matchers with GivenWhenT
 
     Then("it should return true and active  = false for tasks")
     project shouldBe None
-    firstTask.get.active shouldBe Some(false)
-    secondTask.get.active shouldBe Some(false)
+    firstTask.get.active shouldBe Some(Active(false))
+    secondTask.get.active shouldBe Some(Active(false))
   }
 
 

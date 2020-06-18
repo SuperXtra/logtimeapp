@@ -11,15 +11,16 @@ import repository.project.{GetProjectByName, UpdateProjectName}
 import repository.user._
 import cats.implicits._
 import error._
+import models.{Active, ProjectId, UserId}
 import models.request.{ChangeProjectNameRequest, DeleteProjectRequest}
 
 class UpdateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "update project" in new Context {
     Given("user id, result of updating project, updated project")
-    val userId = Some(1)
+    val userId = Some(UserId(1))
     val updateProjectName = "After change"
-    val updatedProject = Project(1, 1, updateProjectName, LocalDateTime.now(), Some(LocalDateTime.now().plusHours(2)), Some(true))
+    val updatedProject = Project(ProjectId(1), UserId(1), updateProjectName, LocalDateTime.now(), Some(LocalDateTime.now().plusHours(2)), Some(Active(true)))
 
     And("ability to check if project was updated")
     var newName = none[String]
@@ -54,7 +55,7 @@ class UpdateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "not update project" in new Context {
     Given("user id, result of updating project, updated project")
-    val userId = Some(1)
+    val userId = Some(UserId(1))
     val updateName = (_: String,_: String) => IO{
       ProjectNotCreated.asLeft[Unit]
     }
@@ -77,15 +78,15 @@ class UpdateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
   private trait Context {
 
     def serviceUnderTest(
-                          userId: Option[Int],
+                          userId: Option[UserId],
                           updateName: (String, String) => IO[Either[LogTimeAppError, Unit]]
                         ): UpdateProject[IO] = {
 
       val user = new GetUserByUUID[IO](null) {
-        override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
+        override def apply(userIdentification: String): IO[Option[UserId]] = userId.pure[IO]
       }
       val updateProjectName = new UpdateProjectName[IO](null) {
-        override def apply(oldName: String, newName: String, userId: Long): IO[Either[LogTimeAppError, Unit]] = updateName(oldName, newName)
+        override def apply(oldName: String, newName: String, userId: UserId): IO[Either[LogTimeAppError, Unit]] = updateName(oldName, newName)
       }
 
       new UpdateProject[IO](user, updateProjectName)

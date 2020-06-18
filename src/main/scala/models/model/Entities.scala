@@ -2,31 +2,33 @@ package models.model
 
 import java.time._
 
+import models._
+
 case class User(
-                   id: Int,
-                   userIdentification: String
-                 )
+                 userId: UserId,
+                 userIdentification: String)
+
 
 case class Task(
-                   id: Int,
-                   projectId: Int,
-                   userId: Int,
-                   createTime: LocalDateTime,
-                   taskDescription: String,
-                   startTime: LocalDateTime,
-                   endTime: LocalDateTime,
-                   duration: Int,
-                   volume: Option[Int],
-                   comment: Option[String],
-                   deleteTime: Option[LocalDateTime],
-                   active: Option[Boolean]
-                 )
+                 id: TaskId,
+                 projectId: ProjectId,
+                 userId: UserId,
+                 createTime: LocalDateTime,
+                 taskDescription: String,
+                 startTime: LocalDateTime,
+                 endTime: LocalDateTime,
+                 duration: TaskDuration,
+                 volume: Option[Volume],
+                 comment: Option[String],
+                 deleteTime: Option[LocalDateTime],
+                 active: Option[Active]
+               )
 
 case class Project(
-                      id: Int,
-                      userId: Int,
-                      projectName: String,
-                      createTime: LocalDateTime,
-                      deleteTime: Option[LocalDateTime],
-                      active: Option[Boolean]
-                    )
+                    id: ProjectId,
+                    userId: UserId,
+                    projectName: String,
+                    createTime: LocalDateTime,
+                    deleteTime: Option[LocalDateTime],
+                    active: Option[Active]
+                  )

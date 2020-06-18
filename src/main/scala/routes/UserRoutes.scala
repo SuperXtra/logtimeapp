@@ -15,6 +15,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import service.auth.Auth
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Route
+import models.Exists
 
 object UserRoutes {
 
@@ -33,15 +34,15 @@ object UserRoutes {
     }
 
 
-  def authorizeUser(userId: String => IO[Boolean])
+  def authorizeUser(userId: String => IO[Exists])
                    (implicit auth: Auth): Route =
     pathPrefix("user" / "login") {
       post {
         entity(as[AuthorizationRequest]) { req => {
           complete(
             userId(req.userUUID.toString).map[ToResponseMarshallable] {
-              case true => AuthResponse(auth.token(req.userUUID.toString))
-              case false => MapToErrorResponse.auth(AuthenticationNotSuccessful )
+              case Exists(value) if value => AuthResponse(auth.token(req.userUUID.toString))
+              case Exists(value) if !value => MapToErrorResponse.auth(AuthenticationNotSuccessful )
             }.unsafeToFuture
           )
         }

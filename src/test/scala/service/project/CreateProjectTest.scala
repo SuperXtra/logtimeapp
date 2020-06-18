@@ -7,17 +7,18 @@ import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import repository.project.InsertProject
-import repository.user.{InsertUser, GetUserByUUID, GetUserById}
+import repository.user.{GetUserById, GetUserByUUID, InsertUser}
 import service.user.CreateUser
 import cats.implicits._
+import models.{ProjectId, UserId}
 import models.request.{CreateProjectRequest, DeleteTaskRequest}
 
 class CreateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "create new project" in new Context {
     Given("user id, inserted project id and request")
-    val userId  = Some(2)
-    val insertedProjectId = 4.asRight
+    val userId  = Some(UserId(2))
+    val insertedProjectId = ProjectId(4).asRight
     val request = CreateProjectRequest("Test project name")
 
     And("a service will create project and return its id")
@@ -27,13 +28,13 @@ class CreateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     val result = createProject(request.projectName, "dsaddas32ndsjkn").unsafeRunSync()
 
     Then("returns project id")
-    result shouldBe Right(4)
+    result shouldBe Right(ProjectId(4))
   }
 
   it should "not create new project" in new Context {
     Given("inserted project id and request")
     val userId  = None
-    val insertedProjectId = 1.asRight
+    val insertedProjectId = ProjectId(1).asRight
 
     val request = CreateProjectRequest("Test project name")
 
@@ -49,7 +50,7 @@ class CreateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "not create new project due to problem with insert" in new Context {
     Given("project error and userId")
-    val userId  = Some(1)
+    val userId  = Some(UserId(1))
     val insertedProjectId = ProjectNotCreated.asLeft
 
     val request = CreateProjectRequest("Test project name")
@@ -67,16 +68,15 @@ class CreateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
   private trait Context {
 
     def serviceUnderTest(
-                          userId: Option[Int],
-                          insertedProjectId: Either[LogTimeAppError, Int]
+                          userId: Option[UserId],
+                          insertedProjectId: Either[LogTimeAppError, ProjectId]
                         ): CreateProject[IO] = {
 
       val getUserId =  new GetUserByUUID[IO](null) {
-        override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
+        override def apply(userIdentification: String): IO[Option[UserId]] = userId.pure[IO]
       }
       val createProject = new InsertProject[IO](null) {
-        override def apply(projectName: String, userId: Long): IO[Either[LogTimeAppError, Int]] = insertedProjectId.pure[IO]
-
+        override def apply(projectName: String, userId: UserId): IO[Either[LogTimeAppError, ProjectId]] = insertedProjectId.pure[IO]
       }
 
       new CreateProject[IO](getUserId, createProject)

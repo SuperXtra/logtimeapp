@@ -9,13 +9,15 @@ import error._
 import doobie.implicits._
 import repository.query.TaskQueries
 import cats.implicits._
+import models.{DeleteCount, ProjectId, UserId}
 
 class DeleteTask[F[+_] : Sync](tx: Transactor[F]) {
 
-  def apply(taskDescription: String, projectId: Long, userId: Long, deleteTime: LocalDateTime): F[Either[LogTimeAppError, Int]] = {
+  def apply(taskDescription: String, projectId: ProjectId, userId: UserId, deleteTime: LocalDateTime): F[Either[LogTimeAppError, DeleteCount]] = {
     TaskQueries
       .deleteTask(taskDescription, projectId, userId, deleteTime)
       .run
+      .map(DeleteCount)
       .transact(tx)
       .attemptSomeSqlState {
         case sqlstate.class23.UNIQUE_VIOLATION => TaskDeleteUnsuccessful
