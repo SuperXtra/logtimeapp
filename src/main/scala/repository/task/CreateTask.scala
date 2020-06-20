@@ -1,30 +1,37 @@
 package repository.task
 
-import java.sql.Timestamp
 import java.time.LocalDateTime
 
 import cats.implicits._
 import cats.effect._
 import models.request.LogTaskRequest
 import doobie._
-import doobie.postgres.sqlstate
 import error._
-import doobie.implicits._
-import doobie.implicits.javasql._
-import doobie.implicits.javatime._
 import models.{ProjectId, TaskId, UserId}
 import repository.query.TaskQueries
+import slick.jdbc.PostgresProfile.api._
+import org.postgresql.util.{PSQLException, _}
+import slick.dbio.Effect
 
-class CreateTask[F[_] : Sync](tx: Transactor[F]) {
+import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success}
+import ExecutionContext.Implicits.global
 
-  def apply(create: LogTaskRequest, projectId: ProjectId, userId: UserId, startTime: LocalDateTime): F[Either[LogTimeAppError, TaskId]] =
+
+class CreateTask[F[_] : Sync] {
+
+  def apply(create: LogTaskRequest, projectId: ProjectId, userId: UserId, startTime: LocalDateTime): DBIOAction[Either[LogTimeAppError, TaskId], NoStream, Effect.Write with Effect] =
     TaskQueries
-      .insert(create, projectId, userId, startTime)
-      .unique
-      .map(TaskId)
-      .transact(tx)
-      .attemptSomeSqlState {
-        case sqlstate.class23.EXCLUSION_VIOLATION => TaskNotCreatedExclusionViolation
-        case sqlstate.class23.UNIQUE_VIOLATION => TaskNameExists
+      .insertSlick(create, projectId, userId, startTime)
+      .asTry
+      .flatMap {
+        case Failure(ex: PSQLException) =>
+          ex match {
+            case e: PSQLException if e.getServerErrorMessage.getSQLState == "23P01" => DBIO.successful(TaskNotCreatedExclusionViolation.asLeft)
+            case e: PSQLException if e.getServerErrorMessage.getSQLState == "23505" => DBIO.successful(TaskNameExists.asLeft)
+          }
+        case Failure(_) => DBIO.successful(UnknownError.asLeft)
+        case Success(value)
+        => DBIO.successful(value.asRight)
       }
 }

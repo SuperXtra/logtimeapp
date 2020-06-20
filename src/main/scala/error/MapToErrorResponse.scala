@@ -6,11 +6,11 @@ import akka.http.scaladsl.model.StatusCodes
 object MapToErrorResponse {
 
   def project(error: LogTimeAppError) = error match {
-    case ProjectNotCreated => StatusCodes.OK -> ErrorResponse("error.project.update.unsuccessful.given.name.exists")
+    case ProjectNotCreated => StatusCodes.OK -> ErrorResponse("error.project.not.created.given.name.exists")
     case ProjectUpdateUnsuccessful => StatusCodes.OK -> ErrorResponse("error.project.update.unsuccessful.no.content.updated")
     case UserNotFound => StatusCodes.OK -> ErrorResponse("error.project.update.unsuccessful.user.not.found")
     case ProjectNameExists => StatusCodes.OK -> ErrorResponse("error.project.update.unsuccessful.name.exists")
-    case ProjectDeleteUnsuccessful => StatusCodes.OK -> ErrorResponse("error.project.update.unsuccessful.name.exists")
+    case ProjectDeleteUnsuccessful => StatusCodes.OK -> ErrorResponse("error.project.deactivation.unsuccessful")
     case ProjectNotFound => StatusCodes.OK -> ErrorResponse("error.project.could.not.find.project.with.given.name")
     case ProjectDeleteUnsuccessfulUserIsNotTheOwner => StatusCodes.OK -> ErrorResponse("error.project.delete.unsuccessful.user.not.owner")
     case TaskUpdateUnsuccessful => StatusCodes.OK -> ErrorResponse("error.project.update.unsuccessful.task.not.updated.successfully")

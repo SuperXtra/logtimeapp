@@ -37,8 +37,8 @@ case class ReportFromDb(
                          task_description: Option[String],
                          start_time: Option[LocalDateTime],
                          end_time: Option[LocalDateTime],
-                         duration: Option[TaskDuration],
-                         volume: Option[Volume],
+                         duration: Option[Int],
+                         volume: Option[Int],
                          comment: Option[String]
                        )
 

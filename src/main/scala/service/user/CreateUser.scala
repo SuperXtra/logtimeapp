@@ -2,28 +2,31 @@ package service.user
 
 import java.util.UUID
 
-import cats.data.EitherT
-import cats.effect.{IO, Sync}
-import error.{CannotCreateUserWithGeneratedUUID, LogTimeAppError, UserNotFound}
-import models.UserId
-import models.model.User
+import akka.event.MarkerLoggingAdapter
+import cats.effect._
+import models._
 import repository.user.{GetUserById, InsertUser}
+import scala.concurrent._
+import ExecutionContext.Implicits.global
+import utils.EitherT
+import slick.jdbc.PostgresProfile.api._
+import db.RunDBIOAction._
 
 class CreateUser[F[+_] : Sync](getNewUser: GetUserById[F],
-                               create: InsertUser[F]) {
+                               create: InsertUser[F])
+                              (implicit db: Database,
+                               logger: MarkerLoggingAdapter,
+                               ec: ContextShift[IO]) {
+  def apply =
+    (
+      for {
+        id <- createUser
+        user <- getExistingUserById(id)
+      } yield user).value.exec
 
-  def apply: F[Either[LogTimeAppError, User]] = (
-    for {
-      id <- createUser
-      user <- getExistingUserById(id)
-    } yield user
-    ).value
-
-  private def createUser: EitherT[F, CannotCreateUserWithGeneratedUUID.type, UserId] = {
+  private def createUser =
     EitherT(create(UUID.randomUUID().toString))
-  }
 
-  private def getExistingUserById(id: UserId): EitherT[F, LogTimeAppError, User] = {
-    EitherT.fromOptionF(getNewUser(id), UserNotFound)
-  }
+  private def getExistingUserById(id: UserId) =
+    EitherT(getNewUser(id))
 }

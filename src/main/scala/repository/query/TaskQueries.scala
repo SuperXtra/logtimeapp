@@ -5,99 +5,83 @@ import java.time._
 import models.request.LogTaskRequest
 import java.time.{ZoneOffset, ZonedDateTime}
 
-import doobie._
-import doobie.implicits._
 import models.model._
-import doobie.implicits.javatime._
-import models.{ProjectId, TaskId, UserId}
+import models._
+import slick.jdbc.PostgresProfile.api._
+import ColumnImplicits._
+import slick.dbio.Effect
+import slick.sql.FixedSqlAction
 
 object TaskQueries {
 
-  def updateByInsert(update: TaskToUpdate, created: LocalDateTime) = {
+  lazy val task = TaskSchema.tasks
+
+  def updateByInsertSlick(update: TaskToUpdate, created: LocalDateTime) = {
     val start = update.startTime
     val end = start.plusMinutes(update.duration.value)
-    fr"""INSERT INTO tb_task (
-        project_id,
-        user_id,
-        create_time,
-        task_description,
-        start_time,
-        end_time,
-        duration,
-        volume,
-        comment) VALUES (
-        ${update.projectId},
-        ${update.userId},
-        ${created},
-        ${update.taskDescription},
-        ${start.toLocalDateTime},
-        ${end.toLocalDateTime},
-        ${update.duration},
-        ${update.volume},
-        ${update.comment}
-        ) returning id"""
-      .query[Int]
+
+    task returning task.map(_.id) +=
+      Task(
+        projectId = update.projectId,
+        userId = update.userId ,
+        createTime = created ,
+        taskDescription = update.taskDescription ,
+        startTime = start.toLocalDateTime,
+        endTime = end.toLocalDateTime ,
+        duration = update.duration,
+        volume =  update.volume,
+        comment = update.comment,
+        deleteTime = None,
+        active = Some(Active(true))
+      )
   }
 
-  def insert(create: LogTaskRequest, projectId: ProjectId, userId: UserId, startTime: LocalDateTime) = {
+  def insertSlick(create: LogTaskRequest, projectId: ProjectId, userId: UserId, startTime: LocalDateTime) = {
     val start = create.startTime.withZoneSameInstant(ZoneOffset.UTC)
     val end: ZonedDateTime = start.plusMinutes(create.durationTime.value)
 
-    fr"""INSERT INTO tb_task (
-             project_id,
-             user_id,
-             create_time,
-             task_description,
-             start_time,
-             end_time,
-             duration,
-             volume,
-             comment
-           ) VALUES (
-             ${projectId.value},
-             ${userId.value},
-             ${startTime},
-             ${create.taskDescription},
-             ${start.toLocalDateTime},
-             ${end.toLocalDateTime},
-             ${create.durationTime.value},
-             ${create.volume},
-             ${create.comment}
-           ) RETURNING id"""
-      .query[Int]
-
+    task returning task.map(_.id) +=
+      Task(
+        projectId = projectId,
+        userId = userId ,
+        createTime = startTime ,
+        taskDescription = create.taskDescription ,
+        startTime = start.toLocalDateTime,
+        endTime = end.toLocalDateTime ,
+        duration = create.durationTime ,
+        volume =  create.volume,
+        comment = create.comment,
+        deleteTime = None,
+        active = Some(Active(true))
+      )
+  }
+  def deleteTaskSlick(taskDescription: String, projectId: ProjectId, userId: UserId, deleteTime: LocalDateTime) = {
+    task.filter(t =>
+      t.taskDescription === taskDescription &&
+        t.projectId === projectId &&
+        t.userId === userId &&
+        t.active === Active(true)
+    ).map(col =>
+      (col.deleteTime, col.active))
+      .update((Some(deleteTime), Some(Active(false))))
   }
 
-  def getTaskById(id: TaskId) = {
-    sql"SELECT * FROM tb_task WHERE id = ${id.value}".query[Task]
+
+  def deleteTasksForProjectSlick(projectId: ProjectId, deleteTime: LocalDateTime): FixedSqlAction[Int, NoStream, Effect.Write] = {
+    task.filter(t => t.projectId === projectId)
+      .map(col => (col.deleteTime, col.active))
+      .update((Some(deleteTime), Some(Active(false))))
   }
 
-  def deleteTask(taskDescription: String, projectId: ProjectId, userId: UserId, deleteTime: LocalDateTime) = {
-    fr"""
-          UPDATE tb_task SET delete_time = ${deleteTime}, active = false
-          WHERE project_id = ${projectId.value} AND
-          user_id = ${userId.value}
-          AND task_description = ${taskDescription}
-          AND active = true
-          """.update
+  def getTaskByIdSlick(id: TaskId) = {
+    task.filter(t => t.id === id).result.headOption
   }
 
-  def fetchTasksForProject(projectId: ProjectId) = {
-    fr"""
-          SELECT * FROM tb_task
-          WHERE project_id = ${projectId.value}
-          AND active = true
-          """.query[Task]
+  def fetchTasksForProjectSlick(projectId: ProjectId) = {
+    task.filter(t => t.projectId === projectId && t.active === Active(true)).result
   }
 
-  def fetchTask(taskDescription: String, userId: UserId) = {
-    sql"SELECT * FROM tb_task WHERE task_description = ${taskDescription} AND user_id = ${userId.value} AND active = true".query[Task]
-  }
-
-  def deleteTasksForProject(projectId: ProjectId, deleteTime: LocalDateTime): Update0 = {
-    fr"""
-        UPDATE tb_task SET delete_time = ${deleteTime}, active = false
-        WHERE project_id = ${projectId.value}
-        """.update
+  def fetchTaskSlick(taskDescription: String, userId: UserId) = {
+    task.filter(t => t.taskDescription === taskDescription && t.userId === userId && t.active === Active(true)).result.headOption
   }
 }

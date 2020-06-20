@@ -52,7 +52,7 @@ object ProjectRoutes {
       }
     }
 
-  def deleteProject(req: (String, String) => IO[Either[LogTimeAppError, Unit]])
+  def deleteProject(req: (String, String) => IO[Either[LogTimeAppError,Unit]])
                    (implicit auth: Auth): Route =
     path(projectPath) {
       delete {

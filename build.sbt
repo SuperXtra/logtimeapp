@@ -45,12 +45,14 @@ lazy val scalaTestFunSuiteVersion =  "3.3.0-SNAP2"
 lazy val testContVersion          =  "0.37.0"
 lazy val testContPostgresVersion  =  "0.37.0"
 lazy val macWireVersion           =  "2.3.6"
+lazy val akkaSlickVersion         =  "3.3.2"
 
 lazy val akkaHttp                 =  Seq("com.typesafe.akka"      %% "akka-http"                        % akkaHttpVersion                       )
 lazy val akkaSteam                =  Seq("com.typesafe.akka"      %% "akka-stream"                      % akkaVersion                           )
 lazy val akkaActor                =  Seq("com.typesafe.akka"      %% "akka-actor"                       % akkaVersion                           )
 lazy val akkaHttpSpray            =  Seq("com.typesafe.akka"      %% "akka-http-spray-json"             % akkaHttpVersion                       )
 lazy val akkaCirce                =  Seq("de.heikoseeberger"      %% "akka-http-circe"                  % akkaCirceVersion                      )
+lazy val akkaSlick                =  Seq("com.typesafe.slick"     %% "slick"                            % akkaSlickVersion                      )
 
 lazy val akkaHttpTestKit          =  Seq("com.typesafe.akka"      %% "akka-http-testkit"                % akkaHttpVersion           % "test"    )
 lazy val akkaSteamTestKit         =  Seq("com.typesafe.akka"      %% "akka-stream-testkit"              % akkaVersion               % "test"    )
@@ -89,7 +91,8 @@ lazy val akka =
     akkaHttpSpray ++
     akkaCirce ++
     akkaHttpTestKit ++
-    akkaSteamTestKit
+    akkaSteamTestKit ++
+    akkaSlick
 
 lazy val cats =
   catsCore ++

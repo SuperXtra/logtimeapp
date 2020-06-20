@@ -19,7 +19,8 @@ import models.Exists
 
 object UserRoutes {
 
-  private case class AuthorizationRequest( userUUID: UUID)
+  private case class AuthorizationRequest(userUUID: UUID)
+
   private case class AuthResponse(token: String)
 
   def createUser(user: => IO[Either[LogTimeAppError, User]]) =
@@ -34,15 +35,18 @@ object UserRoutes {
     }
 
 
-  def authorizeUser(userId: String => IO[Exists])
+  def authorizeUser(userId: String => IO[Either[LogTimeAppError, Exists]])
                    (implicit auth: Auth): Route =
     pathPrefix("user" / "login") {
       post {
         entity(as[AuthorizationRequest]) { req => {
           complete(
             userId(req.userUUID.toString).map[ToResponseMarshallable] {
-              case Exists(value) if value => AuthResponse(auth.token(req.userUUID.toString))
-              case Exists(value) if !value => MapToErrorResponse.auth(AuthenticationNotSuccessful )
+              case Left(value) => MapToErrorResponse.auth(value)
+              case Right(value) => value match {
+                case Exists(value) if value => AuthResponse(auth.token(req.userUUID.toString))
+                case Exists(value) if !value => MapToErrorResponse.auth(AuthenticationNotSuccessful)
+              }
             }.unsafeToFuture
           )
         }

@@ -54,7 +54,7 @@ class UserRoutesTest  extends AnyFlatSpec with Matchers with ScalatestRouteTest 
 
   it should "should authenticate user" in new Context {
     val route =
-      Route.seal(UserRoutes.authorizeUser(_ => IO(Exists(true))))
+      Route.seal(UserRoutes.authorizeUser(_ => IO(Exists(true).asRight)))
     Post("/user/login",
       HttpEntity(
         `application/json`,
@@ -78,7 +78,7 @@ class UserRoutesTest  extends AnyFlatSpec with Matchers with ScalatestRouteTest 
   it should "should not authenticate user" in new Context {
 
     val route =
-      Route.seal(UserRoutes.authorizeUser(_ => IO(Exists(false))))
+      Route.seal(UserRoutes.authorizeUser(_ => IO(Exists(false).asRight)))
     Post("/user/login",
       HttpEntity(
         `application/json`,

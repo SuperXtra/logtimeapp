@@ -1,29 +1,28 @@
 package repository.query
 
-import models.model.User
-import doobie.implicits.javatime._
-import doobie.implicits._
+import models.model.{User, UserSchema}
 import models.UserId
+import models.model.ColumnImplicits._
+import slick.jdbc.PostgresProfile.api._
+import slick.sql.FixedSqlAction
 
 object UserQueries {
+  val users = UserSchema.users
 
-  def insertUser(userIdentification: String) = {
-    sql"INSERT INTO tb_user (user_identification) VALUES (${userIdentification}) RETURNING id".query[Int]
+  def insertUserSlick(userIdentification: String): FixedSqlAction[UserId, NoStream, Effect.Write] = {
+    users returning users.map(_.userId) +=
+      User(userIdentification = userIdentification)
   }
 
-  def getUserById(id: UserId) = {
-    sql"SELECT * FROM tb_user WHERE id = ${id.value}".query[User]
+  def getUserByIdSlick(id: UserId) = {
+    users.filter(u => u.userId === id).result.headOption
   }
 
-  def getUserIdByUUID(userIdentification: String) = {
-    fr"""
-            SELECT id FROM tb_user
-            WHERE user_identification = ${userIdentification}
-            """.query[Int]
+  def getUserIdByUUIDSlick(userIdentification: String): DBIO[Option[User]] = {
+    users.filter(u => u.userIdentification === userIdentification).result.headOption
   }
 
-  def userExists(userIdentification: String) = {
-    sql"SELECT EXISTS ( SELECT * FROM tb_user WHERE user_identification = ${userIdentification} )"
-      .query[Boolean]
+  def userExistsSlick(userIdentification: String): DBIO[Boolean] = {
+    users.filter(u => u.userIdentification === userIdentification).exists.result
   }
 }

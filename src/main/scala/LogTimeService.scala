@@ -15,8 +15,9 @@ import repository.user._
 import routes._
 import service.project._
 import service.report._
-import service.task._
-import service.user._
+import service.task.{DeactivateTask, LogTask, UpdateTask}
+import service.user.{AuthenticateUser, CreateUser}
+//import service.user._
 import pureconfig._
 import pureconfig.generic.auto._
 import repository.report.{GetDetailedReport, GetReport}
@@ -28,15 +29,18 @@ import doobie.util.transactor.Transactor
 import scala.concurrent.ExecutionContextExecutor
 
 trait LogTimeService {
-  val databaseConfiguration: Config = ConfigFactory.load("database-configuration.conf")
-  val databaseConfig: DatabaseConfig = ConfigSource.fromConfig(databaseConfiguration).loadOrThrow[DatabaseConfig]
-  val authConfiguration: Config = ConfigFactory.load("auth-configuration.conf")
-  val authConfig: AuthConfig = ConfigSource.fromConfig(authConfiguration).loadOrThrow[AuthConfig]
+  lazy val databaseConfiguration: Config = ConfigFactory.load("database-configuration.conf")
+  lazy val databaseConfig: DatabaseConfig = ConfigSource.fromConfig(databaseConfiguration).loadOrThrow[DatabaseConfig]
+  lazy val authConfiguration: Config = ConfigFactory.load("auth-configuration.conf")
+  lazy val authConfig: AuthConfig = ConfigSource.fromConfig(authConfiguration).loadOrThrow[AuthConfig]
 
   implicit lazy val logger: MarkerLoggingAdapter = Logging.withMarker(system, "log-time-app")
 
-  implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
-  val transactor = DatabaseContext.transactor(databaseConfig)
+  implicit lazy val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
+  implicit lazy val transactor = DatabaseContext.transactor(databaseConfig)
+//  implicit lazy val slickTransactor = DatabaseContext.slickTransactor(databaseConfig)
+
+
 
   lazy val deleteProjectWithTasks = wire[DeleteProjectWithTasks[IO]]
   lazy val insertProject = wire[InsertProject[IO]]
