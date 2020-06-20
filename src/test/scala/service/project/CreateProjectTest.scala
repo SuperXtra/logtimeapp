@@ -13,6 +13,9 @@
 //import cats.implicits._
 //import models.{ProjectId, UserId}
 //import models.request.{CreateProjectRequest, DeleteTaskRequest}
+//import slick.dbio.{DBIOAction, Effect}
+//import slick.jdbc
+//import slick.jdbc.PostgresProfile
 //
 //class CreateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 //
@@ -75,11 +78,11 @@
 //                          insertedProjectId: Either[LogTimeAppError, ProjectId]
 //                        ): CreateProject[IO] = {
 //
-//      val getUserId =  new GetUserByUUID[IO](null) {
-//        override def apply(userIdentification: String): IO[Option[UserId]] = userId.pure[IO]
+//      val getUserId =  new GetUserByUUID[IO] {
+//        override def apply(userIdentification: String): jdbc.PostgresProfile.api.DBIOAction[Either[LogTimeAppError, User], jdbc.PostgresProfile.api.NoStream, Effect.All with jdbc.PostgresProfile.api.Effect] = super.apply(userIdentification)
 //      }
-//      val createProject = new InsertProject[IO](null) {
-//        override def apply(projectName: String, userId: UserId): IO[Either[LogTimeAppError, ProjectId]] = insertedProjectId.pure[IO]
+//      val createProject = new InsertProject[IO] {
+//        override def apply(projectName: String, userId: UserId): _root_.slick.jdbc.PostgresProfile.api.DBIOAction[Either[LogTimeAppError, ProjectId], _root_.slick.jdbc.PostgresProfile.api.NoStream, Effect.Write with _root_.slick.jdbc.PostgresProfile.api.Effect] = super.apply(projectName, userId)
 //      }
 //
 //      new CreateProject[IO](getUserId, createProject)
