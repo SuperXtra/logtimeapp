@@ -62,7 +62,7 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
       json(response.raw) shouldBe json(
         s"""
           {
-              "error" : "error.project.update.unsuccessful.given.name.exists"
+              "error" : "error.project.not.created.given.name.exists"
           }
         """
       )
@@ -70,9 +70,6 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
   }
 
   it should "update project name and return updated one" in new Context {
-
-    val project = Project(ProjectId(1), UserId(1), "new test project name", LocalDateTime.parse("2020-06-03T13:18:38.01865"), None, Some(Active(true)))
-
 
     val route =
       Route.seal(ProjectRoutes.updateProject((_, _, _) => IO(().asRight)))
