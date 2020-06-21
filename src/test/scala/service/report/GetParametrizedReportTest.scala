@@ -9,10 +9,13 @@ import models.request._
 import models.reports._
 import repository.report.GetReport
 import cats.implicits._
-import models.{Page, Quantity}
+import models.{Page, Quantity, TaskDuration}
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import service.SetUp
+import slick.dbio.DBIOAction
+import slick.jdbc.PostgresProfile
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -44,7 +47,7 @@ class GetParametrizedReportTest extends AnyFlatSpec with Matchers with GivenWhen
     When("generating report")
     val result = report(query).unsafeRunSync()
 
-    val taskList = List(ReportTask(reportFromDb.task_create_time, reportFromDb.task_description, reportFromDb.start_time, reportFromDb.end_time, reportFromDb.duration, reportFromDb.volume, reportFromDb.comment))
+    val taskList = List(ReportTask(reportFromDb.task_create_time, reportFromDb.task_description, reportFromDb.start_time, reportFromDb.end_time, None, None, reportFromDb.comment))
     val response = FinalParametrizedReport(reportFromDb.project_name, reportFromDb.project_create_time, taskList)
 
     Then("returns generated report")
@@ -52,13 +55,12 @@ class GetParametrizedReportTest extends AnyFlatSpec with Matchers with GivenWhen
   }
 
 
-  private trait Context {
-    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
+  private trait Context extends SetUp {
 
     def serviceUnderTest(report: Either[LogTimeAppError, List[ReportFromDb]]): GetParametrizedReport[IO] = {
 
-      val getReport = new GetReport[IO](null) {
-        override def apply(projectQuery: ReportBodyWithParamsRequest): IO[Either[LogTimeAppError, List[ReportFromDb]]] = report.pure[IO]
+      val getReport = new GetReport[IO] {
+        override def apply(projectQuery: ReportBodyWithParamsRequest) = DBIOAction.successful(report)
       }
 
       new GetParametrizedReport[IO](getReport)

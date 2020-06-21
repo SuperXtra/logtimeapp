@@ -7,16 +7,23 @@ import repository.query.ProjectQueries
 import doobie.implicits._
 import cats.implicits._
 import models.{IsOwner, UserId}
+import slick.jdbc.PostgresProfile.api._
+import scala.concurrent._
+import ExecutionContext.Implicits.global
 
-class IsProjectOwner[F[+_] : Sync](tx: Transactor[F]) {
+import scala.util.{Failure, Success}
 
-  def apply(userId: UserId, projectName: String): F[Either[LogTimeAppError, IsOwner]] =
+class IsProjectOwner[F[+_] : Sync] {
+
+  def apply(userId: UserId, projectName: String): DBIOAction[Either[LogTimeAppError, IsOwner], NoStream, Effect.Read with Effect] =
     ProjectQueries
-      .checkIfUserIsOwner(userId, projectName)
-      .unique
-      .transact(tx)
-      .map {
-        case true => IsOwner(true).asRight
-        case false => ProjectDeleteUnsuccessfulUserIsNotTheOwner.asLeft
+      .checkIfUserIsOwnerSlick(userId, projectName)
+    .asTry
+      .flatMap {
+        case Failure(exception) => DBIO.successful(ProjectDeleteUnsuccessfulUserIsNotTheOwner.asLeft)
+        case Success(value: Boolean) =>value match {
+          case true => DBIO.successful(IsOwner(true).asRight)
+          case false => DBIO.successful(ProjectDeleteUnsuccessfulUserIsNotTheOwner.asLeft)
+        }
       }
 }

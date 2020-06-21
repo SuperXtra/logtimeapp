@@ -15,6 +15,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import repository.project.InsertProject
 import repository.user.InsertUser
+import slick.jdbc.PostgresProfile.api._
+import db.RunDBIOAction._
 
 class GetUserTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
 
@@ -23,46 +25,45 @@ class GetUserTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with Fo
   it should "fetch user task" in new Context {
 
     Given("existing user")
-    val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().right.get
+    val userId = createUser(UUID.randomUUID().toString).exec.unsafeRunSync().right.get
 
     And("existing project")
     val projectName = "test_project"
-    val projectId = insertProject(projectName, userId).unsafeRunSync()
+    val projectId = insertProject(projectName, userId).exec.unsafeRunSync()
 
     And("existing tasks")
     val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), TaskDuration(50), None, None)
-    val task1 = insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
+    val task1 = insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).exec.unsafeRunSync()
 
     When("fetching user task")
-    val result = getUserTask("test description 1", userId).unsafeRunSync()
+    val result = getUserTask("test description 1", userId).exec.unsafeRunSync()
 
     Then("it should return task with correct task description")
-    result.get.taskDescription shouldBe "test description 1"
+    result.right.get.taskDescription shouldBe "test description 1"
   }
 
   private trait Context {
 
     implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
 
-    val tx = Transactor.fromDriverManager[IO](
-      container.driverClassName,
+    implicit val tx: Database = Database.forURL(
       container.jdbcUrl,
       container.username,
-      container.password
+      container.password,
+      null,
+      container.driverClassName
     )
 
-    val insertProject = new InsertProject[IO](tx)
-    val createUser = new InsertUser[IO](tx)
-    val insertTask = new CreateTask[IO](tx)
-    val getUserTask = new GetUserTask[IO](tx)
+    val insertProject = new InsertProject[IO]
+    val createUser = new InsertUser[IO]
+    val insertTask = new CreateTask[IO]
+    val getUserTask = new GetUserTask[IO]
 
-    import doobie.implicits._
-
-    (for {
-      _ <- sql"DELETE from tb_project".update.run
-      _ <- sql"DELETE from tb_user".update.run
-      _ <- sql"DELETE from tb_task".update.run
-    } yield ()).transact(tx).unsafeRunSync()
+    for {
+      _ <- sql"DELETE from tb_project".asUpdate.exec
+      _ <- sql"DELETE from tb_user".asUpdate.exec
+      _ <- sql"DELETE from tb_task".asUpdate.exec
+    } yield ()
   }
 
   override def beforeEach(): Unit = {
@@ -72,7 +73,5 @@ class GetUserTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with Fo
       container.username,
       container.password
     ).unsafeRunSync()
-
-
   }
 }

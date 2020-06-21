@@ -2,7 +2,6 @@ package service.task
 
 import java.time._
 
-import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect._
 import cats.implicits._
 import error._
@@ -15,19 +14,21 @@ import org.scalatest.matchers.should.Matchers
 import repository.project.GetProjectByName
 import repository.task._
 import repository.user.GetUserByUUID
+import service.SetUp
+import slick.dbio._
 
 class TaskDeleteTestDeactivateTaskQueries extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "delete task" in new Context {
     Given("user wants to delete task")
     val project = Project(ProjectId(1), UserId(123), "test", LocalDateTime.now(), None, None)
-    val userId = UserId(232)
+    val user = User(UserId(232),"123")
     val taskDeleteResult = DeleteCount(1)
 
     And("a service will find project id, user, delete(update) task for that data and return 1")
     val deleteTask = serviceUnderTest(
-      project = Some(project),
-      userId = userId.some,
+      project = project.asRight,
+      userId = user.asRight,
       taskDeleteResult = taskDeleteResult.asRight
     )
 
@@ -50,8 +51,8 @@ class TaskDeleteTestDeactivateTaskQueries extends AnyFlatSpec with Matchers with
 
     And("a service that cannot find specified project and task")
     val deleteTask = serviceUnderTest(
-      project = None,
-      userId = None,
+      project = ProjectNotFound.asLeft,
+      userId = UserNotFound.asLeft,
       taskDeleteResult = DeleteCount(0).asRight
     )
 
@@ -68,25 +69,22 @@ class TaskDeleteTestDeactivateTaskQueries extends AnyFlatSpec with Matchers with
   }
 
 
-  private trait Context {
+  private trait Context extends SetUp {
 
-    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
-
-    def serviceUnderTest(project: Option[Project],
-                         userId: Option[UserId],
+    def serviceUnderTest(project: Either[LogTimeAppError,Project],
+                         userId: Either[LogTimeAppError, User],
                          taskDeleteResult: Either[LogTimeAppError, DeleteCount]
                         ): DeactivateTask[IO] = {
 
 
-      val getProjectId = new GetProjectByName[IO](null) {
-        override def apply(projectName: String): IO[Option[Project]] = project.pure[IO]
+      val getProjectId = new GetProjectByName[IO] {
+        override def apply(projectName: String) = DBIOAction.successful(project)
       }
-      val getUserId = new GetUserByUUID[IO](null) {
-        override def apply(userIdentification: String): IO[Option[UserId]] = userId.pure[IO]
+      val getUserId = new GetUserByUUID[IO] {
+        override def apply(userIdentification: String) = DBIOAction.successful(userId)
       }
-      val delete = new DeleteTask[IO](null) {
-        override def apply(taskDescription: String, projectId: ProjectId, userId: UserId, deleteTime: LocalDateTime): IO[Either[LogTimeAppError, DeleteCount]] = taskDeleteResult.pure[IO]
-
+      val delete = new DeleteTask[IO] {
+        override def apply(taskDescription: String, projectId: ProjectId, userId: UserId, deleteTime: LocalDateTime) = DBIOAction.successful(taskDeleteResult)
       }
 
       new DeactivateTask(getProjectId, getUserId, delete)

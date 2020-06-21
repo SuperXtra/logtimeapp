@@ -16,6 +16,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import repository.project.{InsertProject, IsProjectOwner}
 import repository.user.InsertUser
+import slick.jdbc.PostgresProfile.api._
+import db.RunDBIOAction._
 
 class DeleteTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
 
@@ -24,21 +26,21 @@ class DeleteTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
   it should "delete task" in new Context {
 
     Given("existing user")
-    val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().right.get
+    val userId = createUser(UUID.randomUUID().toString).exec.unsafeRunSync().right.get
 
     And("existing project")
     val projectName = "test_project"
-    val projectId = insertProject(projectName, userId).unsafeRunSync()
+    val projectId = insertProject(projectName, userId).exec.unsafeRunSync()
 
     And("existing task")
     val req1 = LogTaskRequest(projectName, "test description 1", ZonedDateTime.now(ZoneOffset.UTC), TaskDuration(50), None, None)
-    val task = insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
+    val task = insertTask(req1,projectId.right.get, userId, LocalDateTime.now()).exec.unsafeRunSync()
 
     When("deleting inserted task")
-    deleteTask("test description 1", projectId.right.get, userId, LocalDateTime.now()).unsafeRunSync()
+    deleteTask("test description 1", projectId.right.get, userId, LocalDateTime.now()).exec.unsafeRunSync()
 
     And("fetching information about deleted task")
-    val result: Option[Active] = getTask(task.right.get).unsafeRunSync().get.active
+    val result: Option[Active] = getTask(task.right.get).exec.unsafeRunSync().right.get.active
 
     Then("it should return that task is inactive")
     result shouldBe Some(Active(false))
@@ -48,26 +50,25 @@ class DeleteTaskIT extends AnyFlatSpec with Matchers with GivenWhenThen with For
 
     implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
 
-    val tx = Transactor.fromDriverManager[IO](
-      container.driverClassName,
+    implicit val tx: Database = Database.forURL(
       container.jdbcUrl,
       container.username,
-      container.password
+      container.password,
+      null,
+      container.driverClassName
     )
 
-    val getTask = new GetTask[IO](tx)
-    val insertProject = new InsertProject[IO](tx)
-    val createUser = new InsertUser[IO](tx)
-    val insertTask = new CreateTask[IO](tx)
-    val deleteTask = new DeleteTask[IO](tx)
+    val getTask = new GetTask[IO]
+    val insertProject = new InsertProject[IO]
+    val createUser = new InsertUser[IO]
+    val insertTask = new CreateTask[IO]
+    val deleteTask = new DeleteTask[IO]
 
-    import doobie.implicits._
-
-    (for {
-      _ <- sql"DELETE from tb_project".update.run
-      _ <- sql"DELETE from tb_user".update.run
-      _ <- sql"DELETE from tb_task".update.run
-    } yield ()).transact(tx).unsafeRunSync()
+    for {
+      _ <- sql"DELETE from tb_project".asUpdate.exec
+      _ <- sql"DELETE from tb_user".asUpdate.exec
+      _ <- sql"DELETE from tb_task".asUpdate.exec
+    } yield ()
   }
 
   override def beforeEach(): Unit = {

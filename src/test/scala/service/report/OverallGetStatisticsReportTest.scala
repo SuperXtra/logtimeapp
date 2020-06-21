@@ -11,6 +11,9 @@ import models.TotalCount
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import service.SetUp
+import slick.dbio.DBIOAction
+import slick.jdbc.PostgresProfile
 
 class OverallGetStatisticsReportTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
@@ -35,16 +38,14 @@ class OverallGetStatisticsReportTest extends AnyFlatSpec with Matchers with Give
     result shouldBe Right(userStatisticsReport)
   }
 
-  private trait Context {
-
-    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
+  private trait Context extends SetUp {
 
     def serviceUnderTest(
                           taskUpdateResult: Either[LogTimeAppError, OverallStatisticsReport]
                         ): GetStatisticsReport[IO] = {
 
-      val getReport = new GetDetailedReport[IO](null) {
-        override def apply(req: MainReport): IO[Either[LogTimeAppError, OverallStatisticsReport]] = taskUpdateResult.pure[IO]
+      val getReport = new GetDetailedReport[IO]{
+        override def apply(req: MainReport) = DBIOAction.successful(taskUpdateResult)
       }
 
       new GetStatisticsReport[IO](getReport)

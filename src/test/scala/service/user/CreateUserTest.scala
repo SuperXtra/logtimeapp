@@ -14,17 +14,20 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import repository.task._
 import repository.user.{GetUserById, GetUserByUUID, InsertUser}
+import service.SetUp
 import service.task.DeactivateTask
+import slick.{dbio, jdbc}
+import slick.dbio.{DBIOAction, Effect}
+import slick.jdbc.PostgresProfile
 
 class CreateUserTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "create new user" in new Context {
     Given("user wants to delete task")
-    val userId = UserId(232)
-    val user = User(userId, "dsadas324hdsfjks")
+    val user = User(UserId(232), "dsadas324hdsfjks")
 
     And("a service will create new user")
-    val createUser = serviceUnderTest(userId.asRight, Some(user))
+    val createUser = serviceUnderTest(user.asRight, user.userId.asRight)
 
     When("creating user")
     val result = createUser.apply.unsafeRunSync()
@@ -34,24 +37,21 @@ class CreateUserTest extends AnyFlatSpec with Matchers with GivenWhenThen {
   }
 
 
-  private trait Context {
-
-    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
+  private trait Context extends SetUp {
 
     def serviceUnderTest(
-                          userId: Either[CannotCreateUserWithGeneratedUUID.type, UserId],
-                          createdUser: Option[User]
+                          user: Either[LogTimeAppError, User],
+                          createdUser: Either[LogTimeAppError,UserId]
                         ): CreateUser[IO] = {
 
-      val getNewUser = new GetUserById[IO](null) {
-        override def apply(id: UserId): IO[Option[User]] = createdUser.pure[IO]
+      val getNewUser = new GetUserById[IO] {
+        override def apply(id: UserId) = DBIOAction.successful(user)
       }
-      val create = new InsertUser[IO](null) {
-        override def apply(uuid: String): IO[Either[CannotCreateUserWithGeneratedUUID.type, UserId]] = userId.pure[IO]
+      val create = new InsertUser[IO] {
+        override def apply(uuid: String) = DBIOAction.successful(createdUser)
       }
 
       new CreateUser[IO](getNewUser, create)
     }
   }
-
 }

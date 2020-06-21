@@ -2,36 +2,46 @@ package service.task
 
 import java.time.{ZoneOffset, ZonedDateTime}
 
-import cats.data.EitherT
+import akka.event.MarkerLoggingAdapter
 import cats.effect._
+import db.DatabaseContext
 import models._
 import models.model._
 import models.request.UpdateTaskRequest
 import error._
 import repository.task._
 import repository.user.GetUserByUUID
+import slick.jdbc.PostgresProfile.api._
+import utils.EitherT
+import scala.concurrent._
+import ExecutionContext.Implicits.global
+import db.RunDBIOAction._
 
 class UpdateTask[F[+_] : Sync](getUserId: GetUserByUUID[F],
                                getUserTask: GetUserTask[F],
-                               taskUpdate: ChangeTask[F]) {
+                               taskUpdate: ChangeTask[F])
+                              (implicit db: Database,
+                               logger: MarkerLoggingAdapter,
+                               ec: ContextShift[IO])  {
 
-  def apply(updateTask: UpdateTaskRequest, uuid: String): F[Either[LogTimeAppError, Unit]] = (
-    for {
-      userId <- getExistingUserId(uuid)
-      oldTask <- fetchTask(updateTask.oldTaskDescription, userId)
-      _ <- updateExistingTask(newTask(oldTask, updateTask), oldTask.taskDescription, oldTask.projectId, userId)
-    } yield ()).value
+  def apply(updateTask: UpdateTaskRequest, uuid: String) =
+    (for {
+        user <- getExistingUserId(uuid)
+        userId = user.userId
+        oldTask <- fetchTask(updateTask.oldTaskDescription, userId)
+        _ <- updateExistingTask(newTask(oldTask, updateTask), oldTask.taskDescription, oldTask.projectId, userId)
+      } yield ()).value.transactionally.exec
 
-  private def updateExistingTask(toUpdate: TaskToUpdate, taskDescription: String, projectId: ProjectId, userId: UserId): EitherT[F, LogTimeAppError, Unit] = {
+  private def updateExistingTask(toUpdate: TaskToUpdate, taskDescription: String, projectId: ProjectId, userId: UserId) = {
     EitherT(taskUpdate(toUpdate, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime, taskDescription, projectId, userId))
   }
 
-  private def fetchTask(taskDescription: String, userId: UserId): EitherT[F, LogTimeAppError, Task] = {
-    EitherT.fromOptionF(getUserTask(taskDescription, userId), TaskNotFound )
+  private def fetchTask(taskDescription: String, userId: UserId) = {
+    EitherT(getUserTask(taskDescription, userId))
   }
 
-  private def getExistingUserId(uuid: String): EitherT[F, UserNotFound.type, UserId] =
-    EitherT.fromOptionF(getUserId(uuid), UserNotFound)
+  private def getExistingUserId(uuid: String) =
+    EitherT(getUserId(uuid))
 
   private def newTask(oldTask: Task, updateTask: UpdateTaskRequest): TaskToUpdate = {
 

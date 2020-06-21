@@ -2,25 +2,26 @@ package service.task
 
 import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
-import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect.IO
-import error.{LogTimeAppError, ProjectNotFound, ProjectUpdateUnsuccessful, TaskDeleteUnsuccessful, TaskNotFound, TaskUpdateUnsuccessful, UserNotFound}
-import models.model.{Project, Task, TaskToUpdate}
-import models.request.{LogTaskRequest, UpdateTaskRequest}
+import error._
+import models.model._
+import models.request._
 import org.scalatest.GivenWhenThen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import repository.task.{ChangeTask, CreateTask, DeleteTask, GetTask, GetUserTask}
+import repository.task._
 import repository.user.GetUserByUUID
 import cats.implicits._
 import models.{Active, ProjectId, TaskDuration, TaskId, UserId, Volume}
+import service.SetUp
+import slick.dbio._
 
 class TaskUpdateQueriesTestTask extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "update task" in new Context {
 
     Given("user user id and update request")
-    val userId = UserId(456)
+    val user = User(UserId(456),"123")
 
     val updateTaskRequest = UpdateTaskRequest(
       oldTaskDescription= "String",
@@ -34,7 +35,7 @@ class TaskUpdateQueriesTestTask extends AnyFlatSpec with Matchers with GivenWhen
     val task = Task(
       id = TaskId(283),
       projectId = ProjectId(123),
-      userId = userId,
+      userId = user.userId,
       taskDescription =updateTaskRequest.oldTaskDescription,
       startTime = updateTaskRequest.startTime.get.toLocalDateTime,
       endTime = updateTaskRequest.startTime.get.plusMinutes(updateTaskRequest.durationTime.value).toLocalDateTime,
@@ -48,9 +49,8 @@ class TaskUpdateQueriesTestTask extends AnyFlatSpec with Matchers with GivenWhen
 
     And("a service will find  user id, user_task, delete old task, insert updated one and return right confirming that operation was successful")
     val updateWork = serviceUnderTest(
-      userId.some,
-      task.some,
-      1.asRight,
+      user.asRight,
+      task.asRight,
       ().asRight
     )
 
@@ -74,9 +74,8 @@ class TaskUpdateQueriesTestTask extends AnyFlatSpec with Matchers with GivenWhen
     )
     And("a service that can't find specified user id and task")
     val updateTask = serviceUnderTest(
-      userId = None,
-      userTask = None,
-      taskDeleteResult = TaskDeleteUnsuccessful.asLeft,
+      user = UserNotFound.asLeft,
+      userTask = TaskNotFound.asLeft,
       taskUpdateResult = TaskUpdateUnsuccessful.asLeft
     )
 
@@ -100,9 +99,8 @@ class TaskUpdateQueriesTestTask extends AnyFlatSpec with Matchers with GivenWhen
     )
     And("a service that can't find specified user id and task")
     val updateTask = serviceUnderTest(
-      userId = Some(UserId(1)),
-      userTask = None,
-      taskDeleteResult = TaskDeleteUnsuccessful.asLeft,
+      user = User(UserId(1), "123").asRight,
+      userTask = TaskNotFound.asLeft,
       taskUpdateResult = ().asRight
     )
 
@@ -142,9 +140,8 @@ class TaskUpdateQueriesTestTask extends AnyFlatSpec with Matchers with GivenWhen
     )
     And("a service that can't find specified user id and task")
     val updateTask = serviceUnderTest(
-      userId = Some(UserId(1)),
-      userTask = Some(task),
-      taskDeleteResult = TaskDeleteUnsuccessful.asLeft,
+      user = User(UserId(1), "123").asRight,
+      userTask = task.asRight,
       taskUpdateResult = TaskUpdateUnsuccessful.asLeft
     )
 
@@ -157,26 +154,23 @@ class TaskUpdateQueriesTestTask extends AnyFlatSpec with Matchers with GivenWhen
 
 
 
-  private trait Context {
-
-    implicit lazy val logger: MarkerLoggingAdapter = NoMarkerLogging
+  private trait Context extends SetUp {
 
     def serviceUnderTest(
-                          userId: Option[UserId],
-                          userTask: Option[Task],
-                          taskDeleteResult: Either[LogTimeAppError, Int],
+                          user: Either[LogTimeAppError, User],
+                          userTask: Either[LogTimeAppError,Task],
                           taskUpdateResult: Either[TaskUpdateUnsuccessful.type , Unit]
                         ): UpdateTask[IO] = {
 
-      val getUserId = new GetUserByUUID[IO](null) {
-        override def apply(userIdentification: String): IO[Option[UserId]] = userId.pure[IO]
+      val getUserId = new GetUserByUUID[IO] {
+        override def apply(userIdentification: String) = DBIOAction.successful(user)
       }
-      val getUserTask = new GetUserTask[IO](null) {
-        override def apply(taskDescription: String, userId: UserId): IO[Option[Task]] = userTask.pure[IO]
+      val getUserTask = new GetUserTask[IO] {
+        override def apply(taskDescription: String, userId: UserId) = DBIOAction.successful(userTask)
       }
 
-      val taskUpdate = new ChangeTask[IO](null) {
-        override def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: ProjectId, userId: UserId): IO[Either[LogTimeAppError, Unit]] = taskUpdateResult.pure[IO]
+      val taskUpdate = new ChangeTask[IO] {
+        override def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: ProjectId, userId: UserId) = DBIOAction.successful(taskUpdateResult)
       }
 
       new UpdateTask(getUserId, getUserTask, taskUpdate)

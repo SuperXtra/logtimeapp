@@ -1,11 +1,19 @@
 package service.user
 
-import cats.effect.Sync
+import akka.event.MarkerLoggingAdapter
+import cats.effect.{ContextShift, IO, Sync}
 import cats.implicits._
 import error.LogTimeAppError
 import models.Exists
-import repository.user.{GetUserById, InsertUser, UserExists}
+import repository.user._
+import slick.jdbc.PostgresProfile.api._
+import db.RunDBIOAction._
 
-class AuthenticateUser[F[+_] : Sync](exists: UserExists[F]) {
-  def apply(uuid: String): F[Exists] = exists(uuid)
+class AuthenticateUser[F[+_] : Sync](exists: UserExists[F])
+                                    (implicit db: Database,
+                                     logger: MarkerLoggingAdapter,
+                                     ec: ContextShift[IO]) {
+
+  def apply(uuid: String): IO[Either[LogTimeAppError, Exists]] =
+   exists(uuid).exec
 }

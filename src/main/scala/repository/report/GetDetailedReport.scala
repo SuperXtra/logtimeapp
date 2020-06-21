@@ -4,18 +4,27 @@ import cats.effect.Sync
 import doobie.util.transactor.Transactor
 import error.{LogTimeAppError, ReportCouldNotBeGenerated}
 import models.request.{MainReport, ReportBodyWithParamsRequest}
-import models.reports.{ReportFromDb, OverallStatisticsReport}
+import models.reports.{OverallStatisticsReport, ReportFromDb}
 import repository.query.{GenerateReportQueries, StatisticsReportQuery}
 import doobie.implicits._
+import slick.jdbc.PostgresProfile.api._
 
-class GetDetailedReport[F[_] : Sync](tx: Transactor[F]) {
-  def apply(req: MainReport): F[Either[LogTimeAppError, OverallStatisticsReport]] = {
+import scala.concurrent._
+import ExecutionContext.Implicits.global
+import scala.util.{Failure, Success}
+import cats.implicits._
+import slick.jdbc.PostgresProfile
+
+import scala.util.{Failure, Success}
+
+class GetDetailedReport[F[_] : Sync] {
+  def apply(req: MainReport): DBIOAction[Either[LogTimeAppError, OverallStatisticsReport], NoStream, PostgresProfile.api.Effect with Effect] = {
     StatisticsReportQuery(req)
-      .unique
-      .transact(tx)
-      .attemptSomeSqlState {
-        case _ => ReportCouldNotBeGenerated
+      .head
+      .asTry
+      .flatMap {
+        case Failure(_) => DBIO.successful(ReportCouldNotBeGenerated.asLeft)
+        case Success(value) =>DBIO.successful(value.asRight)
       }
   }
-
 }
