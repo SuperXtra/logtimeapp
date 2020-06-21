@@ -17,16 +17,12 @@ import service.project._
 import service.report._
 import service.task.{DeactivateTask, LogTask, UpdateTask}
 import service.user.{AuthenticateUser, CreateUser}
-//import service.user._
 import pureconfig._
 import pureconfig.generic.auto._
 import repository.report.{GetDetailedReport, GetReport}
 import service.auth.Auth
 import com.typesafe.config.ConfigFactory
 import config.{AuthConfig, DatabaseConfig}
-import doobie.util.transactor.Transactor
-
-import scala.concurrent.ExecutionContextExecutor
 
 trait LogTimeService {
   lazy val databaseConfiguration: Config = ConfigFactory.load("database-configuration.conf")
@@ -38,8 +34,6 @@ trait LogTimeService {
 
   implicit lazy val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
   implicit lazy val transactor = DatabaseContext.transactor(databaseConfig)
-//  implicit lazy val slickTransactor = DatabaseContext.slickTransactor(databaseConfig)
-
 
 
   lazy val deleteProjectWithTasks = wire[DeleteProjectWithTasks[IO]]
