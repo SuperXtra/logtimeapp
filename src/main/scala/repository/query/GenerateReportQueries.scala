@@ -1,23 +1,19 @@
 package repository.query
 
-
-import java.time.LocalDateTime
-
-import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending, ProjectSchema, TaskSchema, UserSchema}
+import models.model._
 import models.request.ReportBodyWithParamsRequest
 import cats.implicits._
-import models.reports.{OverallStatisticsReport, ReportFromDb}
-import models.{Active, TaskDuration, TotalCount}
+import models.reports._
+import models._
 import slick.jdbc.{GetResult, PositionedResult}
+import slick.jdbc.PostgresProfile.api._
 
 object GenerateReportQueries {
 
   def apply(projectQuery: ReportBodyWithParamsRequest) = {
 
-    import slick.jdbc.PostgresProfile.api._
-
-
-    val base = """ WITH projects_page AS(
+    val base =
+      """ WITH projects_page AS(
                    SELECT p.*, COALESCE(MAX(t.create_time), p.create_time) AS update
                    FROM tb_project p
                    LEFT JOIN tb_task t ON t.project_id = p.id
@@ -43,9 +39,9 @@ object GenerateReportQueries {
     val projectNamesFilter = projectQuery.params.ids match {
       case None => " "
       case Some(Nil) => " "
-      case Some(projects) =>  " AND p.project_name IN ( " +
-                              projects.map(x => s"'$x''").intercalate(",") +
-                              " )"
+      case Some(projects) => " AND p.project_name IN ( " +
+        projects.map(x => s"'$x'").intercalate(",") +
+        " )"
     }
 
     val dateRangeFilter =
@@ -77,46 +73,25 @@ object GenerateReportQueries {
     val sortingSelect = projectQuery.pathParams.projectSort.map {
       case ByCreatedTime => s" ORDER BY p.create_time ${order}, t.create_time ${order}"
       case ByUpdateTime => s" ORDER BY COALESCE(t.create_time, p.create_time) ${order}"
-      }.getOrElse(" ")
+    }.getOrElse(" ")
 
-    val isActiveFilter = projectQuery.pathParams.active.map{
-        case Active(value) if value => " AND COALESCE(t.active , true) = true"
-        case Active(value) if !value => " AND COALESCE(t.active , false) = false"
-      }.getOrElse(" ")
+    val isActiveFilter = projectQuery.pathParams.active.map {
+      case Active(value) if value => " AND COALESCE(t.active , true) = true"
+      case Active(value) if !value => " AND COALESCE(t.active , false) = false"
+    }.getOrElse(" ")
 
     val paginationFilter = {
-      val offset = ((projectQuery.pathParams.page.value -1 ) * projectQuery.pathParams.quantity.value).toLong
+      val offset = ((projectQuery.pathParams.page.value - 1) * projectQuery.pathParams.quantity.value).toLong
       val limitation = projectQuery.pathParams.quantity.value.toLong
       s"""
         LIMIT ${limitation} OFFSET ${offset}
        """
     }
 
-//    val reportQuery =
-//      fr"""
-//        WITH projects_page AS(
-//        SELECT p.*, COALESCE(MAX(t.create_time), p.create_time) AS update
-//        FROM tb_project p
-//        LEFT JOIN tb_task t ON t.project_id = p.id
-//        WHERE 1 = 1
-//        """ ++
-//        projectNamesFilter ++
-//        isActiveFilter ++
-//        dateRangeFilter ++
-//        fr"""GROUP BY p.id""" ++
-//        sortingCTE ++
-//        paginationFilter ++
-//        fr")" ++
-//        selectAllFromCTE ++
-//        isActiveFilter ++
-//        sortingSelect
-
-    import java.sql.Date
-
     implicit val localDateTime = GetResult.apply((x: PositionedResult) => x.nextTimestampOption().map(_.toLocalDateTime))
-//    implicit val getTotalCountResult = GetResult(r => r.nextIntOption().map(x => TotalCount(x)))
     implicit val getOverallReportResult = GetResult(r => ReportFromDb(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
 
     sql"""#$base #$projectNamesFilter #$isActiveFilter #$dateRangeFilter GROUP BY p.id #$sortingCTE #$paginationFilter ) #$selectAllFromCTE #$isActiveFilter #$sortingSelect""".as[ReportFromDb]
+
   }
 }

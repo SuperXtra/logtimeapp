@@ -20,7 +20,7 @@ class GetProjectTasks[F[_] : Sync] {
 
   def apply(projectId: ProjectId): DBIOAction[Either[LogTimeAppError, List[Task]], NoStream, Effect.Read with Effect] = {
     TaskQueries
-      .fetchTasksForProjectSlick(projectId)
+      .fetchTasksForProject(projectId)
       .asTry
       .flatMap {
         case Failure(_) => DBIO.successful(TaskNotFound.asLeft)

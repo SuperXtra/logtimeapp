@@ -2,8 +2,6 @@ package routes
 
 import java.util.UUID
 
-import akka.http.scaladsl.model.{HttpHeader, HttpResponse, StatusCodes}
-import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.server.Directives._
 import cats.effect.IO
@@ -16,6 +14,7 @@ import service.auth.Auth
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Route
 import models.Exists
+import utils.CirceEncoderDecoder._
 
 object UserRoutes {
 

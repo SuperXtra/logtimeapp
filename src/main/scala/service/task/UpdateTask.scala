@@ -27,9 +27,12 @@ class UpdateTask[F[+_] : Sync](getUserId: GetUserByUUID[F],
   def apply(updateTask: UpdateTaskRequest, uuid: String) =
     (for {
         user <- getExistingUserId(uuid)
+        _ = logging.checkingWhetherUserExists(uuid)
         userId = user.userId
         oldTask <- fetchTask(updateTask.oldTaskDescription, userId)
+        _ = logging.oldTaskData(updateTask.oldTaskDescription, userId)
         _ <- updateExistingTask(newTask(oldTask, updateTask), oldTask.taskDescription, oldTask.projectId, userId)
+        _ = logging.updatedTaskData(newTask(oldTask, updateTask), oldTask.taskDescription, oldTask.projectId, userId)
       } yield ()).value.transactionally.exec
 
   private def updateExistingTask(toUpdate: TaskToUpdate, taskDescription: String, projectId: ProjectId, userId: UserId) = {

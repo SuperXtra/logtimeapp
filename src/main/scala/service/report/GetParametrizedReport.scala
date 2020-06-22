@@ -19,8 +19,10 @@ class GetParametrizedReport[F[+_] : Sync](getReport: GetReport[F])
                                           logger: MarkerLoggingAdapter,
                                           ec: ContextShift[IO]) {
 
-  def apply(projectQuery: ReportBodyWithParamsRequest): IO[Either[LogTimeAppError, Seq[FinalParametrizedReport]]] =
+  def apply(projectQuery: ReportBodyWithParamsRequest): IO[Either[LogTimeAppError, Seq[FinalParametrizedReport]]] = {
+    logging.generatingReportForData(projectQuery)
     generateReport(projectQuery)
+  }
 
   private def generateReport(projectQuery: ReportBodyWithParamsRequest) =
     EitherT(getReport(projectQuery)).map(report => groupByOrdered(report)(project => (project.project_name, project.project_create_time)).map {

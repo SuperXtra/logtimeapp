@@ -14,7 +14,7 @@ import slick.jdbc.PostgresProfile.api._
 class InsertUser[F[_]: Sync] {
   def apply(uuid: String): DBIOAction[Either[LogTimeAppError, UserId], NoStream, Effect.Write with Effect] = {
     UserQueries
-      .insertUserSlick(uuid)
+      .insertUser(uuid)
       .asTry
       .flatMap {
         case Failure(_) => DBIO.successful(CannotCreateUserWithGeneratedUUID.asLeft)

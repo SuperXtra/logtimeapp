@@ -17,6 +17,8 @@ class GetStatisticsReport[F[+_] : Sync](getStatisticsReport: GetDetailedReport[F
                                        (implicit db: Database,
                                         logger: MarkerLoggingAdapter,
                                         ec: ContextShift[IO]) {
-  def apply(projectQuery: MainReport): IO[Either[LogTimeAppError, OverallStatisticsReport]] =
+  def apply(projectQuery: MainReport): IO[Either[LogTimeAppError, OverallStatisticsReport]] = {
+    logging.generatingStatisticsReport(projectQuery)
     getStatisticsReport(projectQuery).exec
+  }
 }

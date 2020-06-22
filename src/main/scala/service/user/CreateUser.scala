@@ -21,7 +21,9 @@ class CreateUser[F[+_] : Sync](getNewUser: GetUserById[F],
     (
       for {
         id <- createUser
+        _ = logging.createdUserWithId(id)
         user <- getExistingUserById(id)
+        _ = logging.fetchedUser(user)
       } yield user).value.exec
 
   private def createUser =

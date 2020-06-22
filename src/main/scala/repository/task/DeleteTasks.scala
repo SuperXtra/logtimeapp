@@ -19,7 +19,7 @@ class DeleteTasks[F[+_] : Sync] {
 
   def apply(projectId: ProjectId, deleteTime: LocalDateTime): DBIOAction[Either[LogTimeAppError, Int], NoStream, Effect.Write with Effect] = {
     TaskQueries
-      .deleteTasksForProjectSlick(projectId, deleteTime)
+      .deleteTasksForProject(projectId, deleteTime)
       .asTry
       .flatMap {
         case Failure(exception) => DBIO.successful(TaskDeleteUnsuccessful.asLeft)

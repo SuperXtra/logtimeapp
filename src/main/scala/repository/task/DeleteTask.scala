@@ -20,7 +20,7 @@ class DeleteTask[F[+_] : Sync] {
 
   def apply(taskDescription: String, projectId: ProjectId, userId: UserId, deleteTime: LocalDateTime): DBIOAction[Either[LogTimeAppError, DeleteCount], NoStream, Effect.Write with Effect] = {
     TaskQueries
-      .deleteTaskSlick(taskDescription, projectId, userId, deleteTime)
+      .deleteTask(taskDescription, projectId, userId, deleteTime)
       .asTry
       .flatMap {
         case Failure(ex: PSQLException) => ex match {

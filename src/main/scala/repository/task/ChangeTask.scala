@@ -20,8 +20,8 @@ class ChangeTask[F[_] : Sync] {
 
   def apply(toUpdate: TaskToUpdate, timestamp: LocalDateTime, taskDescription: String, projectId: ProjectId, userId: UserId): DBIOAction[Either[LogTimeAppError, Unit], NoStream, Effect.Write with Effect.Transactional with Effect] =
     (for {
-      _ <- TaskQueries.deleteTaskSlick(taskDescription, projectId, userId, timestamp)
-      update <- TaskQueries.updateByInsertSlick(toUpdate, timestamp)
+      _ <- TaskQueries.deleteTask(taskDescription, projectId, userId, timestamp)
+      update <- TaskQueries.updateByInsert(toUpdate, timestamp)
     } yield update).transactionally
       .asTry
       .flatMap {

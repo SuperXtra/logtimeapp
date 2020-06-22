@@ -34,50 +34,32 @@ class ReportRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest
         """
           |{
           |  "project" : {
-          |    "id" : {
-          |      "value" : 1
-          |    },
-          |    "userId" : {
-          |      "value" : 1
-          |    },
+          |    "id" : 1,
+          |    "userId" : 1,
           |    "projectName" : "project",
           |    "createTime" : "2020-01-15T04:00:00",
           |    "deleteTime" : null,
-          |    "active" : {
-          |      "value" : true
-          |    }
+          |    "active" : true
           |  },
           |  "tasks" : {
           |    "tasks" : [
           |      {
-          |        "id" : {
-          |          "value" : 1
-          |        },
-          |        "projectId" : {
-          |          "value" : 1
-          |        },
-          |        "userId" : {
-          |          "value" : 1
-          |        },
+          |        "id": 1,
+          |        "projectId": 1,
+          |        "userId": 1,
           |        "createTime" : "2020-01-15T04:00:00",
           |        "taskDescription" : "task",
           |        "startTime" : "2020-01-15T04:00:00",
           |        "endTime" : "2020-01-15T04:00:00",
-          |        "duration" : {
-          |          "value" : 20
-          |        },
+          |        "duration" : 20,
           |        "volume" : null,
           |        "comment" : null,
           |        "deleteTime" : null,
-          |        "active" : {
-          |          "value" : true
-          |        }
+          |        "active" : true
           |      }
           |    ]
           |  },
-          |  "workedTimeInMinutes" : {
-          |    "value" : 40
-          |  }
+          |  "workedTimeInMinutes" : 40
           |}
         """.stripMargin
       )

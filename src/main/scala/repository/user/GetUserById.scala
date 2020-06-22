@@ -18,7 +18,7 @@ import slick.jdbc.PostgresProfile.api._
 class GetUserById[F[_]: Sync] {
   def apply(id: UserId): DBIOAction[Either[LogTimeAppError, User], NoStream, Effect.Read with Effect] = {
     UserQueries
-      .getUserByIdSlick(id)
+      .getUserById(id)
       .asTry
       .flatMap {
         case Failure(_) => DBIO.successful(UserNotFound.asLeft)

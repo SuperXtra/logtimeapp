@@ -20,8 +20,10 @@ class GetReport[F[_] : Sync] {
     GenerateReportQueries(projectQuery)
       .asTry
       .flatMap {
-        case Failure(_) => DBIO.successful(ReportCouldNotBeGenerated.asLeft)
-        case Success(seq) =>DBIO.successful(seq.toList.asRight)
+        case Failure(x) =>
+          DBIO.successful(ReportCouldNotBeGenerated.asLeft)
+        case Success(seq) =>
+          DBIO.successful(seq.toList.asRight)
       }
   }
 
