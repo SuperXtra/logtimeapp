@@ -1,15 +1,12 @@
 package service.auth
 
 import java.util.concurrent.TimeUnit
-
 import cats.implicits._
-import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives.{complete, optionalHeaderValueByName, provide}
-import authentikat.jwt.{JsonWebToken, JwtClaimsSet, JwtClaimsSetJValue, JwtHeader}
-import com.typesafe.config.ConfigFactory
+import authentikat.jwt._
 import config.AuthConfig
-import error.{AuthenticationNotSuccessful, AuthenticationNotSuccessfulWithoutBearer, ErrorResponse, MapToErrorResponse}
+import error._
 import pureconfig.ConfigSource
 import pureconfig._
 import pureconfig.generic.auto._
@@ -37,7 +34,7 @@ object Auth {
             val arrayFromToken = token.split(" ")
             arrayFromToken.length match {
               case 2 => arrayFromToken(1) match {  // 2 represents length of an array with Bearer prefix
-                case token if isTokenExpired(token) => complete(MapToErrorResponse.auth(AuthenticationNotSuccessful ))
+                case token if isTokenExpired(token) => complete(MapToErrorResponse.auth(AuthenticationNotSuccessful))
                 case token if JsonWebToken.validate(token, secretKey) => provide(getClaims(token))
                 case _ => complete(MapToErrorResponse.auth(AuthenticationNotSuccessful ))
               }

@@ -1,25 +1,29 @@
 package repository.project
 
-import java.time.{LocalDateTime, ZonedDateTime}
+import java.time._
 
 import cats.effect._
-import doobie.implicits._
-import doobie.util.transactor.Transactor
 import error._
-import models.model.Project
-import models.request.DeleteProjectRequest
-import repository.query.{ProjectQueries, TaskQueries, UserQueries}
+import models.{ProjectId, UserId}
+import repository.query._
+import cats.implicits._
+import slick.dbio.Effect
+import scala.util.{Failure, Success}
+import slick.jdbc.PostgresProfile.api._
+import scala.concurrent._
+import ExecutionContext.Implicits.global
 
-class DeleteProjectWithTasks[F[+_] : Sync](tx: Transactor[F]) {
-
-  def apply(userId: Int, projectName: String, projectId: Int, deleteTime: LocalDateTime): F[Either[LogTimeAppError, Unit]] = {
-
+class DeleteProjectWithTasks[F[+_] : Sync] {
+  def apply(userId: UserId, projectName: String, projectId: ProjectId, deleteTime: LocalDateTime): DBIOAction[Either[LogTimeAppError, Unit], NoStream, Effect.Write with Effect.Transactional with Effect] = {
     (for {
-      _ <- ProjectQueries.deactivate(userId, projectName, deleteTime).run
-      _ <- TaskQueries.deleteTasksForProject(projectId, deleteTime).run
-    } yield ()).transact(tx)
-      .attemptSomeSqlState {
-        case _ => ProjectDeleteUnsuccessful
+      _ <- ProjectQueries.deactivate(userId, projectName, deleteTime)
+      _ <- TaskQueries.deleteTasksForProject(projectId, deleteTime)
+    } yield ()).transactionally
+      .asTry
+      .flatMap {
+        case Failure(_) =>
+          DBIO.successful(ProjectDeleteUnsuccessful.asLeft)
+        case Success(_) => DBIO.successful(().asRight)
       }
   }
 }

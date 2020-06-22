@@ -24,6 +24,7 @@ lazy val root = project
         doobie ++
         authentikat ++
         flyway ++
+        macWire ++
         pureConfig ++
         scalatest ++
         scalaTestFunSuite ++
@@ -43,12 +44,15 @@ lazy val scalatestVersion         =  "3.1.1"
 lazy val scalaTestFunSuiteVersion =  "3.3.0-SNAP2"
 lazy val testContVersion          =  "0.37.0"
 lazy val testContPostgresVersion  =  "0.37.0"
+lazy val macWireVersion           =  "2.3.6"
+lazy val akkaSlickVersion         =  "3.3.2"
 
 lazy val akkaHttp                 =  Seq("com.typesafe.akka"      %% "akka-http"                        % akkaHttpVersion                       )
 lazy val akkaSteam                =  Seq("com.typesafe.akka"      %% "akka-stream"                      % akkaVersion                           )
 lazy val akkaActor                =  Seq("com.typesafe.akka"      %% "akka-actor"                       % akkaVersion                           )
 lazy val akkaHttpSpray            =  Seq("com.typesafe.akka"      %% "akka-http-spray-json"             % akkaHttpVersion                       )
 lazy val akkaCirce                =  Seq("de.heikoseeberger"      %% "akka-http-circe"                  % akkaCirceVersion                      )
+lazy val akkaSlick                =  Seq("com.typesafe.slick"     %% "slick"                            % akkaSlickVersion                      )
 
 lazy val akkaHttpTestKit          =  Seq("com.typesafe.akka"      %% "akka-http-testkit"                % akkaHttpVersion           % "test"    )
 lazy val akkaSteamTestKit         =  Seq("com.typesafe.akka"      %% "akka-stream-testkit"              % akkaVersion               % "test"    )
@@ -75,6 +79,11 @@ lazy val scalaTestFunSuite        =  Seq("org.scalatest"          %% "scalatest-
 lazy val testContainersScala      =  Seq("com.dimafeng"           %% "testcontainers-scala-scalatest"   % testContVersion           % "it"      )
 lazy val testContainersPostgres   =  Seq("com.dimafeng"           %% "testcontainers-scala-postgresql"  % testContPostgresVersion   % "it"      )
 
+lazy val macWireMacros            =  Seq("com.softwaremill.macwire" %% "macros"                         % macWireVersion            % "provided")
+lazy val macrosAkka               =  Seq("com.softwaremill.macwire" %% "macrosakka"                     % macWireVersion            % "provided")
+lazy val macWireUtil              =  Seq("com.softwaremill.macwire" %% "util"                           % macWireVersion                        )
+lazy val macWireProxy             =  Seq("com.softwaremill.macwire" %% "proxy"                          % macWireVersion                        )
+
 lazy val akka =
   akkaHttp ++
     akkaActor ++
@@ -82,7 +91,8 @@ lazy val akka =
     akkaHttpSpray ++
     akkaCirce ++
     akkaHttpTestKit ++
-    akkaSteamTestKit
+    akkaSteamTestKit ++
+    akkaSlick
 
 lazy val cats =
   catsCore ++
@@ -101,3 +111,9 @@ lazy val doobie =
 lazy val testContainers =
   testContainersScala ++
     testContainersPostgres
+
+lazy val macWire =
+  macWireMacros ++
+    macrosAkka ++
+    macWireUtil ++
+    macWireProxy

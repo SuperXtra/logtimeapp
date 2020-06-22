@@ -1,21 +1,27 @@
 package repository.report
 
 import cats.effect.Sync
-import doobie.implicits._
-import doobie.util.transactor.Transactor
-import error.{LogTimeAppError, ReportCouldNotBeGenerated}
+import error._
 import models.request.ReportBodyWithParamsRequest
-import models.reports.ReportFromDb
 import repository.query.GenerateReportQueries
+import slick.jdbc.PostgresProfile.api._
+import scala.util.{Failure, Success}
+import cats.implicits._
+import models.reports.ReportFromDb
 
-class GetReport[F[_] : Sync](tx: Transactor[F]) {
+import scala.concurrent._
+import ExecutionContext.Implicits.global
 
-  def apply(projectQuery: ReportBodyWithParamsRequest): F[Either[LogTimeAppError, List[ReportFromDb]]] = {
+class GetReport[F[_] : Sync] {
+
+  def apply(projectQuery: ReportBodyWithParamsRequest): DBIOAction[Either[LogTimeAppError, List[ReportFromDb]], NoStream, Effect] = {
     GenerateReportQueries(projectQuery)
-      .to[List]
-      .transact(tx)
-      .attemptSomeSqlState {
-        case _ => ReportCouldNotBeGenerated
+      .asTry
+      .flatMap {
+        case Failure(x) =>
+          DBIO.successful(ReportCouldNotBeGenerated.asLeft)
+        case Success(seq) =>
+          DBIO.successful(seq.toList.asRight)
       }
   }
 

@@ -1,24 +1,22 @@
 package routes
 
-import akka.http.scaladsl.marshalling.ToResponseMarshallable
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives.{as, complete, delete, entity, path, post, put}
 import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import models.request.{ChangeProjectNameRequest, CreateProjectRequest, DeleteProjectRequest}
-import models.model.Project
 import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import cats.implicits._
 import service.auth.Auth
 import error._
-
+import models.ProjectId
+import utils.CirceEncoderDecoder._
 
 object ProjectRoutes {
 
   val projectPath = "project"
 
-  def createProject(req: (String, String) => IO[Either[LogTimeAppError, Int]])
+  def createProject(req: (String, String) => IO[Either[LogTimeAppError, ProjectId]])
                    (implicit auth: Auth): Route =
     path(projectPath) {
       post {
@@ -51,7 +49,7 @@ object ProjectRoutes {
       }
     }
 
-  def deleteProject(req: (String, String) => IO[Either[LogTimeAppError, Unit]])
+  def deleteProject(req: (String, String) => IO[Either[LogTimeAppError,Unit]])
                    (implicit auth: Auth): Route =
     path(projectPath) {
       delete {

@@ -9,6 +9,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import cats.implicits._
 import error.{AuthenticationNotSuccessful, CannotCreateUserWithGeneratedUUID}
 import io.circe.parser.{parse => json}
+import models.{Exists, UserId}
 import models.model.User
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -18,7 +19,7 @@ class UserRoutesTest  extends AnyFlatSpec with Matchers with ScalatestRouteTest 
 
   it should "should create user" in new Context {
 
-    val user = User(21, "61a3a602-3797-41c2-8d69-764f762f1484")
+    val user = User(UserId(21), "61a3a602-3797-41c2-8d69-764f762f1484")
     val route =
       Route.seal(UserRoutes.createUser(IO(user.asRight)))
     Post("/user/register") ~> route ~> check {
@@ -26,8 +27,8 @@ class UserRoutesTest  extends AnyFlatSpec with Matchers with ScalatestRouteTest 
       json(response.raw) shouldBe json(
         s"""
           {
-             "id": 21,
-             "userIdentification": "61a3a602-3797-41c2-8d69-764f762f1484"
+          "userId" : 21,
+          "userIdentification" : "61a3a602-3797-41c2-8d69-764f762f1484"
           }
         """
       )
@@ -51,7 +52,7 @@ class UserRoutesTest  extends AnyFlatSpec with Matchers with ScalatestRouteTest 
 
   it should "should authenticate user" in new Context {
     val route =
-      Route.seal(UserRoutes.authorizeUser(_ => IO(true)))
+      Route.seal(UserRoutes.authorizeUser(_ => IO(Exists(true).asRight)))
     Post("/user/login",
       HttpEntity(
         `application/json`,
@@ -75,7 +76,7 @@ class UserRoutesTest  extends AnyFlatSpec with Matchers with ScalatestRouteTest 
   it should "should not authenticate user" in new Context {
 
     val route =
-      Route.seal(UserRoutes.authorizeUser(_ => IO(false)))
+      Route.seal(UserRoutes.authorizeUser(_ => IO(Exists(false).asRight)))
     Post("/user/login",
       HttpEntity(
         `application/json`,

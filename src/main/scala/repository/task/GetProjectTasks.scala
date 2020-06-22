@@ -1,21 +1,28 @@
 package repository.task
 
 import cats.effect.Sync
-import doobie.Transactor
 import error._
-import doobie.implicits._
+import models.ProjectId
 import models.model.Task
 import repository.query.TaskQueries
+import slick.jdbc.PostgresProfile.api._
+import slick.dbio.Effect
 
-class GetProjectTasks[F[_] : Sync](tx: Transactor[F]) {
+import scala.concurrent.ExecutionContext
+import ExecutionContext.Implicits.global
+import cats.implicits._
 
-  def apply(projectId: Int): F[Either[LogTimeAppError, List[Task]]] = {
+import scala.util.{Failure, Success}
+
+class GetProjectTasks[F[_] : Sync] {
+
+  def apply(projectId: ProjectId): DBIOAction[Either[LogTimeAppError, List[Task]], NoStream, Effect.Read with Effect] = {
     TaskQueries
       .fetchTasksForProject(projectId)
-      .to[List]
-      .transact(tx)
-      .attemptSomeSqlState {
-        case _ => TaskNotFound
+      .asTry
+      .flatMap {
+        case Failure(_) => DBIO.successful(TaskNotFound.asLeft)
+        case Success(value) => DBIO.successful(value.toList.asRight)
       }
   }
 }

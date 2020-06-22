@@ -11,6 +11,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import cats.implicits._
 import io.circe.parser.{parse => json}
+import models.{Active, ProjectId, TaskDuration, TaskId, UserId, WorkedTime}
 import models.model.{Project, Task}
 import models.reports.{FinalProjectReport, Tasks}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -24,8 +25,8 @@ class ReportRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest
 
   it should "return project report" in new Context {
     val time = LocalDateTime.parse("2020-01-15T04:00:00")
-    val project = Project(1, 1, "project", time, None, Some(true))
-    val result = FinalProjectReport(project, Tasks(List(Task(1, 1, 1, time, "task", time, time, 20, None, None, None, Some(true)))), 40)
+    val project = Project(ProjectId(1), UserId(1), "project", time, None, Some(Active(true)))
+    val result = FinalProjectReport(project, Tasks(List(Task(TaskId(1), ProjectId(1), UserId(1), time, "task", time, time, TaskDuration(20), None, None, None, Some(Active(true))))), WorkedTime(40))
     val route = Route.seal(ReportRoutes.projectTasksReport((_) => IO(result.asRight)))
     Get("/report/project?name=project") ~> route ~> check {
       response.status shouldBe StatusCodes.OK
@@ -43,9 +44,9 @@ class ReportRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest
           |  "tasks" : {
           |    "tasks" : [
           |      {
-          |        "id" : 1,
-          |        "projectId" : 1,
-          |        "userId" : 1,
+          |        "id": 1,
+          |        "projectId": 1,
+          |        "userId": 1,
           |        "createTime" : "2020-01-15T04:00:00",
           |        "taskDescription" : "task",
           |        "startTime" : "2020-01-15T04:00:00",

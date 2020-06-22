@@ -1,4 +1,4 @@
-import akka.actor.{ActorLogging, ActorSystem}
+import akka.actor._
 import akka.http.scaladsl.Http
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import pureconfig.ConfigSource

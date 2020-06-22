@@ -2,35 +2,48 @@ package service.task
 
 import java.time.{ZoneOffset, ZonedDateTime}
 
-import cats.data.EitherT
+import akka.event.MarkerLoggingAdapter
 import cats.effect._
-import models.request.DeleteTaskRequest
-import error._
-import models.model.Project
+import models._
 import repository.project.GetProjectByName
 import repository.task.DeleteTask
 import repository.user.GetUserByUUID
+import slick.jdbc.PostgresProfile.api._
+import utils.EitherT
+
+import scala.concurrent._
+import ExecutionContext.Implicits.global
+import db.RunDBIOAction._
+import error.LogTimeAppError
 
 class DeactivateTask[F[+_] : Sync](
-                                getProjectId: GetProjectByName[F],
-                                getUserId: GetUserByUUID[F],
-                                delete: DeleteTask[F]) {
+                                    getProjectId: GetProjectByName[F],
+                                    getUserId: GetUserByUUID[F],
+                                    delete: DeleteTask[F])
+                                  (implicit db: Database,
+                                   logger: MarkerLoggingAdapter,
+                                   ec: ContextShift[IO])  {
 
 
-  def apply(taskDescription: String, projectName: String, uuid: String): F[Either[LogTimeAppError, Int]] = (for {
+  def apply(taskDescription: String, projectName: String, uuid: String): IO[Either[LogTimeAppError, DeleteCount]] = {
+    logging.requestedTaskDeactivation(taskDescription: String, projectName: String, uuid: String)
+    (for {
     project <- findProjectById(projectName)
+    _ = logging.checkingWhetherProjectExists(projectName: String)
     userId <- getExistingUserId(uuid)
-    updatedCount <- deleteTask(taskDescription, project.id, userId)
-  } yield updatedCount).value
-
-
-  private def findProjectById(projectName: String): EitherT[F, LogTimeAppError, Project] = {
-    EitherT.fromOptionF(getProjectId(projectName), ProjectNotFound)
+    _ = logging.checkingWhetherUserExists(uuid: String)
+    updatedCount <- deleteTask(taskDescription, project.id, userId.userId)
+      _ = logging.deactivatingTask(taskDescription: String, projectName: String, uuid: String)
+  } yield updatedCount).value.transactionally.exec
   }
 
-  private def getExistingUserId(uuid: String): EitherT[F, LogTimeAppError, Int] =
-    EitherT.fromOptionF(getUserId(uuid), UserNotFound )
+  private def findProjectById(projectName: String) =
+    EitherT(getProjectId(projectName))
 
-  private def deleteTask(taskDescription: String, projectId: Long, userId: Long): EitherT[F, LogTimeAppError, Int] =
+  private def getExistingUserId(uuid: String) =
+    EitherT(getUserId(uuid))
+
+  private def deleteTask(taskDescription: String, projectId: ProjectId, userId: UserId) =
     EitherT(delete(taskDescription, projectId, userId, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime))
 }
+

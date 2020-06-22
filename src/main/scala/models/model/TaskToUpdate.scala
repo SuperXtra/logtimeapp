@@ -1,13 +1,14 @@
 package models.model
 
 import java.time.ZonedDateTime
+import models._
 
 case class TaskToUpdate(
-                         projectId: Long,
-                         userId: Long,
+                         projectId: ProjectId,
+                         userId: UserId,
                          taskDescription: String,
                          startTime: ZonedDateTime,
-                         duration: Long,
-                         volume: Option[Int],
+                         duration: TaskDuration,
+                         volume: Option[Volume],
                          comment: Option[String]
                        )

@@ -2,40 +2,49 @@ package service.task
 
 import java.time.{ZoneOffset, ZonedDateTime}
 
-import cats.data.EitherT
-import cats.effect.Sync
+import akka.event.MarkerLoggingAdapter
+import cats.effect.{ContextShift, IO, Sync}
 import models.request.LogTaskRequest
-import error.{LogTimeAppError, ProjectNotFound, TaskNotCreated, UserNotFound}
-import models.model.{Project, Task}
+import error._
+import models.{ProjectId, TaskId, UserId}
+import models.model._
 import repository.project.GetProjectByName
-import repository.task.{GetTask, CreateTask}
+import repository.task.{CreateTask, GetTask}
 import repository.user.GetUserByUUID
-
+import slick.jdbc.PostgresProfile.api._
+import utils.EitherT
+import scala.concurrent._
+import ExecutionContext.Implicits.global
+import db.RunDBIOAction._
 
 class LogTask[F[+_]: Sync](
                             getProjectId: GetProjectByName[F],
                             getUserId: GetUserByUUID[F],
                             insertTask: CreateTask[F],
-                            getTask: GetTask[F]) {
+                            getTask: GetTask[F])
+                          (implicit db: Database,
+                           logger: MarkerLoggingAdapter,
+                           ec: ContextShift[IO]) {
 
-  def apply(work: LogTaskRequest, uuid: String): F[Either[LogTimeAppError, Task]] = {
-    (for {
-      projectId <- getExistingProjectId(work.projectName)
-      userId <- getExistingUserId(uuid)
-      taskId <- insertNewTask(work, projectId.id, userId)
-      task <- getExistingTask(taskId)
-    } yield task).value
-  }
+  def apply(work: LogTaskRequest, uuid: String): IO[Either[LogTimeAppError, Task]] = (for {
+    projectId <- getExistingProjectId(work.projectName)
+    _ = logging.checkingWhetherProjectExists(work.projectName)
+    userId <- getExistingUserId(uuid)
+    _ = logging.checkingWhetherUserExists(uuid)
+    taskId <- insertNewTask(work, projectId.id, userId.userId)
+    task <- getExistingTask(taskId)
+    _ = logging.insertedTask(taskId: TaskId)
+  } yield task).value.transactionally.exec
 
-  private def getExistingProjectId(projectName: String): EitherT[F, LogTimeAppError, Project] =
-    EitherT.fromOptionF(getProjectId(projectName), ProjectNotFound)
+  private def getExistingProjectId(projectName: String)=
+    EitherT(getProjectId(projectName))
 
-  private def getExistingUserId(userIdentification: String): EitherT[F, LogTimeAppError, Int] =
-    EitherT.fromOptionF(getUserId(userIdentification), UserNotFound )
+  private def getExistingUserId(userIdentification: String) =
+    EitherT(getUserId(userIdentification))
 
-  private def insertNewTask(work: LogTaskRequest, projectId: Long, userId: Long): EitherT[F, LogTimeAppError, Int] =
+  private def insertNewTask(work: LogTaskRequest, projectId: ProjectId, userId: UserId) =
     EitherT(insertTask(work, projectId, userId, ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime))
 
-  private def getExistingTask(taskId: Long): EitherT[F, LogTimeAppError, Task] =
-    EitherT.fromOptionF(getTask(taskId), TaskNotCreated )
+  private def getExistingTask(taskId: TaskId)=
+    EitherT(getTask(taskId))
 }

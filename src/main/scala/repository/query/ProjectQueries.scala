@@ -1,67 +1,60 @@
 package repository.query
 
 import java.time._
-
-import doobie.Update0
-import doobie.implicits._
-import doobie.util.query.Query0
 import models.model._
 import doobie.implicits.javatime._
-import doobie.util.log.LogHandler
+import models._
+import slick.sql._
+import slick.jdbc.PostgresProfile.api._
+import db.ColumnImplicits._
+import db.ProjectSchema
+
 
 object ProjectQueries {
+  val project = ProjectSchema.projects
 
-  def insert(projectName: String, userId: Long): doobie.Query0[Int] = {
-    fr"""INSERT INTO tb_project (user_id, project_name, create_time) VALUES (
-           ${userId.toInt},
-           ${projectName},
-           ${ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime}
-           ) returning id
-           """
-      .query[Int]
-  }
-  def changeName(oldName: String, newName: String, userId: Long): Update0 = {
-    fr"""
-        UPDATE tb_project SET project_name = ${newName}
-        WHERE project_name = ${oldName}
-        AND user_id = ${userId.toInt}
-        """.update
+  def insert(projectName: String, userId: UserId): FixedSqlAction[Project, NoStream, Effect.Write] = {
+    (project returning project) +=
+      Project(
+        userId = userId,
+        projectName = projectName,
+        createTime = ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime,
+        deleteTime = None,
+        active = Some(Active(true))
+      )
   }
 
-  def deactivate(requestingUserId: Long, projectName: String, deleteTime: LocalDateTime): Update0 = {
-    fr"""UPDATE tb_project
-           SET delete_time = ${deleteTime}, active = false
-           WHERE project_name = $projectName
-           AND user_id = ${requestingUserId.toInt}
-           """
-      .update
+  def changeName(oldName: String, newName: String, userId: UserId): FixedSqlAction[Int, NoStream, Effect.Write] = {
+    val result = (for {
+      p <- project if p.projectName === oldName && p.userId === userId
+    } yield p.projectName).update(newName)
+
+    result.statements.foreach(println)
+    result
   }
 
-  def getIdByProjectName(projectName: String): Query0[Long] =
-    fr"""SELECT id FROM tb_project
-           WHERE project_name = ${projectName}
-           """
-      .query[Long]
+  def deactivate(requestingUserId: UserId, projectName: String, deleteTime: LocalDateTime): FixedSqlAction[Int, NoStream, Effect.Write] = {
+    project.filter(p => p.projectName === projectName && p.userId === requestingUserId)
+      .map(x => (x.deleteTime, x.active))
+      .update((Some(deleteTime), Some(Active(false))))
+  }
 
-  def getActiveProjectByName(projectName: String)= {
-    fr"""SELECT * FROM tb_project
-           WHERE project_name = ${projectName}
-           AND active = true"""
-      .query[Project]
+  def getIdByProjectName(projectName: String) =
+    project.filter(_.projectName === projectName).result.headOption
+
+  def getActiveProjectByName(projectName: String) = {
+    project.filter(p => p.projectName === projectName && p.active === Active(true)).result
   }
 
 
-  def projectExists(projectName: String): Query0[Boolean] = {
-    fr"""SELECT EXISTS (
-           SELECT * FROM tb_project
-           WHERE project_name = ${projectName})
-           """
-      .query[Boolean]
-  }
+  def projectExists(projectName: String) =
+    project.filter(p => p.projectName === projectName).exists.result
 
-  def checkIfUserIsOwner(userId: Int, projectName: String): doobie.Query0[Boolean] = {
-    fr"""
-        SELECT EXISTS ( select (id) FROM tb_project WHERE project_name = ${projectName} AND user_id = ${userId} and active = true)
-        """.query[Boolean]
-  }
+  def checkIfUserIsOwner(userId: UserId, projectName: String) =
+    project
+      .filter(p =>
+        p.projectName === projectName &&
+          p.userId === userId &&
+          p.active === Active(true))
+      .exists.result
 }

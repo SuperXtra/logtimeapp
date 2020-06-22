@@ -29,3 +29,5 @@ case object ReportCouldNotBeGenerated extends LogTimeAppError
 //Authentication
 case object AuthenticationNotSuccessful extends LogTimeAppError
 case object AuthenticationNotSuccessfulWithoutBearer extends LogTimeAppError
+
+case object UnknownError extends LogTimeAppError

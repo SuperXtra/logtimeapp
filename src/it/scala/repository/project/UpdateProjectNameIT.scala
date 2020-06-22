@@ -6,12 +6,13 @@ import cats.effect.{ContextShift, IO}
 import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
 import db.InitializeDatabase
 import doobie.util.ExecutionContexts
-import doobie.util.transactor.Transactor
-import error.{ProjectNotCreated, ProjectUpdateUnsuccessful}
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import repository.user.InsertUser
+import slick.jdbc.PostgresProfile.api._
+import db.RunDBIOAction._
+
 
 class UpdateProjectNameIT extends AnyFlatSpec with Matchers with GivenWhenThen with ForAllTestContainer with BeforeAndAfterEach {
 
@@ -20,46 +21,44 @@ class UpdateProjectNameIT extends AnyFlatSpec with Matchers with GivenWhenThen w
   it should "update existing project id" in new Context {
 
     Given("existing user")
-    val userId = createUser(UUID.randomUUID().toString).unsafeRunSync().right.get
+    val userId = createUser(UUID.randomUUID().toString).exec.unsafeRunSync().right.get
 
     And("existing project")
     val projectName = "test_project"
-    insertProject(projectName, userId).unsafeRunSync()
+    insertProject(projectName, userId).exec.unsafeRunSync()
 
     When("updating existing project")
     val newName = projectName + "test"
-    update(projectName, newName, userId).unsafeRunSync()
+    update(projectName, newName, userId).exec.unsafeRunSync()
 
     And("fetching active project by name")
-    val result = findActiveProjectByName(newName).unsafeRunSync.get
+    val result = findActiveProjectByName(newName).exec.unsafeRunSync.right.get
 
     Then("it should return new project name")
     result.projectName shouldBe newName
   }
 
   private trait Context {
-
     implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
 
-    val tx = Transactor.fromDriverManager[IO](
-      container.driverClassName,
+    implicit val tx: Database = Database.forURL(
       container.jdbcUrl,
       container.username,
-      container.password
+      container.password,
+      null,
+      container.driverClassName
     )
 
-    val findActiveProjectByName = new GetProjectByName[IO](tx)
-    val insertProject = new InsertProject(tx)
-    val createUser = new InsertUser[IO](tx)
-    val update = new UpdateProjectName[IO](tx)
+    val findActiveProjectByName = new GetProjectByName[IO]
+    val insertProject = new InsertProject[IO]
+    val createUser = new InsertUser[IO]
+    val update = new UpdateProjectName[IO]
 
-    import doobie.implicits._
-
-    (for {
-      _ <- sql"DELETE from tb_project".update.run
-      _ <- sql"DELETE from tb_user".update.run
-      _ <- sql"DELETE from tb_task".update.run
-    } yield ()).transact(tx).unsafeRunSync()
+    for {
+      _ <- sql"DELETE from tb_project".asUpdate.exec
+      _ <- sql"DELETE from tb_user".asUpdate.exec
+      _ <- sql"DELETE from tb_task".asUpdate.exec
+    } yield ()
   }
 
   override def beforeEach(): Unit = {

@@ -2,6 +2,7 @@ package service.project
 
 import java.time.LocalDateTime
 
+import akka.event.{MarkerLoggingAdapter, NoMarkerLogging}
 import cats.effect.IO
 import models.model.{Project, User}
 import org.scalatest.GivenWhenThen
@@ -11,27 +12,27 @@ import repository.project.{GetProjectByName, UpdateProjectName}
 import repository.user._
 import cats.implicits._
 import error._
+import models.{Active, ProjectId, UserId}
 import models.request.{ChangeProjectNameRequest, DeleteProjectRequest}
+import service.SetUp
+import slick.dbio.{DBIOAction, Effect}
+import slick.jdbc
+import slick.jdbc.PostgresProfile
 
 class UpdateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
 
   it should "update project" in new Context {
     Given("user id, result of updating project, updated project")
-    val userId = Some(1)
+    val user = User(UserId(1), "123").asRight
     val updateProjectName = "After change"
-    val updatedProject = Project(1, 1, updateProjectName, LocalDateTime.now(), Some(LocalDateTime.now().plusHours(2)), Some(true))
+    val updatedProject = Project(ProjectId(1), UserId(1), updateProjectName, LocalDateTime.now(), Some(LocalDateTime.now().plusHours(2)), Some(Active(true)))
 
     And("ability to check if project was updated")
-    var newName = none[String]
-    var oldName = none[String]
-    val updateName = (on: String, nn: String) => IO{
-      oldName = on.some
-      newName = nn.some
-      ().asRight[LogTimeAppError]
-    }
+    val updateName = ().asRight
+
 
     And("a service will update project")
-    val updateProject = serviceUnderTest(userId, updateName)
+    val updateProject = serviceUnderTest(user, updateName)
 
     val changeProjectName = ChangeProjectNameRequest(
       oldProjectName = "Test project name",
@@ -44,23 +45,15 @@ class UpdateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     Then("returns project")
     result.isRight shouldBe true
 
-    And("correct old name was passed")
-    oldName shouldBe changeProjectName.oldProjectName.some
-
-    And("correct new name was passed")
-    newName shouldBe changeProjectName.projectName.some
-
   }
 
   it should "not update project" in new Context {
     Given("user id, result of updating project, updated project")
-    val userId = Some(1)
-    val updateName = (_: String,_: String) => IO{
-      ProjectNotCreated.asLeft[Unit]
-    }
+    val user = User(UserId(1), "123").asRight
+    val updateName = ProjectNotCreated.asLeft[Unit]
 
     And("a service will update project")
-    val updateProject = serviceUnderTest(userId, updateName)
+    val updateProject = serviceUnderTest(user, updateName)
 
     val changeProjectName = ChangeProjectNameRequest(
       oldProjectName = "Test project name",
@@ -74,21 +67,21 @@ class UpdateProjectTest extends AnyFlatSpec with Matchers with GivenWhenThen {
     result shouldBe Left(ProjectNotCreated)
   }
 
-  private trait Context {
+  private trait Context extends SetUp{
 
     def serviceUnderTest(
-                          userId: Option[Int],
-                          updateName: (String, String) => IO[Either[LogTimeAppError, Unit]]
+                          user: Either[LogTimeAppError, User],
+                          updateName: Either[LogTimeAppError, Unit]
                         ): UpdateProject[IO] = {
 
-      val user = new GetUserByUUID[IO](null) {
-        override def apply(userIdentification: String): IO[Option[Int]] = userId.pure[IO]
+      val userIO = new GetUserByUUID[IO] {
+        override def apply(userIdentification: String) = DBIOAction.successful(user)
       }
-      val updateProjectName = new UpdateProjectName[IO](null) {
-        override def apply(oldName: String, newName: String, userId: Long): IO[Either[LogTimeAppError, Unit]] = updateName(oldName, newName)
+      val updateProjectName = new UpdateProjectName[IO] {
+        override def apply(oldName: String, newName: String, userId: UserId) = DBIOAction.successful(updateName)
       }
 
-      new UpdateProject[IO](user, updateProjectName)
+      new UpdateProject[IO](userIO, updateProjectName)
     }
   }
 }
