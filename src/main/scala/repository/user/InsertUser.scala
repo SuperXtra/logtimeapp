@@ -1,7 +1,6 @@
 package repository.user
 
 import cats.effect.Sync
-import doobie.util.transactor.Transactor
 import error.{CannotCreateUserWithGeneratedUUID, LogTimeAppError}
 import models.UserId
 import repository.query.UserQueries

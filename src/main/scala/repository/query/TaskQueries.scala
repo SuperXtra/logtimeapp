@@ -1,10 +1,8 @@
 package repository.query
 
 import java.time._
-
 import models.request.LogTaskRequest
 import java.time.{ZoneOffset, ZonedDateTime}
-
 import models.model._
 import models._
 import slick.jdbc.PostgresProfile.api._

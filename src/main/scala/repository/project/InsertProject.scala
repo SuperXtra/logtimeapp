@@ -4,7 +4,6 @@ import cats.effect.Sync
 import error._
 import models._
 import repository.query.ProjectQueries
-
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import scala.util._

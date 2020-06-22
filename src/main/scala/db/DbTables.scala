@@ -1,7 +1,6 @@
 package db
 
 import java.time.LocalDateTime
-
 import models.{Active, ProjectId, TaskDuration, TaskId, UserId, Volume}
 import models.model.{Project, Task, User}
 import slick.jdbc.PostgresProfile.api._

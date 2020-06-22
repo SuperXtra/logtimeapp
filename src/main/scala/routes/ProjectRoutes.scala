@@ -12,8 +12,6 @@ import error._
 import models.ProjectId
 import utils.CirceEncoderDecoder._
 
-
-
 object ProjectRoutes {
 
   val projectPath = "project"

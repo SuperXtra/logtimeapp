@@ -1,15 +1,11 @@
 package repository.user
 
-import cats.effect.{IO, Sync}
+import cats.effect.Sync
 import cats.implicits._
-import doobie.implicits._
-import doobie.util.transactor.Transactor
 import error.{LogTimeAppError, ProjectNotCreated}
-import models.UserId
 import models.model.User
 import repository.query.UserQueries
 import slick.jdbc.PostgresProfile.api._
-
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}

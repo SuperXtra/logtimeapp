@@ -1,12 +1,10 @@
 package repository.report
 
 import cats.effect.Sync
-import doobie.util.transactor.Transactor
 import error._
 import models.request.ReportBodyWithParamsRequest
 import repository.query.GenerateReportQueries
 import slick.jdbc.PostgresProfile.api._
-
 import scala.util.{Failure, Success}
 import cats.implicits._
 import models.reports.ReportFromDb

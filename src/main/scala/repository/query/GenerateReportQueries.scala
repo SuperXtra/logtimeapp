@@ -11,6 +11,8 @@ import slick.jdbc.PostgresProfile.api._
 object GenerateReportQueries {
 
   def apply(projectQuery: ReportBodyWithParamsRequest) = {
+    implicit val localDateTime = GetResult.apply((x: PositionedResult) => x.nextTimestampOption().map(_.toLocalDateTime))
+    implicit val getOverallReportResult = GetResult(r => ReportFromDb(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
 
     val base =
       """ WITH projects_page AS(
@@ -87,9 +89,6 @@ object GenerateReportQueries {
         LIMIT ${limitation} OFFSET ${offset}
        """
     }
-
-    implicit val localDateTime = GetResult.apply((x: PositionedResult) => x.nextTimestampOption().map(_.toLocalDateTime))
-    implicit val getOverallReportResult = GetResult(r => ReportFromDb(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
 
     sql"""#$base #$projectNamesFilter #$isActiveFilter #$dateRangeFilter GROUP BY p.id #$sortingCTE #$paginationFilter ) #$selectAllFromCTE #$isActiveFilter #$sortingSelect""".as[ReportFromDb]
 

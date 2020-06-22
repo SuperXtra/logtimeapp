@@ -2,8 +2,6 @@ package service.project
 
 import akka.event.MarkerLoggingAdapter
 import cats.effect.{ContextShift, IO, Sync}
-import db.DatabaseContext
-import error._
 import models.UserId
 import repository.project._
 import repository.user.GetUserByUUID

@@ -10,9 +10,11 @@ import repository.task.DeleteTask
 import repository.user.GetUserByUUID
 import slick.jdbc.PostgresProfile.api._
 import utils.EitherT
+
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import db.RunDBIOAction._
+import error.LogTimeAppError
 
 class DeactivateTask[F[+_] : Sync](
                                     getProjectId: GetProjectByName[F],
@@ -23,7 +25,7 @@ class DeactivateTask[F[+_] : Sync](
                                    ec: ContextShift[IO])  {
 
 
-  def apply(taskDescription: String, projectName: String, uuid: String) = {
+  def apply(taskDescription: String, projectName: String, uuid: String): IO[Either[LogTimeAppError, DeleteCount]] = {
     logging.requestedTaskDeactivation(taskDescription: String, projectName: String, uuid: String)
     (for {
     project <- findProjectById(projectName)

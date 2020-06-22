@@ -8,7 +8,6 @@ import models.request.ReportBodyWithParamsRequest
 import models.reports._
 import repository.report.GetReport
 import utils.EitherT
-
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import db.RunDBIOAction._

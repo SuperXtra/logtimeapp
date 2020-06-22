@@ -1,14 +1,11 @@
 package repository.task
 
 import cats.effect.Sync
-import doobie._
-import doobie.implicits._
 import models.TaskId
 import models.model.Task
 import repository.query.TaskQueries
 import slick.jdbc.PostgresProfile.api._
 import slick.dbio.Effect
-
 import scala.concurrent.ExecutionContext
 import ExecutionContext.Implicits.global
 import cats.implicits._

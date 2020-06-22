@@ -1,16 +1,13 @@
 package repository.project
 
 import cats.effect.Sync
-import doobie.util.transactor.Transactor
 import models.model.Project
 import repository.query.ProjectQueries
-import doobie.implicits._
-import error.{LogTimeAppError, ProjectNotCreated, ProjectNotFound}
+import error._
 import cats.implicits._
 import slick.jdbc.PostgresProfile.api._
 import scala.concurrent._
 import ExecutionContext.Implicits.global
-
 import scala.util.{Failure, Success}
 
 class GetProjectByName[F[+_] : Sync] {

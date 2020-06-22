@@ -1,11 +1,9 @@
 package repository.task
 
 import java.time.LocalDateTime
-
 import cats.implicits._
 import cats.effect._
 import models.request.LogTaskRequest
-import doobie._
 import error._
 import models.{ProjectId, TaskId, UserId}
 import repository.query.TaskQueries

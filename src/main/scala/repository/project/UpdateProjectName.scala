@@ -1,11 +1,8 @@
 package repository.project
 
 import cats.effect.Sync
-import doobie.implicits._
-import doobie.util.transactor.Transactor
 import repository.query.ProjectQueries
 import cats.implicits._
-import doobie.postgres.sqlstate
 import error.{LogTimeAppError, ProjectNameExists, ProjectUpdateUnsuccessful}
 import models.UserId
 import slick.jdbc.PostgresProfile.api._
@@ -14,8 +11,7 @@ import ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
 
-class UpdateProjectName[F[+_] : Sync]() {
-
+class UpdateProjectName[F[+_] : Sync] {
   def apply(oldName: String, newName: String, userId: UserId): DBIOAction[Either[LogTimeAppError, Unit], NoStream, Effect.Write with Effect] =
     ProjectQueries
       .changeName(oldName, newName, userId)

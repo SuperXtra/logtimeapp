@@ -1,15 +1,11 @@
 package repository.user
 
 import cats.effect.Sync
-import doobie.util.transactor.Transactor
-import doobie.implicits._
 import error.{LogTimeAppError, UserNotFound}
 import models.Exists
 import repository.query.UserQueries
-
 import scala.concurrent._
 import ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
 import slick.jdbc.PostgresProfile.api._
 import cats.implicits._
 

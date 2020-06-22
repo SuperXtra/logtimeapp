@@ -1,9 +1,7 @@
 package repository.task
 
 import cats.effect.Sync
-import doobie.Transactor
 import error._
-import doobie.implicits._
 import models.ProjectId
 import models.model.Task
 import repository.query.TaskQueries

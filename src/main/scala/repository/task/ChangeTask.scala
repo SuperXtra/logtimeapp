@@ -1,15 +1,12 @@
 package repository.task
 
-import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
-
+import java.time._
 import cats.effect.Sync
 import models.model.TaskToUpdate
 import error._
 import repository.query.TaskQueries
 import cats.implicits._
-import doobie.util.transactor.Transactor
 import models.{ProjectId, UserId}
-
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}

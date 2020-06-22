@@ -1,7 +1,6 @@
 package service.user
 
 import java.util.UUID
-
 import akka.event.MarkerLoggingAdapter
 import cats.effect._
 import models._

@@ -42,7 +42,6 @@ case class ReportFromDb(
                          comment: Option[String]
                        )
 
-// TODO
 case class OverallStatisticsReport(
                                     total_count: TotalCount,
                                     average_duration: Option[BigDecimal],

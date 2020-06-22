@@ -1,7 +1,6 @@
 package models.model
 
 import java.time.ZonedDateTime
-
 import models._
 
 case class TaskToUpdate(

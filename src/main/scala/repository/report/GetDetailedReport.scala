@@ -1,17 +1,13 @@
 package repository.report
 
 import cats.effect.Sync
-import doobie.util.transactor.Transactor
 import error.{LogTimeAppError, ReportCouldNotBeGenerated}
-import models.request.{MainReport, ReportBodyWithParamsRequest}
-import models.reports.{OverallStatisticsReport, ReportFromDb}
-import repository.query.{GenerateReportQueries, StatisticsReportQuery}
-import doobie.implicits._
+import models.request._
+import models.reports._
+import repository.query._
 import slick.jdbc.PostgresProfile.api._
-
 import scala.concurrent._
 import ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
 import cats.implicits._
 import slick.jdbc.PostgresProfile
 

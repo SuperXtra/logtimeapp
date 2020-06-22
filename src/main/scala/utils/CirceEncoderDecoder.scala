@@ -5,13 +5,11 @@ import io.circe.syntax._
 import io.circe.generic.extras.semiauto._
 import io.circe.generic.extras.defaults._
 import models._
-import models.model.User
 
 object CirceEncoderDecoder {
 
 
   //Encoders
-//  implicit val UserEncoder: Encoder[User]         = deriveConfiguredCodec
   implicit val UserIdEncoder:       Encoder[UserId]           = deriveUnwrappedEncoder
   implicit val TaskIdEncoder:       Encoder[TaskId]           = deriveUnwrappedEncoder
   implicit val TaskDurationEncoder: Encoder[TaskDuration]     = deriveUnwrappedEncoder

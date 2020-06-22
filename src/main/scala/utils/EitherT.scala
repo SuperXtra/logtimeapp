@@ -2,7 +2,6 @@ package utils
 
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
-
 import scala.concurrent.ExecutionContext
 
 

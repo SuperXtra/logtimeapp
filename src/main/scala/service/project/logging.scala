@@ -6,7 +6,6 @@ import akka.event.MarkerLoggingAdapter
 import cats.effect._
 import cats.implicits._
 import models.{IsOwner, ProjectId, UserId}
-import repository.project.UpdateProjectName
 
 object logging {
   def changedProjectName[F[_]: Sync](oldName: String, newProjectName: String)

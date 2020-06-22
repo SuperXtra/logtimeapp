@@ -4,15 +4,13 @@ import java.time.{ZoneOffset, ZonedDateTime}
 
 import akka.event.MarkerLoggingAdapter
 import cats.effect.{ContextShift, IO, Sync}
-import db.DatabaseContext
 import models.request.LogTaskRequest
-import error.{LogTimeAppError, ProjectNotFound, TaskNotCreated, UserNotFound}
+import error._
 import models.{ProjectId, TaskId, UserId}
-import models.model.{Project, Task}
+import models.model._
 import repository.project.GetProjectByName
 import repository.task.{CreateTask, GetTask}
 import repository.user.GetUserByUUID
-import slick.jdbc.PostgresProfile
 import slick.jdbc.PostgresProfile.api._
 import utils.EitherT
 import scala.concurrent._

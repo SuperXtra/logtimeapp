@@ -1,9 +1,7 @@
 package repository.task
 
 import java.time.LocalDateTime
-
 import cats.effect.Sync
-import doobie.util.transactor.Transactor
 import error._
 import repository.query.TaskQueries
 import cats.implicits._

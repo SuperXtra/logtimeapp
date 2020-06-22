@@ -3,8 +3,6 @@ package service.project
 import akka.event.MarkerLoggingAdapter
 import utils.EitherT
 import cats.effect.{ContextShift, IO, Sync}
-import db.DatabaseContext
-import doobie.util.ExecutionContexts
 import models._
 import error._
 import repository.project.InsertProject

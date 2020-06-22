@@ -1,14 +1,11 @@
 package service.task
 
 import java.time.{ZoneOffset, ZonedDateTime}
-
 import akka.event.MarkerLoggingAdapter
 import cats.effect._
-import db.DatabaseContext
 import models._
 import models.model._
 import models.request.UpdateTaskRequest
-import error._
 import repository.task._
 import repository.user.GetUserByUUID
 import slick.jdbc.PostgresProfile.api._

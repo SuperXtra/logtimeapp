@@ -1,12 +1,9 @@
 package repository.task
 
-import java.time.{LocalDateTime, ZonedDateTime}
-
+import java.time._
 import cats.effect.Sync
-import doobie.implicits._
-import doobie.util.transactor.Transactor
 import error._
-import models.{DeleteCount, ProjectId}
+import models._
 import repository.query.TaskQueries
 import slick.jdbc.PostgresProfile.api._
 import slick.dbio.Effect

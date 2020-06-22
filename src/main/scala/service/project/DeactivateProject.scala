@@ -4,18 +4,10 @@ import java.time.{ZonedDateTime, _}
 
 import akka.event.MarkerLoggingAdapter
 import cats.effect._
-import db.DatabaseContext
-import doobie.util.ExecutionContexts
-import models.request.DeleteProjectRequest
 import error._
-import models.{IsOwner, ProjectId, UserId}
-import models.model.{Project, User}
+import models._
 import repository.project._
-import repository.task.DeleteTasks
 import repository.user.GetUserByUUID
-import slick.dbio
-import slick.dbio.{DBIOAction, Effect, NoStream}
-
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import slick.jdbc.PostgresProfile.api._
