@@ -18,7 +18,7 @@ class UpdateProjectName[F[+_] : Sync]() {
 
   def apply(oldName: String, newName: String, userId: UserId): DBIOAction[Either[LogTimeAppError, Unit], NoStream, Effect.Write with Effect] =
     ProjectQueries
-      .changeNameSlick(oldName, newName, userId)
+      .changeName(oldName, newName, userId)
       .asTry
       .flatMap {
         case Failure(_) => DBIO.successful(ProjectNameExists.asLeft)

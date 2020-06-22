@@ -23,8 +23,8 @@ import ExecutionContext.Implicits.global
 class DeleteProjectWithTasks[F[+_] : Sync] {
   def apply(userId: UserId, projectName: String, projectId: ProjectId, deleteTime: LocalDateTime): DBIOAction[Either[LogTimeAppError, Unit], NoStream, Effect.Write with Effect.Transactional with Effect] = {
     (for {
-      _ <- ProjectQueries.deactivateSlick(userId, projectName, deleteTime)
-      _ <- TaskQueries.deleteTasksForProjectSlick(projectId, deleteTime)
+      _ <- ProjectQueries.deactivate(userId, projectName, deleteTime)
+      _ <- TaskQueries.deleteTasksForProject(projectId, deleteTime)
     } yield ()).transactionally
       .asTry
       .flatMap {

@@ -17,7 +17,7 @@ import scala.util.{Failure, Success}
 class GetUserByUUID[F[_] : Sync]() {
   def apply(userIdentification: String): DBIOAction[Either[LogTimeAppError, User], NoStream, Effect.All with Effect] =
       UserQueries
-        .getUserIdByUUIDSlick(userIdentification)
+        .getUserIdByUUID(userIdentification)
         .asTry
         .flatMap {
           case Failure(_) => DBIO.successful(ProjectNotCreated.asLeft)

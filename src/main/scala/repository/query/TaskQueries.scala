@@ -8,7 +8,8 @@ import java.time.{ZoneOffset, ZonedDateTime}
 import models.model._
 import models._
 import slick.jdbc.PostgresProfile.api._
-import ColumnImplicits._
+import db.ColumnImplicits._
+import db.TaskSchema
 import slick.dbio.Effect
 import slick.sql.FixedSqlAction
 
@@ -16,7 +17,7 @@ object TaskQueries {
 
   lazy val task = TaskSchema.tasks
 
-  def updateByInsertSlick(update: TaskToUpdate, created: LocalDateTime) = {
+  def updateByInsert(update: TaskToUpdate, created: LocalDateTime) = {
     val start = update.startTime
     val end = start.plusMinutes(update.duration.value)
 
@@ -36,7 +37,7 @@ object TaskQueries {
       )
   }
 
-  def insertSlick(create: LogTaskRequest, projectId: ProjectId, userId: UserId, startTime: LocalDateTime) = {
+  def insert(create: LogTaskRequest, projectId: ProjectId, userId: UserId, startTime: LocalDateTime) = {
     val start = create.startTime.withZoneSameInstant(ZoneOffset.UTC)
     val end: ZonedDateTime = start.plusMinutes(create.durationTime.value)
 
@@ -55,7 +56,7 @@ object TaskQueries {
         active = Some(Active(true))
       )
   }
-  def deleteTaskSlick(taskDescription: String, projectId: ProjectId, userId: UserId, deleteTime: LocalDateTime) = {
+  def deleteTask(taskDescription: String, projectId: ProjectId, userId: UserId, deleteTime: LocalDateTime) = {
     task.filter(t =>
       t.taskDescription === taskDescription &&
         t.projectId === projectId &&
@@ -67,21 +68,21 @@ object TaskQueries {
   }
 
 
-  def deleteTasksForProjectSlick(projectId: ProjectId, deleteTime: LocalDateTime): FixedSqlAction[Int, NoStream, Effect.Write] = {
+  def deleteTasksForProject(projectId: ProjectId, deleteTime: LocalDateTime): FixedSqlAction[Int, NoStream, Effect.Write] = {
     task.filter(t => t.projectId === projectId)
       .map(col => (col.deleteTime, col.active))
       .update((Some(deleteTime), Some(Active(false))))
   }
 
-  def getTaskByIdSlick(id: TaskId) = {
+  def getTaskById(id: TaskId) = {
     task.filter(t => t.id === id).result.headOption
   }
 
-  def fetchTasksForProjectSlick(projectId: ProjectId) = {
+  def fetchTasksForProject(projectId: ProjectId) = {
     task.filter(t => t.projectId === projectId && t.active === Active(true)).result
   }
 
-  def fetchTaskSlick(taskDescription: String, userId: UserId) = {
+  def fetchTask(taskDescription: String, userId: UserId) = {
     task.filter(t => t.taskDescription === taskDescription && t.userId === userId && t.active === Active(true)).result.headOption
   }
 }

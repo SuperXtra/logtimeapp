@@ -16,7 +16,7 @@ import scala.util.{Failure, Success}
 class GetProjectByName[F[+_] : Sync] {
   def apply(projectName: String): DBIOAction[Either[LogTimeAppError, Project], NoStream, Effect.Read with Effect] =
     ProjectQueries
-      .getActiveProjectByNameSlick(projectName)
+      .getActiveProjectByName(projectName)
     .headOption
     .asTry
     .flatMap {

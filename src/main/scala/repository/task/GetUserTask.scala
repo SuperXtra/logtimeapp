@@ -21,7 +21,7 @@ import scala.util.{Failure, Success}
 class GetUserTask[F[_] : Sync]{
   def apply(taskDescription: String, userId: UserId): DBIOAction[Either[LogTimeAppError, Task], NoStream, Effect.Read with Effect] = {
     TaskQueries
-      .fetchTaskSlick(taskDescription, userId)
+      .fetchTask(taskDescription, userId)
       .asTry
       .flatMap {
         case Failure(_) => DBIO.successful(TaskNotFound.asLeft)

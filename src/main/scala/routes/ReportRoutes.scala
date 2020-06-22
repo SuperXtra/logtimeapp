@@ -13,6 +13,7 @@ import cats.implicits._
 import models.model.{Ascending, ByCreatedTime, ByUpdateTime, Descending, ProjectSort, SortDirection}
 import models.{Active, Page, Quantity, reports}
 import service.auth.Auth
+import utils.CirceEncoderDecoder._
 
 object ReportRoutes {
 

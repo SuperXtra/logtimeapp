@@ -1,5 +1,4 @@
 import LogTimeApp.system
-import akka.actor.ActorSystem
 import akka.event.{Logging, MarkerLoggingAdapter}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -23,6 +22,7 @@ import repository.report.{GetDetailedReport, GetReport}
 import service.auth.Auth
 import com.typesafe.config.ConfigFactory
 import config.{AuthConfig, DatabaseConfig}
+import slick.jdbc.PostgresProfile
 
 trait LogTimeService {
   lazy val databaseConfiguration: Config = ConfigFactory.load("database-configuration.conf")
@@ -33,8 +33,7 @@ trait LogTimeService {
   implicit lazy val logger: MarkerLoggingAdapter = Logging.withMarker(system, "log-time-app")
 
   implicit lazy val cs: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
-  implicit lazy val transactor = DatabaseContext.transactor(databaseConfig)
-
+  implicit lazy val transactor: PostgresProfile.backend.DatabaseDef = DatabaseContext.transactor(databaseConfig)
 
   lazy val deleteProjectWithTasks = wire[DeleteProjectWithTasks[IO]]
   lazy val insertProject = wire[InsertProject[IO]]

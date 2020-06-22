@@ -18,7 +18,7 @@ import scala.util.{Failure, Success}
 class UserExists[F[_] : Sync] {
   def apply(uuid: String): DBIOAction[Either[LogTimeAppError, Exists], NoStream, Effect.All with Effect] = {
     UserQueries
-      .userExistsSlick(uuid)
+      .userExists(uuid)
       .asTry
       .flatMap {
         case Failure(_) => DBIO.successful(UserNotFound.asLeft)

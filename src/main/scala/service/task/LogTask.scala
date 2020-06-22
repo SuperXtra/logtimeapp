@@ -30,9 +30,12 @@ class LogTask[F[+_]: Sync](
 
   def apply(work: LogTaskRequest, uuid: String): IO[Either[LogTimeAppError, Task]] = (for {
     projectId <- getExistingProjectId(work.projectName)
+    _ = logging.checkingWhetherProjectExists(work.projectName)
     userId <- getExistingUserId(uuid)
+    _ = logging.checkingWhetherUserExists(uuid)
     taskId <- insertNewTask(work, projectId.id, userId.userId)
     task <- getExistingTask(taskId)
+    _ = logging.insertedTask(taskId: TaskId)
   } yield task).value.transactionally.exec
 
   private def getExistingProjectId(projectName: String)=

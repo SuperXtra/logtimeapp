@@ -14,6 +14,8 @@ class AuthenticateUser[F[+_] : Sync](exists: UserExists[F])
                                      logger: MarkerLoggingAdapter,
                                      ec: ContextShift[IO]) {
 
-  def apply(uuid: String): IO[Either[LogTimeAppError, Exists]] =
-   exists(uuid).exec
+  def apply(uuid: String): IO[Either[LogTimeAppError, Exists]] = {
+   logging.checkingWhetherUserExists(uuid)
+    exists(uuid).exec
+  }
 }

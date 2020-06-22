@@ -25,6 +25,7 @@ class GetProjectReport[F[+_] : Sync](
     (for {
       project <- findProjectById(projectName)
       projectTasks <- fetchTasksForProject(project.id)
+      _ = logging.generatingProjectReport(projectName)
     } yield {
       val totalDuration = projectTasks.map(_.duration.value).sum
       FinalProjectReport(project, Tasks(projectTasks), WorkedTime(totalDuration))

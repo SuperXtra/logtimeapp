@@ -22,7 +22,7 @@ class CreateTask[F[_] : Sync] {
 
   def apply(create: LogTaskRequest, projectId: ProjectId, userId: UserId, startTime: LocalDateTime): DBIOAction[Either[LogTimeAppError, TaskId], NoStream, Effect.Write with Effect] =
     TaskQueries
-      .insertSlick(create, projectId, userId, startTime)
+      .insert(create, projectId, userId, startTime)
       .asTry
       .flatMap {
         case Failure(ex: PSQLException) =>

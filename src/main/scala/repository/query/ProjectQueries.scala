@@ -1,24 +1,19 @@
 package repository.query
 
-import java.sql.Timestamp
 import java.time._
-
-import doobie.Update0
-import doobie.implicits._
-import doobie.util.query.Query0
 import models.model._
 import doobie.implicits.javatime._
-import models.{Active, IsOwner, ProjectId, UserId}
-import slick.jdbc.{GetResult, PositionedParameters, SetParameter}
+import models._
 import slick.sql._
 import slick.jdbc.PostgresProfile.api._
-import ColumnImplicits._
+import db.ColumnImplicits._
+import db.ProjectSchema
 
 
 object ProjectQueries {
   val project = ProjectSchema.projects
 
-  def insertSlick(projectName: String, userId: UserId): FixedSqlAction[Project, NoStream, Effect.Write] = {
+  def insert(projectName: String, userId: UserId): FixedSqlAction[Project, NoStream, Effect.Write] = {
     (project returning project) +=
       Project(
         userId = userId,
@@ -29,7 +24,7 @@ object ProjectQueries {
       )
   }
 
-  def changeNameSlick(oldName: String, newName: String, userId: UserId): FixedSqlAction[Int, NoStream, Effect.Write] = {
+  def changeName(oldName: String, newName: String, userId: UserId): FixedSqlAction[Int, NoStream, Effect.Write] = {
     val result = (for {
       p <- project if p.projectName === oldName && p.userId === userId
     } yield p.projectName).update(newName)
@@ -38,24 +33,24 @@ object ProjectQueries {
     result
   }
 
-  def deactivateSlick(requestingUserId: UserId, projectName: String, deleteTime: LocalDateTime): FixedSqlAction[Int, NoStream, Effect.Write] = {
-       project.filter(p => p.projectName === projectName && p.userId === requestingUserId)
+  def deactivate(requestingUserId: UserId, projectName: String, deleteTime: LocalDateTime): FixedSqlAction[Int, NoStream, Effect.Write] = {
+    project.filter(p => p.projectName === projectName && p.userId === requestingUserId)
       .map(x => (x.deleteTime, x.active))
       .update((Some(deleteTime), Some(Active(false))))
   }
 
-  def getIdByProjectNameSlick(projectName: String) =
+  def getIdByProjectName(projectName: String) =
     project.filter(_.projectName === projectName).result.headOption
 
-  def getActiveProjectByNameSlick(projectName: String)= {
+  def getActiveProjectByName(projectName: String) = {
     project.filter(p => p.projectName === projectName && p.active === Active(true)).result
   }
 
 
-  def projectExistsSlick(projectName: String) =
+  def projectExists(projectName: String) =
     project.filter(p => p.projectName === projectName).exists.result
 
-  def checkIfUserIsOwnerSlick(userId: UserId, projectName: String) =
+  def checkIfUserIsOwner(userId: UserId, projectName: String) =
     project
       .filter(p =>
         p.projectName === projectName &&

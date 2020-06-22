@@ -27,9 +27,7 @@ class UserRoutesTest  extends AnyFlatSpec with Matchers with ScalatestRouteTest 
       json(response.raw) shouldBe json(
         s"""
           {
-            "userId" : {
-            "value" : 21
-              },
+          "userId" : 21,
           "userIdentification" : "61a3a602-3797-41c2-8d69-764f762f1484"
           }
         """

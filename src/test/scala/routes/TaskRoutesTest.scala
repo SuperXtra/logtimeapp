@@ -36,12 +36,8 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
            |"projectName": "Project 23!",
            |"taskDescription": "this is task description",
            |"startTime": "${ZonedDateTime.now.minusDays(3)}",
-           |"durationTime": {
-           |  "value": ${3.days.toSeconds}
-           |  },
-           |"volume": {
-           | "value": 8
-           | },
+           |"durationTime": ${3.days.toSeconds},
+           |"volume": 8,
            |"comment": "this is comment"
            |}
            |""".stripMargin
@@ -80,51 +76,35 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
     Post("/task",
       HttpEntity(
         `application/json`,
-                s"""
-                   |{
-                   |  "projectName": "Project 23!",
-                   |  "taskDescription": "${task.taskDescription}",
-                   |  "startTime": "${ZonedDateTime.of(task.startTime, ZoneOffset.UTC)}",
-                   |  "durationTime": {
-                   |      "value": ${duration}
-                   |      },
-                   |  "volume": {
-                   |      "value": ${task.volume.get.value}
-                   |      },
-                   |  "comment": "${task.comment.get}"
-                   |}
-                   |""".stripMargin
+        s"""
+           |{
+           |  "projectName": "Project 23!",
+           |  "taskDescription": "${task.taskDescription}",
+           |  "startTime": "${ZonedDateTime.of(task.startTime, ZoneOffset.UTC)}",
+           |  "durationTime": ${duration},
+           |  "volume": ${task.volume.get.value},
+           |  "comment": "${task.comment.get}"
+           |}
+           |""".stripMargin
       )
     ) ~> route ~> check {
       response.status shouldBe StatusCodes.OK
       json(response.raw) shouldBe json(
         s"""
-    {
-  "id" : {
-    "value" : 283
-  },
-  "projectId" : {
-    "value" : 213
-  },
-  "userId" : {
-    "value" : 123
-  },
-  "createTime" : "${task.createTime.toString}",
-  "taskDescription" : "this is description",
-  "startTime" : "2020-05-31T12:23:02",
-  "endTime" : "2020-06-03T12:23:02",
-  "duration" : {
-    "value" : 259200
-  },
-  "volume" : {
-    "value" : 2
-  },
-  "comment" : "this is comment",
-  "deleteTime" : null,
-  "active" : {
-    "value" : false
-  }
-}
+        {
+            "id" :  283,
+            "projectId" : 213,
+            "userId" : 123,
+            "createTime" : "${task.createTime.toString}",
+            "taskDescription" : "this is description",
+            "startTime" : "2020-05-31T12:23:02",
+            "endTime" : "2020-06-03T12:23:02",
+            "duration" : 259200,
+            "volume" : 2,
+            "comment" : "this is comment",
+            "deleteTime" : null,
+            "active" : false
+        }
         """
       )
     }
@@ -141,12 +121,8 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
            |	  "oldTaskDescription": "old task description",
            |    "newTaskDescription": "new task description",
            |    "startTime": "2020-03-10T14:00:00+02:00",
-           |    "durationTime": {
-           |      "value": 500
-           |      },
-           |    "volume": {
-           |      "value": 3
-           |      },
+           |    "durationTime": 500,
+           |    "volume": 3,
            |    "comment": "some interesting comment2"
            |}
            |""".stripMargin
@@ -172,12 +148,8 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
            |	  "oldTaskDescription": "old task description",
            |    "newTaskDescription": "new task description",
            |    "startTime": "2020-03-10T14:00:00+02:00",
-           |    "durationTime": {
-           |        "value": 500
-           |        },
-           |    "volume":  {
-           |        "value": 3
-           |        },
+           |    "durationTime": 500,
+           |    "volume": 3,
            |    "comment": "some interesting comment2"
            |}
            |""".stripMargin
@@ -212,9 +184,7 @@ class TaskRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTest {
       response.status shouldBe StatusCodes.OK
       json(response.raw) shouldBe json(
         """
-        {
-           "value" : 1
-        }
+            1
         """
       )
     }

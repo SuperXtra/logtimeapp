@@ -17,7 +17,7 @@ class IsProjectOwner[F[+_] : Sync] {
 
   def apply(userId: UserId, projectName: String): DBIOAction[Either[LogTimeAppError, IsOwner], NoStream, Effect.Read with Effect] =
     ProjectQueries
-      .checkIfUserIsOwnerSlick(userId, projectName)
+      .checkIfUserIsOwner(userId, projectName)
     .asTry
       .flatMap {
         case Failure(exception) => DBIO.successful(ProjectDeleteUnsuccessfulUserIsNotTheOwner.asLeft)

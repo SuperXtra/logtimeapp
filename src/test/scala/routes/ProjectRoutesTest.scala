@@ -36,9 +36,7 @@ class ProjectRoutesTest extends AnyFlatSpec with Matchers with ScalatestRouteTes
       response.status shouldBe StatusCodes.OK
       json(response.raw) shouldBe json(
         s"""
-          {
-             "value" : 1
-          }
+             1
         """
       )
     }

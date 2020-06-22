@@ -11,6 +11,7 @@ import cats.implicits._
 import service.auth.Auth
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import models.DeleteCount
+import utils.CirceEncoderDecoder._
 
 object TaskRoutes {
 
